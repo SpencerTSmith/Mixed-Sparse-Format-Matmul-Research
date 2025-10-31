@@ -1,0 +1,6 @@
+*.x
+out
+*.json
+.vscode/
+*.dump
+*.txt
