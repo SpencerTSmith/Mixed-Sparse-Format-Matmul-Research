@@ -28,6 +28,20 @@ void repetition_tester_count_bytes(Repetition_Tester *tester, u64 bytes)
 }
 
 static
+void repetition_tester_count_flops(Repetition_Tester *tester, u64 count)
+{
+  Repetition_Test *curr = &tester->current_test;
+  curr->accum.v[REPTEST_VALUE_FLOP_COUNT] += count;
+}
+
+static
+void repetition_tester_count_memops(Repetition_Tester *tester, u64 count)
+{
+  Repetition_Test *curr = &tester->current_test;
+  curr->accum.v[REPTEST_VALUE_MEMOP_COUNT] += count;
+}
+
+static
 void repetition_tester_error(Repetition_Tester *tester, const char *message)
 {
   LOG_ERROR("%s", message);
@@ -61,6 +75,12 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
 
       printf(", %lu faults (%.4f kb/fault)", page_faults, kb_per_fault);
     }
+
+    u64 flops = values.v[REPTEST_VALUE_FLOP_COUNT] / divisor;
+    printf(", %lu flops", flops);
+
+    u64 memops = values.v[REPTEST_VALUE_MEMOP_COUNT] / divisor;
+    printf(", %lu memops", memops);
   }
 }
 
@@ -109,7 +129,6 @@ b32 repetition_tester_is_testing(Repetition_Tester *tester)
       {
         repetition_tester_error(tester, "Tester has uneven timing blocks");
       }
-      // TODO: Hmm this is not very good when comparing completely different algo's
       // if (curr.accum.v[REPTEST_VALUE_BYTE_COUNT] != tester->target_processed_byte_count)
       // {
       //   repetition_tester_error(tester, "Tester has mismatched target and actual bytes processed");
@@ -151,8 +170,6 @@ b32 repetition_tester_is_testing(Repetition_Tester *tester)
         if ((current_time - tester->tests_start_time) > tester->try_for_min_time)
         {
           tester->mode = REPTEST_MODE_COMPLETE;
-
-          Repetition_Tester_Results *results = &tester->results;
 
           print_repetition_test_values("MIN", results->min, tester->cpu_timer_frequency, 1);
           printf("\n");

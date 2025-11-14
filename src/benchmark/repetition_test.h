@@ -21,6 +21,8 @@ typedef enum Repetition_Test_Value
   REPTEST_VALUE_TIME,
   REPTEST_VALUE_PAGE_FAULTS,
   REPTEST_VALUE_BYTE_COUNT,
+  REPTEST_VALUE_FLOP_COUNT,
+  REPTEST_VALUE_MEMOP_COUNT,
 
   REPTEST_VALUE_COUNT,
 } Repetition_Test_Value;
@@ -72,13 +74,20 @@ static
 void repetition_tester_count_bytes(Repetition_Tester *tester, u64 bytes);
 
 static
+void repetition_tester_count_flops(Repetition_Tester *tester, u64 count);
+static
+void repetition_tester_count_memops(Repetition_Tester *tester, u64 count);
+
+static
 void repetition_tester_error(Repetition_Tester *tester, const char *message);
 
 static
-void print_repetition_test_values(const char *label, Repetition_Test_Values values, u64 cpu_timer_frequency, u64 test_count);
+void print_repetition_test_values(const char *label, Repetition_Test_Values values,
+                                  u64 cpu_timer_frequency, u64 test_count);
 
 static
-void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_byte_count, u64 cpu_timer_frequency, u32 seconds_to_try_for_min);
+void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_byte_count,
+                                u64 cpu_timer_frequency, u32 seconds_to_try_for_min);
 
 static
 b32 repetition_tester_is_testing(Repetition_Tester *tester);

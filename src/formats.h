@@ -86,7 +86,7 @@ struct Matrix_Reps
 };
 
 static
-Dense_Matrix make_random_dense_matrix(Arena *arena, u32 row_count, u32 col_count, f64 sparsity);
+Dense_Matrix make_random_dense_matrix(Arena *arena, u32 row_count, u32 col_count, f64 density);
 
 static
 CSR_Matrix csr_from_dense(Arena *arena, Dense_Matrix *dense);

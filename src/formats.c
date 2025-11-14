@@ -84,8 +84,10 @@ CSC_Matrix csc_from_dense(Arena *arena, Dense_Matrix *dense)
   return result;
 }
 
+#include <stdlib.h>
+
 static
-Dense_Matrix make_random_dense_matrix(Arena *arena, u32 row_count, u32 col_count, f64 sparsity)
+Dense_Matrix make_random_dense_matrix(Arena *arena, u32 row_count, u32 col_count, f64 density)
 {
   Dense_Matrix result =
   {
@@ -101,7 +103,7 @@ Dense_Matrix make_random_dense_matrix(Arena *arena, u32 row_count, u32 col_count
       f64 check = (f64)rand() / RAND_MAX;
 
       // We should put a non-zero
-      if (check > sparsity)
+      if (check < density)
       {
         f64 value = ((f64)rand() / RAND_MAX) * 2.0 - 1.0;
         result.values[r * col_count + c] = value;

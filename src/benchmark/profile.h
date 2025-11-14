@@ -25,8 +25,6 @@ struct Profile_Zone
   u64    bytes_processed;
 };
 
-#define MAX_PROFILE_ZONES 4096
-
 typedef struct Profiler Profiler;
 struct Profiler
 {
@@ -36,7 +34,7 @@ struct Profiler
   // DANGER! Needs to be a per thread profiler
   usize current_parent_zone;
 
-  Profile_Zone zones[MAX_PROFILE_ZONES];
+  Profile_Zone zones[4096];
 };
 
 static
@@ -61,16 +59,16 @@ void __profile_close_pass(Profile_Pass pass);
   #define profile_close_func()   profile_close_pass(__func_pass__)
 
   #define PROFILE_SCOPE(name) \
-    Profile_Pass MACRO_CONCAT(__pass, __LINE__) = profile_begin_pass(name); DEFER_SCOPE(VOID_PROC, profile_close_pass(MACRO_CONCAT(__pass, __LINE__)))
+    Profile_Pass CONCAT(__pass, __LINE__) = profile_begin_pass(name); DEFER_SCOPE(VOID_PROC, profile_close_pass(CONCAT(__pass, __LINE__)))
 
   #define PROFILE_SCOPE_BANDWIDTH(name, bytes) \
-    Profile_Pass MACRO_CONCAT(__pass, __LINE__) = __profile_begin_pass(String(name), __COUNTER__ + 1, bytes); DEFER_SCOPE(VOID_PROC, profile_close_pass(MACRO_CONCAT(__pass, __LINE__)))
+    Profile_Pass CONCAT(__pass, __LINE__) = __profile_begin_pass(String(name), __COUNTER__ + 1, bytes); DEFER_SCOPE(VOID_PROC, profile_close_pass(CONCAT(__pass, __LINE__)))
 
 #else
-  #define profile_begin_pass(name) VOID_PROC
-  #define profile_close_pass(block)  VOID_PROC
-  #define profile_begin_func()     VOID_PROC
-  #define profile_close_func()       VOID_PROC
+  #define profile_begin_pass(name)  VOID_PROC
+  #define profile_close_pass(block) VOID_PROC
+  #define profile_begin_func()      VOID_PROC
+  #define profile_close_func()      VOID_PROC
   #define PROFILE_SCOPE(name)
   #define PROFILE_SCOPE_BANDWIDTH(name, bytes)
 #endif

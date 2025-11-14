@@ -3,8 +3,24 @@
 
 #include "common.h"
 #include "formats.h"
-#include "instrument.h"
 #include "benchmark/benchmark_inc.h"
+
+#define SIMULATE_FLOPS
+#define SIMULATE_MEMOPS
+
+#ifndef SIMULATE_FLOPS
+#define FMADD(dst, a, b) dst += (a * b);
+#else
+#define FMADD(dst, a, b) dst += (a * b); repetition_tester_count_flops(tester, 2)
+#endif // SIMULATE_FLOPS
+
+#ifndef SIMULATE_MEMOPS
+#define LOAD(src)       src;
+#define STORE(dst, src) dst = src;
+#else
+#define LOAD(src)       src;       repetition_tester_count_memops(tester, 1)
+#define STORE(dst, src) dst = src; repetition_tester_count_memops(tester, 1)
+#endif // SIMULATE_MEMOPS
 
 #include "formats.c"
 #include "benchmark/benchmark_inc.c"
@@ -34,10 +50,10 @@ void matmul_dense_dense(Repetition_Tester *tester, Operation_Parameters *params)
 
       for (usize i = 0; i < left.col_count; i++)
       {
-        usize left_index  = row * left.col_count + col;
-        usize right_index = row * right.col_count + col;
+        usize left_index  = row * left.col_count + i;
+        usize right_index = i * right.col_count + col;
         f64 left_value  = LOAD(left.values[left_index]);
-        f64 right_value = LOAD(right.values[left_index]);
+        f64 right_value = LOAD(right.values[right_index]);
 
         FMADD(dot, left_value, right_value);
       }
@@ -133,18 +149,100 @@ void matmul_csc_dense(Repetition_Tester *tester, Operation_Parameters *params)
   repetition_tester_count_bytes(tester, left.non_zero_count * right.col_count * sizeof(f64));
 }
 
+static
+void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSR_Matrix left  = params->left.csr;
+  CSR_Matrix right = params->right.csr;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  for (usize left_row = 0; left_row < left.row_count; left_row++)
+  {
+    // Double count?
+    usize left_row_start = LOAD(left.row_pointers[left_row]);
+    usize left_row_end   = LOAD(left.row_pointers[left_row + 1]);
+
+    for (usize i = left_row_start; i < left_row_end; i++)
+    {
+      usize left_col = LOAD(left.col_indices[i]);
+      f64 left_value = LOAD(left.values[i]);
+
+      usize right_row_start = LOAD(right.row_pointers[left_col]);
+      usize right_row_end   = LOAD(right.row_pointers[left_col + 1]);
+      for (usize j = right_row_start; j < right_row_end; j++)
+      {
+        usize right_col = LOAD(right.col_indices[j]);
+        f64 right_value = LOAD(right.values[j]);
+
+        usize output_index = left_row * output.col_count + right_col;
+        f64 current_value = LOAD(output.values[output_index]);
+
+        f64 result_value = current_value;
+        FMADD(result_value, left_value, right_value);
+
+        STORE(output.values[output_index], result_value);
+      }
+    }
+  }
+
+  repetition_tester_close_time(tester);
+
+  // TODO: Hmm what should this really be?
+  repetition_tester_count_bytes(tester, left.non_zero_count * right.non_zero_count * sizeof(f64));
+}
+
 Operation_Entry test_entries[] =
 {
-  {String("dense x dense"),  matmul_dense_dense},
-  {String("csr   x dense"),  matmul_csr_dense},
-  {String("csc   x dense"),  matmul_csc_dense},
+  {STR("dense_X_dense"), matmul_dense_dense},
+  {STR("csr_X_dense"),   matmul_csr_dense},
+  {STR("csc_X_dense"),   matmul_csc_dense},
+  {STR("csr_X_csr"),     matmul_csr_csr},
 };
+
+#include <math.h>
+
+static
+b32 epsilon_equal(f64 a, f64 b)
+{
+  f64 epsilon = 0.00001;
+
+  return fabs(a - b) <= epsilon;
+}
+
+Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, f64 density)
+{
+  Dense_Matrix left_dense  = make_random_dense_matrix(arena, row_count, col_count, density);
+  Dense_Matrix right_dense = make_random_dense_matrix(arena, row_count, col_count, density);
+  Dense_Matrix output =
+  {
+    .row_count = row_count,
+    .col_count = col_count,
+    .values = arena_calloc(arena, row_count * col_count, f64),
+  };
+
+  Operation_Parameters params =
+  {
+    .left.dense = left_dense,
+    .left.csr = csr_from_dense(arena, &left_dense),
+    .left.csc = csc_from_dense(arena, &left_dense),
+
+    .right.dense = right_dense,
+    .right.csr = csr_from_dense(arena, &right_dense),
+    .right.csc = csc_from_dense(arena, &right_dense),
+
+    .output = output,
+  };
+
+  return params;
+}
 
 int main(int arg_count, char **args)
 {
-  if (arg_count != 5)
+  if (arg_count < 4)
   {
-    printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [sparsity]\n", args[0]);
+    printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [verify/no-verify]\n", args[0]);
   }
 
   u32 seconds_to_try_for_min = atoi(args[1]);
@@ -154,40 +252,84 @@ int main(int arg_count, char **args)
 
   u32 row_count = atoi(args[2]);
   u32 col_count = atoi(args[3]);
-  f64 sparsity  = atof(args[4]);
 
-  Dense_Matrix left_dense  = make_random_dense_matrix(&arena, row_count, col_count, sparsity);
-  Dense_Matrix right_dense = make_random_dense_matrix(&arena, row_count, col_count, sparsity);
-  Dense_Matrix output =
+  if (arg_count == 5)
   {
-    .row_count = row_count,
-    .col_count = col_count,
-    .values = arena_calloc(&arena, row_count * col_count, f64),
-  };
-
-  Operation_Parameters params =
-  {
-    .left.dense = left_dense,
-    .left.csr = csr_from_dense(&arena, &left_dense),
-    .left.csc = csc_from_dense(&arena, &left_dense),
-
-    .right.dense = right_dense,
-    .right.csr = csr_from_dense(&arena, &right_dense),
-    .right.csc = csc_from_dense(&arena, &right_dense),
-
-    .output = output,
-  };
-
-  while (true)
-  {
-    Repetition_Tester testers[STATIC_ARRAY_COUNT(test_entries)] = {0};
-
-    for (usize i = 0; i < STATIC_ARRAY_COUNT(test_entries); i++)
+    if (strcmp(args[4], "verify") == 0)
     {
-      Repetition_Tester *tester = &testers[i];
-      Operation_Entry *entry = &test_entries[i];
+      // Arbitrary sparsity to check
+      Operation_Parameters params = init_params(&arena, row_count, col_count, 0.1);
 
-      printf("\n--- %.*s ---\n", String_Format(entry->name));
+      b32 had_failure = false;
+      Repetition_Tester dummy = {0};
+      // Just gonna take a copy of the dense dense to compare against
+      matmul_dense_dense(&dummy, &params);
+
+      usize count = params.output.row_count * params.output.col_count;
+      f64 *reference = arena_calloc(&arena, count, f64);
+      MEM_COPY(reference, params.output.values, sizeof(f64) * count);
+
+      for (isize i = 1; i < STATIC_COUNT(test_entries); i++)
+      {
+        Operation_Entry *entry = test_entries + i;
+
+        MEM_SET(params.output.values, sizeof(f64) * params.output.row_count * params.output.col_count, 0);
+        entry->function(&dummy, &params);
+
+        for (isize v = 0; v < count; v++)
+        {
+          if (!epsilon_equal(params.output.values[v], reference[v]))
+          {
+            LOG_ERROR("Entry '%.*s' @ %lu does not match reference (%f:%f)",
+                      STRF(entry->name), v, reference[v], params.output.values[v]);
+            had_failure = true;
+            break;
+          }
+        }
+      }
+
+      arena_clear(&arena);
+
+      if (!had_failure)
+      {
+        LOG_INFO("All entries match reference");
+      }
+    }
+  }
+
+  f64 densities[30] = {0};
+  f64 density_delta = 0.0001;
+  f64 density_accum = 0.0;
+  for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
+  {
+    densities[density_idx] = density_accum;
+
+    // A little floating point error but good enough
+    if ((density_idx % 10) == 0)
+    {
+      density_delta *= 10;
+    }
+    density_accum += density_delta;
+  }
+
+  Repetition_Tester testers[STATIC_COUNT(test_entries)][40] = {0};
+
+#if 0
+  for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
+  {
+    // So SLOW! But don't know of a better way to test a bunch of densities of different
+    // matrix sizes
+    Operation_Parameters params = init_params(&arena, row_count, col_count,
+                                              densities[density_idx]);
+
+    f64 density = densities[density_idx];
+
+    for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
+    {
+      Repetition_Tester *tester = &testers[func_idx][density_idx];
+      Operation_Entry *entry = test_entries + func_idx;
+
+      printf("\n--- %.*s @ %.4f density ---\n", STRF(entry->name), density);
       printf("                                                          \r");
       repetition_tester_new_wave(tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
 
@@ -195,6 +337,33 @@ int main(int arg_count, char **args)
       {
         entry->function(tester, &params);
       }
+    }
+
+    arena_clear(&arena); // Reset any memory taken by params
+  }
+
+#endif
+
+  // Dump csv
+  for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
+  {
+    Operation_Entry *entry = test_entries + func_idx;
+
+    // FIXME: Holy jank, simplify
+    String filename = string_join_array(&arena, (String_Array){.v = (String[]){entry->name, STR(".csv")}, .count = 2}, STR(""));
+    FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
+
+    fprintf(csv, "row_count,col_count,density,flops,memops\n");
+
+    for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
+    {
+      Repetition_Tester *tester = &testers[func_idx][density_idx];
+      Repetition_Test_Values v = tester->results.min;
+      u64 flops   = v.v[REPTEST_VALUE_FLOP_COUNT];
+      u64 memops  = v.v[REPTEST_VALUE_MEMOP_COUNT];
+      f64 density = densities[density_idx];
+
+      fprintf(csv, "%d,%d,%f,%lu,%lu\n", row_count, col_count, density, flops, memops);
     }
   }
 }
