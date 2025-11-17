@@ -1,12 +1,45 @@
 #define LOG_TITLE "REPETITION_TESTER"
 #define COMMON_IMPLEMENTATION
 
+
 #include "common.h"
 #include "formats.h"
 #include "benchmark/benchmark_inc.h"
 
-#define SIMULATE_FLOPS
-#define SIMULATE_MEMOPS
+String string_make_formatted(Arena *arena, const char *format_string, ...)
+{
+  u8 *base = arena_new(arena, u8);
+  va_list args;
+  va_start(args, format_string);
+  // TODO: no stdlib bullshit
+  vsnprintf(base, arena->commit_size - arena->next_offset, format_string, args);
+  va_end(args);
+
+  String result = string_from_c_string(base);
+
+  // FIXME: DANGER!
+  arena->next_offset += result.count + 1;
+
+  return result;
+}
+
+#include <time.h>
+String string_create_timestamp(Arena *arena)
+{
+  time_t t = time(NULL);
+  struct tm *time_thing = localtime(&t);
+  i32 year  = time_thing->tm_year;
+  i32 month = time_thing->tm_mon;
+  i32 day   = time_thing->tm_wday;
+  i32 hour  = time_thing->tm_hour;
+  i32 min   = time_thing->tm_min;
+  i32 sec   = time_thing->tm_sec;
+
+  String result = string_make_formatted(arena, "%d-%d-%d_%d:%d:%d",
+                                        year, month, day, hour, min, sec);
+
+  return result;
+}
 
 #ifndef SIMULATE_FLOPS
 #define FMADD(dst, a, b) dst += (a * b);
@@ -245,10 +278,11 @@ int main(int arg_count, char **args)
     printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [verify/no-verify]\n", args[0]);
   }
 
+  Arena arena = arena_make(.reserve_size = GB(64));
+
   u32 seconds_to_try_for_min = atoi(args[1]);
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
-  Arena arena = arena_make(.reserve_size = GB(64));
 
   u32 row_count = atoi(args[2]);
   u32 col_count = atoi(args[3]);
@@ -314,7 +348,6 @@ int main(int arg_count, char **args)
 
   Repetition_Tester testers[STATIC_COUNT(test_entries)][40] = {0};
 
-#if 0
   for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
   {
     // So SLOW! But don't know of a better way to test a bunch of densities of different
@@ -342,15 +375,15 @@ int main(int arg_count, char **args)
     arena_clear(&arena); // Reset any memory taken by params
   }
 
-#endif
-
+#if defined(SIMULATE_MEMOPS) || defined(SIMULATE_FLOPS)
   // Dump csv
   for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
   {
     Operation_Entry *entry = test_entries + func_idx;
 
     // FIXME: Holy jank, simplify
-    String filename = string_join_array(&arena, (String_Array){.v = (String[]){entry->name, STR(".csv")}, .count = 2}, STR(""));
+    String join[] = {entry->name, STR(".csv")}, string_create_timestamp(&arena)};
+    String filename = string_join_array(&arena, (String_Array){.v = join, .count = STATIC_COUNT(join)}, STR(""));
     FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
 
     fprintf(csv, "row_count,col_count,density,flops,memops\n");
@@ -366,4 +399,5 @@ int main(int arg_count, char **args)
       fprintf(csv, "%d,%d,%f,%lu,%lu\n", row_count, col_count, density, flops, memops);
     }
   }
+#endif
 }
