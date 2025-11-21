@@ -28,7 +28,7 @@ String string_create_timestamp(Arena *arena)
 {
   time_t t = time(NULL);
   struct tm *time_thing = localtime(&t);
-  i32 year  = time_thing->tm_year;
+  i32 year  = time_thing->tm_year + 1900; // why?
   i32 month = time_thing->tm_mon;
   i32 day   = time_thing->tm_wday;
   i32 hour  = time_thing->tm_hour;
@@ -222,8 +222,7 @@ void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
 
   repetition_tester_close_time(tester);
 
-  // TODO: Hmm what should this really be?
-  repetition_tester_count_bytes(tester, left.non_zero_count * right.non_zero_count * sizeof(f64));
+  repetition_tester_count_bytes(tester, (tester->current_test.accum.v[REPTEST_VALUE_FLOP_COUNT] / 2) * sizeof(f64));
 }
 
 Operation_Entry test_entries[] =
@@ -244,10 +243,10 @@ b32 epsilon_equal(f64 a, f64 b)
   return fabs(a - b) <= epsilon;
 }
 
-Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, f64 density)
+Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, u32 inner_count, f64 density)
 {
-  Dense_Matrix left_dense  = make_random_dense_matrix(arena, row_count, col_count, density);
-  Dense_Matrix right_dense = make_random_dense_matrix(arena, row_count, col_count, density);
+  Dense_Matrix left_dense  = make_random_dense_matrix(arena, row_count, inner_count, density);
+  Dense_Matrix right_dense = make_random_dense_matrix(arena, inner_count, col_count, density);
   Dense_Matrix output =
   {
     .row_count = row_count,
@@ -273,9 +272,9 @@ Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, f64
 
 int main(int arg_count, char **args)
 {
-  if (arg_count < 4)
+  if (arg_count < 5)
   {
-    printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [verify/no-verify]\n", args[0]);
+    printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [inner_count] [verify/no-verify]\n", args[0]);
   }
 
   Arena arena = arena_make(.reserve_size = GB(64));
@@ -283,16 +282,16 @@ int main(int arg_count, char **args)
   u32 seconds_to_try_for_min = atoi(args[1]);
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
-
   u32 row_count = atoi(args[2]);
   u32 col_count = atoi(args[3]);
+  u32 inner_count = atoi(args[4]);
 
   if (arg_count == 5)
   {
     if (strcmp(args[4], "verify") == 0)
     {
       // Arbitrary sparsity to check
-      Operation_Parameters params = init_params(&arena, row_count, col_count, 0.1);
+      Operation_Parameters params = init_params(&arena, row_count, col_count, inner_count, 0.1);
 
       b32 had_failure = false;
       Repetition_Tester dummy = {0};
@@ -331,7 +330,7 @@ int main(int arg_count, char **args)
     }
   }
 
-  f64 densities[30] = {0};
+  f64 densities[20] = {0};
   f64 density_delta = 0.0001;
   f64 density_accum = 0.0;
   for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
@@ -346,13 +345,14 @@ int main(int arg_count, char **args)
     density_accum += density_delta;
   }
 
-  Repetition_Tester testers[STATIC_COUNT(test_entries)][40] = {0};
+  Repetition_Tester testers[STATIC_COUNT(test_entries)][STATIC_COUNT(densities)] = {0};
 
   for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
   {
     // So SLOW! But don't know of a better way to test a bunch of densities of different
     // matrix sizes
-    Operation_Parameters params = init_params(&arena, row_count, col_count,
+    Operation_Parameters params = init_params(&arena,
+                                              row_count, col_count, inner_count,
                                               densities[density_idx]);
 
     f64 density = densities[density_idx];
@@ -382,11 +382,11 @@ int main(int arg_count, char **args)
     Operation_Entry *entry = test_entries + func_idx;
 
     // FIXME: Holy jank, simplify
-    String join[] = {entry->name, STR(".csv")}, string_create_timestamp(&arena)};
+    String join[] = {entry->name, string_create_timestamp(&arena), STR(".csv"), };
     String filename = string_join_array(&arena, (String_Array){.v = join, .count = STATIC_COUNT(join)}, STR(""));
     FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
 
-    fprintf(csv, "row_count,col_count,density,flops,memops\n");
+    fprintf(csv, "row_count,col_count,inner_count,density,flops,memops,time\n");
 
     for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
     {
@@ -394,9 +394,10 @@ int main(int arg_count, char **args)
       Repetition_Test_Values v = tester->results.min;
       u64 flops   = v.v[REPTEST_VALUE_FLOP_COUNT];
       u64 memops  = v.v[REPTEST_VALUE_MEMOP_COUNT];
+      u64 time    = v.v[REPTEST_VALUE_TIME];
       f64 density = densities[density_idx];
 
-      fprintf(csv, "%d,%d,%f,%lu,%lu\n", row_count, col_count, density, flops, memops);
+      fprintf(csv, "%d,%d,%d,%f,%lu,%lu,%lu\n", row_count, col_count, inner_count, density, flops, memops, time);
     }
   }
 #endif
