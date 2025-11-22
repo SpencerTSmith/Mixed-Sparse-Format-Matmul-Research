@@ -63,9 +63,8 @@ for csv_file in csv_files:
     RRC = inner_count
     RCC = col_count
 
-    # TODO: Probably some error, should probably just include nnz in csv
-    LNZ = LRC * LCC * densities
-    RNZ = RRC * RCC * densities
+    LNZ = data['left_non_zero_count'].values
+    RNZ = data['right_non_zero_count'].values
 
     formula_flops, formula_memops = formula_func(LRC, LCC, RCC, LNZ, RNZ)
 

@@ -41,19 +41,19 @@ String string_create_timestamp(Arena *arena)
   return result;
 }
 
-#ifndef SIMULATE_FLOPS
+#ifndef OBSERVE_FLOPS
 #define FMADD(dst, a, b) dst += (a * b);
 #else
 #define FMADD(dst, a, b) dst += (a * b); repetition_tester_count_flops(tester, 2)
-#endif // SIMULATE_FLOPS
+#endif // OBSERVE_FLOPS
 
-#ifndef SIMULATE_MEMOPS
+#ifndef OBSERVE_MEMOPS
 #define LOAD(src)       src;
 #define STORE(dst, src) dst = src;
 #else
 #define LOAD(src)       src;       repetition_tester_count_memops(tester, 1)
 #define STORE(dst, src) dst = src; repetition_tester_count_memops(tester, 1)
-#endif // SIMULATE_MEMOPS
+#endif // OBSERVE_MEMOPS
 
 #include "formats.c"
 #include "benchmark/benchmark_inc.c"
@@ -222,7 +222,8 @@ void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
 
   repetition_tester_close_time(tester);
 
-  repetition_tester_count_bytes(tester, (tester->current_test.accum.v[REPTEST_VALUE_FLOP_COUNT] / 2) * sizeof(f64));
+  repetition_tester_count_bytes(tester,
+                                left.non_zero_count * right.non_zero_count / params->right.dense.col_count * sizeof(f64));
 }
 
 Operation_Entry test_entries[] =
@@ -275,6 +276,7 @@ int main(int arg_count, char **args)
   if (arg_count < 5)
   {
     printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [inner_count] [verify/no-verify]\n", args[0]);
+    return -1;
   }
 
   Arena arena = arena_make(.reserve_size = GB(64));
@@ -286,9 +288,9 @@ int main(int arg_count, char **args)
   u32 col_count = atoi(args[3]);
   u32 inner_count = atoi(args[4]);
 
-  if (arg_count == 5)
+  if (arg_count == 6)
   {
-    if (strcmp(args[4], "verify") == 0)
+    if (strcmp(args[5], "verify") == 0)
     {
       // Arbitrary sparsity to check
       Operation_Parameters params = init_params(&arena, row_count, col_count, inner_count, 0.1);
@@ -313,8 +315,8 @@ int main(int arg_count, char **args)
         {
           if (!epsilon_equal(params.output.values[v], reference[v]))
           {
-            LOG_ERROR("Entry '%.*s' @ %lu does not match reference (%f:%f)",
-                      STRF(entry->name), v, reference[v], params.output.values[v]);
+            LOG_ERROR("Entry '%.*s' does not match reference (%f:%f)",
+                      STRF(entry->name), reference[v], params.output.values[v]);
             had_failure = true;
             break;
           }
@@ -330,7 +332,7 @@ int main(int arg_count, char **args)
     }
   }
 
-  f64 densities[20] = {0};
+  f64 densities[30] = {0};
   f64 density_delta = 0.0001;
   f64 density_accum = 0.0;
   for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
@@ -347,13 +349,19 @@ int main(int arg_count, char **args)
 
   Repetition_Tester testers[STATIC_COUNT(test_entries)][STATIC_COUNT(densities)] = {0};
 
-  for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
+  u32 non_zero_counts[STATIC_COUNT(densities)][2] = {0};
+
+  for (usize density_idx = 1; density_idx < STATIC_COUNT(densities); density_idx++)
   {
-    // So SLOW! But don't know of a better way to test a bunch of densities of different
+    // FIXME: So SLOW! But don't know of a better way to test a bunch of densities of different
     // matrix sizes
     Operation_Parameters params = init_params(&arena,
                                               row_count, col_count, inner_count,
                                               densities[density_idx]);
+
+    // NOTE: Should be the same across all formats, so just look at csr
+    non_zero_counts[density_idx][0] = params.left.csr.non_zero_count;
+    non_zero_counts[density_idx][1] = params.right.csr.non_zero_count;
 
     f64 density = densities[density_idx];
 
@@ -375,30 +383,44 @@ int main(int arg_count, char **args)
     arena_clear(&arena); // Reset any memory taken by params
   }
 
-#if defined(SIMULATE_MEMOPS) || defined(SIMULATE_FLOPS)
   // Dump csv
   for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
   {
     Operation_Entry *entry = test_entries + func_idx;
 
     // FIXME: Holy jank, simplify
-    String join[] = {entry->name, string_create_timestamp(&arena), STR(".csv"), };
+    String dirname =  string_create_timestamp(&arena);
+    mkdir(string_to_c_string(&arena, dirname), 0777);
+
+    String join[] = {dirname, STR("/"), entry->name,  STR(".csv"), };
+
     String filename = string_join_array(&arena, (String_Array){.v = join, .count = STATIC_COUNT(join)}, STR(""));
     FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
 
-    fprintf(csv, "row_count,col_count,inner_count,density,flops,memops,time\n");
-
-    for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
+    if (csv)
     {
-      Repetition_Tester *tester = &testers[func_idx][density_idx];
-      Repetition_Test_Values v = tester->results.min;
-      u64 flops   = v.v[REPTEST_VALUE_FLOP_COUNT];
-      u64 memops  = v.v[REPTEST_VALUE_MEMOP_COUNT];
-      u64 time    = v.v[REPTEST_VALUE_TIME];
-      f64 density = densities[density_idx];
+      fprintf(csv, "row_count,col_count,inner_count,left_non_zero_count,right_non_zero_count,density,flops,memops,time\n");
 
-      fprintf(csv, "%d,%d,%d,%f,%lu,%lu,%lu\n", row_count, col_count, inner_count, density, flops, memops, time);
+      for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
+      {
+        Repetition_Tester *tester = &testers[func_idx][density_idx];
+        Repetition_Test_Values v = tester->results.min;
+        u64 flops   = v.v[REPTEST_VALUE_FLOP_COUNT];
+        u64 memops  = v.v[REPTEST_VALUE_MEMOP_COUNT];
+        u64 time    = v.v[REPTEST_VALUE_TIME];
+        f64 density = densities[density_idx];
+
+        u32 left_non_zero_count  = non_zero_counts[density_idx][0];
+        u32 right_non_zero_count = non_zero_counts[density_idx][1];
+
+        fprintf(csv, "%d,%d,%d,%d,%d,%f,%lu,%lu,%lu\n",
+                row_count, col_count, inner_count, left_non_zero_count, right_non_zero_count,
+                density, flops, memops, time);
+      }
+    }
+    else
+    {
+      LOG_ERROR("Unable to open csv file: %.*s", STRF(filename));
     }
   }
-#endif
 }

@@ -77,10 +77,16 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
     }
 
     u64 flops = values.v[REPTEST_VALUE_FLOP_COUNT] / divisor;
-    printf(", %lu flops", flops);
+    if (flops)
+    {
+      printf(", %lu flops", flops);
+    }
 
     u64 memops = values.v[REPTEST_VALUE_MEMOP_COUNT] / divisor;
-    printf(", %lu memops", memops);
+    if (memops)
+    {
+      printf(", %lu memops", memops);
+    }
   }
 }
 
