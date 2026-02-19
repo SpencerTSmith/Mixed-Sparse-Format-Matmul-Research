@@ -56,7 +56,7 @@ CSC_Matrix csc_from_dense(Arena *arena, Dense_Matrix *dense)
 {
   CSC_Matrix result = {0};
   result.non_zero_count = dense_non_zero_count(dense);
-  result.col_count = dense->row_count;
+  result.col_count = dense->col_count;
 
   result.values       = arena_calloc(arena, result.non_zero_count, f64);
   result.row_indices  = arena_calloc(arena, result.non_zero_count, u32);

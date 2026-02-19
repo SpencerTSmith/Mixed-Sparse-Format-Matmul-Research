@@ -19,9 +19,15 @@ def formula_csc_dense(LRC, LCC, RCC, LNZ, RNZ):
     return flops, memops
 
 def formula_csr_csr(LRC, LCC, RCC, LNZ, RNZ):
-    # RNZ / RCC works for estimating the average non-zeroes in rows
-    flops = (2 * LNZ * RNZ / RCC)
-    memops = (2 * LRC) + (4 * LNZ) + (4 * LNZ * RNZ / RCC)
+    # THE SAME!
+    left_density = LNZ / (LRC * LCC)
+    right_density = RNZ / (LCC * RCC)
+    expected_work = left_density * right_density * LRC * RCC * RRC
+
+    # THE SAME!
+    # RNZ / RRC works for estimating the average non-zeroes in rows
+    flops = (2 * LNZ * RNZ / RRC)
+    memops = (2 * LRC) + (4 * LNZ) + (4 * LNZ * RNZ / RRC)
     return flops, memops
 
 formula_map = {

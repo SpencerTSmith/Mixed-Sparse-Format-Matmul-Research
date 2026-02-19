@@ -332,9 +332,9 @@ int main(int arg_count, char **args)
     }
   }
 
-  f64 densities[30] = {0};
-  f64 density_delta = 0.0001;
-  f64 density_accum = 0.0;
+  f64 densities[20] = {0};
+  f64 density_delta = 0.001;
+  f64 density_accum = 0.01;
   for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
   {
     densities[density_idx] = density_accum;
@@ -363,6 +363,8 @@ int main(int arg_count, char **args)
     non_zero_counts[density_idx][0] = params.left.csr.non_zero_count;
     non_zero_counts[density_idx][1] = params.right.csr.non_zero_count;
 
+    printf("left: %u, right: %u\n", non_zero_counts[density_idx][0], non_zero_counts[density_idx][1]);
+
     f64 density = densities[density_idx];
 
     for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
@@ -389,10 +391,10 @@ int main(int arg_count, char **args)
     Operation_Entry *entry = test_entries + func_idx;
 
     // FIXME: Holy jank, simplify
-    String dirname =  string_create_timestamp(&arena);
-    mkdir(string_to_c_string(&arena, dirname), 0777);
+    String timestamp = string_create_timestamp(&arena);
+    mkdir(string_to_c_string(&arena, timestamp), 0777);
 
-    String join[] = {dirname, STR("/"), entry->name,  STR(".csv"), };
+    String join[] = {timestamp, STR("/"), entry->name,  STR(".csv"), };
 
     String filename = string_join_array(&arena, (String_Array){.v = join, .count = STATIC_COUNT(join)}, STR(""));
     FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
@@ -413,7 +415,7 @@ int main(int arg_count, char **args)
         u32 left_non_zero_count  = non_zero_counts[density_idx][0];
         u32 right_non_zero_count = non_zero_counts[density_idx][1];
 
-        fprintf(csv, "%d,%d,%d,%d,%d,%f,%lu,%lu,%lu\n",
+        fprintf(csv, "%u,%u,%u,%u,%u,%f,%lu,%lu,%lu\n",
                 row_count, col_count, inner_count, left_non_zero_count, right_non_zero_count,
                 density, flops, memops, time);
       }

@@ -1,4 +1,4 @@
-CFLAGS := -g -DDEBUG -O3
+CFLAGS := -g -DDEBUG -O0
 
 observe:
 	gcc ${CFLAGS} -DOBSERVE_FLOPS -DOBSERVE_MEMOPS src/reptest_spmm.c -o reptest.x
