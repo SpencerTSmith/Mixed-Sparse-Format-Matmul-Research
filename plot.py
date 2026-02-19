@@ -30,11 +30,17 @@ def formula_csr_csr(LRC, LCC, RCC, LNZ, RNZ):
     memops = (2 * LRC) + (4 * LNZ) + (4 * LNZ * RNZ / RRC)
     return flops, memops
 
+def formula_csc_csc(LRC, LCC, RCC, LNZ, RNZ):
+    flops = (2 * RNZ * LNZ / LCC)
+    memops = (2 * RCC) + (4 * RNZ) + (4 * RNZ * LNZ / LCC)
+    return flops, memops
+
 formula_map = {
     'dense_X_dense': formula_dense_dense,
     'csr_X_dense':   formula_csr_dense,
     'csc_X_dense':   formula_csc_dense,
     'csr_X_csr':     formula_csr_csr,
+    'csc_X_csc':     formula_csc_csc,
 }
 
 csv_files = sys.argv[1:]
@@ -54,14 +60,10 @@ for csv_file in csv_files:
 
     time = data['time'].values
 
-    formula_func = None
-    for key, func in formula_map.items():
-        if key in csv_file:
-            formula_func = func
-            break
+    formula_func = formula_map.get(csv_file.removesuffix('.csv'), None)
 
     if not formula_func:
-        print(f"No formula defined for file {csv_file}")
+        print(f"No formula defined for file: {csv_file}")
         continue
 
     LRC = row_count
@@ -74,7 +76,7 @@ for csv_file in csv_files:
 
     formula_flops, formula_memops = formula_func(LRC, LCC, RCC, LNZ, RNZ)
 
-    # If we produce a single value nad not a series
+    # If we produce a single value and not a series
     if np.isscalar(formula_flops):
         formula_flops = np.full_like(densities, formula_flops)
     if np.isscalar(formula_memops):

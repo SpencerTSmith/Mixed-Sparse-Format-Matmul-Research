@@ -193,7 +193,6 @@ void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
 
   for (usize left_row = 0; left_row < left.row_count; left_row++)
   {
-    // Double count?
     usize left_row_start = LOAD(left.row_pointers[left_row]);
     usize left_row_end   = LOAD(left.row_pointers[left_row + 1]);
 
@@ -226,12 +225,57 @@ void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
                                 left.non_zero_count * right.non_zero_count / params->right.dense.col_count * sizeof(f64));
 }
 
+static
+void matmul_csc_csc(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSC_Matrix left  = params->left.csc;
+  CSC_Matrix right = params->right.csc;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  for (usize right_col = 0; right_col < right.col_count; right_col++)
+  {
+    usize right_col_start = LOAD(right.col_pointers[right_col]);
+    usize right_col_end   = LOAD(right.col_pointers[right_col + 1]);
+
+    for (usize i = right_col_start; i < right_col_end; i++)
+    {
+      usize right_row = LOAD(right.row_indices[i]);
+      f64 right_value = LOAD(right.values[i]);
+
+      usize left_col_start = LOAD(left.col_pointers[right_row]);
+      usize left_col_end   = LOAD(left.col_pointers[right_row + 1]);
+      for (usize j = left_col_start; j < left_col_end; j++)
+      {
+        usize left_row = LOAD(left.row_indices[j]);
+        f64 left_value = LOAD(left.values[j]);
+
+        usize output_index = left_row * output.col_count + right_col;
+        f64 current_value = LOAD(output.values[output_index]);
+
+        f64 result_value = current_value;
+        FMADD(result_value, left_value, right_value);
+
+        STORE(output.values[output_index], result_value);
+      }
+    }
+  }
+
+  repetition_tester_close_time(tester);
+
+  repetition_tester_count_bytes(tester,
+                                left.non_zero_count * right.non_zero_count / params->right.dense.col_count * sizeof(f64));
+}
+
+
 Operation_Entry test_entries[] =
 {
   {STR("dense_X_dense"), matmul_dense_dense},
   {STR("csr_X_dense"),   matmul_csr_dense},
   {STR("csc_X_dense"),   matmul_csc_dense},
   {STR("csr_X_csr"),     matmul_csr_csr},
+  {STR("csc_X_csc"),     matmul_csc_csc},
 };
 
 #include <math.h>
@@ -395,12 +439,13 @@ int main(int arg_count, char **args)
     mkdir(string_to_c_string(&arena, timestamp), 0777);
 
     String join[] = {timestamp, STR("/"), entry->name,  STR(".csv"), };
-
     String filename = string_join_array(&arena, (String_Array){.v = join, .count = STATIC_COUNT(join)}, STR(""));
+
     FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
 
     if (csv)
     {
+      LOG_INFO("Dumping csv: %.*s", STRF(filename));
       fprintf(csv, "row_count,col_count,inner_count,left_non_zero_count,right_non_zero_count,density,flops,memops,time\n");
 
       for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
