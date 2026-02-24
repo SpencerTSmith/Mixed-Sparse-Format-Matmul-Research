@@ -268,6 +268,58 @@ void matmul_csc_csc(Repetition_Tester *tester, Operation_Parameters *params)
                                 left.non_zero_count * right.non_zero_count / params->right.dense.col_count * sizeof(f64));
 }
 
+static
+void matmul_csr_csc(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSR_Matrix left  = params->left.csr;
+  CSC_Matrix right = params->right.csc;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  for (usize left_row = 0; left_row < left.row_count; left_row++)
+  {
+    f64 sum = 0.0;
+    usize left_row_start = LOAD(left.row_pointers[left_row]);
+    usize left_row_end   = LOAD(left.row_pointers[left_row + 1]);
+
+    for (usize right_col = 0; right_col < right.col_count; right_col++)
+    {
+      usize right_col_start = LOAD(right.col_pointers[right_col]);
+      usize right_col_end   = LOAD(right.col_pointers[right_col + 1]);
+
+      f64 sum = 0.0;
+
+      usize left_cursor  = left_row_start;
+      usize right_cursor = right_col_start;
+      while (left_cursor < left_row_end && right_cursor < right_col_end)
+      {
+        usize k_left  = left.col_indices[left_cursor];
+        usize k_right = right.row_indices[right_cursor];
+        usize k = MIN(k_left, k_right);
+
+        if (k_left == k && k_right == k)
+        {
+          f64 left_value  = LOAD(left.values[left_cursor]);
+          f64 right_value = LOAD(right.values[right_cursor]);
+          sum += left_value * right_value;
+
+        }
+        left_cursor  += (usize)(k_left == k);
+        right_cursor += (usize)(k_right == k);
+      }
+
+      usize output_index = left_row * output.col_count + right_col;
+      output.values[output_index] = sum;
+    }
+  }
+
+  repetition_tester_close_time(tester);
+
+  repetition_tester_count_bytes(tester,
+                                left.non_zero_count * right.non_zero_count / params->right.dense.col_count * sizeof(f64));
+}
+
 
 Operation_Entry test_entries[] =
 {
@@ -276,6 +328,7 @@ Operation_Entry test_entries[] =
   {STR("csc_X_dense"),   matmul_csc_dense},
   {STR("csr_X_csr"),     matmul_csr_csr},
   {STR("csc_X_csc"),     matmul_csc_csc},
+  {STR("csr_X_csc"),     matmul_csr_csc},
 };
 
 #include <math.h>
@@ -406,8 +459,6 @@ int main(int arg_count, char **args)
     // NOTE: Should be the same across all formats, so just look at csr
     non_zero_counts[density_idx][0] = params.left.csr.non_zero_count;
     non_zero_counts[density_idx][1] = params.right.csr.non_zero_count;
-
-    printf("left: %u, right: %u\n", non_zero_counts[density_idx][0], non_zero_counts[density_idx][1]);
 
     f64 density = densities[density_idx];
 
