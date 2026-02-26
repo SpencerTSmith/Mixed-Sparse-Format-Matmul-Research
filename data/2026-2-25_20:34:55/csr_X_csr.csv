@@ -1,0 +1,2 @@
+row_count,col_count,inner_count,left_non_zero_count,right_non_zero_count,density,flops,memops,time
+16,16,256,425,451,0.100000,1468,4668,43258,29180

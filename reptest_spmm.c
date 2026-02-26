@@ -8,36 +8,22 @@
 #include "../benchmark/benchmark_inc.h"
 #include "../benchmark/benchmark_inc.c"
 
-#include <time.h>
-String string_create_timestamp(Arena *arena)
-{
-  time_t t = time(NULL);
-  struct tm *time_thing = localtime(&t);
-  i32 year  = time_thing->tm_year + 1900; // why?
-  i32 month = time_thing->tm_mon;
-  i32 day   = time_thing->tm_wday;
-  i32 hour  = time_thing->tm_hour;
-  i32 min   = time_thing->tm_min;
-  i32 sec   = time_thing->tm_sec;
-
-  String result = string_formatted(arena, "%d-%d-%d_%d:%d:%d",
-                                   year, month, day, hour, min, sec);
-
-  return result;
-}
-
 #ifndef OBSERVE_FLOPS
-#define FMADD(dst, a, b) dst += (a * b);
+#define FMADD(dst, a, b) dst += (a * b)
 #else
 #define FMADD(dst, a, b) dst += (a * b); repetition_tester_count_flops(tester, 2)
 #endif // OBSERVE_FLOPS
 
 #ifndef OBSERVE_MEMOPS
-#define LOAD(src)       src;
-#define STORE(dst, src) dst = src;
+#define LOAD(src)       src
+#define STORE(dst, src) dst = src
 #else
-#define LOAD(src)       src;       repetition_tester_count_memops(tester, 1)
-#define STORE(dst, src) dst = src; repetition_tester_count_memops(tester, 1)
+#define LOAD(src)       src;                          \
+  repetition_tester_count_memops(tester, 1);          \
+  repetition_tester_count_bytes(tester, sizeof(src))
+#define STORE(dst, src) dst = src;                    \
+  repetition_tester_count_memops(tester, 1);          \
+  repetition_tester_count_bytes(tester, sizeof(dst))
 #endif // OBSERVE_MEMOPS
 
 typedef struct Operation_Parameters Operation_Parameters;
@@ -47,6 +33,16 @@ struct Operation_Parameters
   Matrix_Reps  right;
   Dense_Matrix output;
 };
+
+static
+void roofline_bandwidth(Repetition_Tester *tester, Operation_Parameters *params)
+{
+}
+
+static
+void roofline_flops(Repetition_Tester *tester, Operation_Parameters *params)
+{
+}
 
 static
 void matmul_dense_dense(Repetition_Tester *tester, Operation_Parameters *params)
@@ -79,8 +75,6 @@ void matmul_dense_dense(Repetition_Tester *tester, Operation_Parameters *params)
   }
 
   repetition_tester_close_time(tester);
-
-  repetition_tester_count_bytes(tester, output.row_count * output.col_count * sizeof(f64));
 }
 
 static
@@ -120,8 +114,6 @@ void matmul_csr_dense(Repetition_Tester *tester, Operation_Parameters *params)
   }
 
   repetition_tester_close_time(tester);
-
-  repetition_tester_count_bytes(tester, left.non_zero_count * right.col_count * sizeof(f64));
 }
 
 static
@@ -160,8 +152,6 @@ void matmul_csc_dense(Repetition_Tester *tester, Operation_Parameters *params)
   }
 
   repetition_tester_close_time(tester);
-
-  repetition_tester_count_bytes(tester, left.non_zero_count * right.col_count * sizeof(f64));
 }
 
 static
@@ -202,9 +192,6 @@ void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
   }
 
   repetition_tester_close_time(tester);
-
-  repetition_tester_count_bytes(tester,
-                                left.non_zero_count * right.non_zero_count / params->right.dense.col_count * sizeof(f64));
 }
 
 static
@@ -245,9 +232,6 @@ void matmul_csc_csc(Repetition_Tester *tester, Operation_Parameters *params)
   }
 
   repetition_tester_close_time(tester);
-
-  repetition_tester_count_bytes(tester,
-                                left.non_zero_count * right.non_zero_count / params->right.dense.col_count * sizeof(f64));
 }
 
 static
@@ -261,7 +245,6 @@ void matmul_csr_csc(Repetition_Tester *tester, Operation_Parameters *params)
 
   for (usize left_row = 0; left_row < left.row_count; left_row++)
   {
-    f64 sum = 0.0;
     usize left_row_start = LOAD(left.row_pointers[left_row]);
     usize left_row_end   = LOAD(left.row_pointers[left_row + 1]);
 
@@ -297,20 +280,133 @@ void matmul_csr_csc(Repetition_Tester *tester, Operation_Parameters *params)
   }
 
   repetition_tester_close_time(tester);
+}
 
-  repetition_tester_count_bytes(tester,
-                                left.non_zero_count * right.non_zero_count / params->right.dense.col_count * sizeof(f64));
+static
+void matmul_csc_csr(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSC_Matrix left  = params->left.csc;
+  CSR_Matrix right = params->right.csr;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  for (usize k = 0; k < right.row_count; k++)
+  {
+    usize left_col_start = LOAD(left.col_pointers[k]);
+    usize left_col_close = LOAD(left.col_pointers[k + 1]);
+
+    usize right_row_start = LOAD(right.row_pointers[k]);
+    usize right_row_close = LOAD(right.row_pointers[k + 1]);
+
+    for (usize left_col = left_col_start; left_col < left_col_close; left_col++)
+    {
+      usize row = LOAD(left.row_indices[left_col]);
+      f64 left_value  = LOAD(left.values[left_col]);
+
+      for (usize right_row = right_row_start; right_row < right_row_close; right_row++)
+      {
+        usize col = LOAD(right.col_indices[right_row]);
+        f64 right_value = LOAD(right.values[right_row]);
+
+        usize output_index = row * output.col_count + col;
+        f64 output_value   = LOAD(output.values[output_index]);
+        FMADD(output_value, left_value, right_value);
+
+        STORE(output.values[output_index], output_value);
+      }
+    }
+  }
+
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_dense_csr(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  Dense_Matrix left   = params->left.dense;
+  CSR_Matrix right    = params->right.csr;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  for (usize row = 0; row < left.row_count; row++)
+  {
+    for (usize k = 0; k < right.row_count; k++)
+    {
+      usize left_index = row * left.col_count + k;
+      f64 left_value   = LOAD(left.values[left_index]);
+
+      usize right_row_start = LOAD(right.row_pointers[k]);
+      usize right_row_close = LOAD(right.row_pointers[k + 1]);
+
+      for (usize rj = right_row_start; rj < right_row_close; rj++)
+      {
+        usize col = LOAD(right.col_indices[rj]);
+        f64 right_value = LOAD(right.values[rj]);
+
+        usize output_index = row * output.col_count + col;
+        f64 output_value   = output.values[output_index];
+
+        FMADD(output_value, left_value, right_value);
+
+        STORE(output.values[output_index], output_value);
+      }
+    }
+  }
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_dense_csc(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  Dense_Matrix left   = params->left.dense;
+  CSC_Matrix right    = params->right.csc;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  for (usize row = 0; row < left.row_count; row++)
+  {
+    for (usize col = 0; col < right.col_count; col++)
+    {
+      usize output_index = row * output.col_count + col;
+      f64 output_value = 0.0;
+
+      usize right_col_start = LOAD(right.col_pointers[col]);
+      usize right_col_close   = LOAD(right.col_pointers[col + 1]);
+      for (usize kc = right_col_start; kc < right_col_close; kc++)
+      {
+        usize k = right.row_indices[kc];
+        f64 right_value = LOAD(right.values[kc]);
+
+        usize left_index = row * left.col_count + k;
+        f64 left_value = LOAD(left.values[left_index]);
+
+        FMADD(output_value, left_value, right_value);
+      }
+
+      STORE(output.values[output_index], output_value);
+    }
+  }
+
+  repetition_tester_close_time(tester);
 }
 
 
 Operation_Entry test_entries[] =
 {
   {STR("dense_X_dense"), matmul_dense_dense},
+  {STR("dense_X_csr"),   matmul_dense_csr},
+  {STR("dense_X_csc"),   matmul_dense_csc},
   {STR("csr_X_dense"),   matmul_csr_dense},
-  {STR("csc_X_dense"),   matmul_csc_dense},
   {STR("csr_X_csr"),     matmul_csr_csr},
-  {STR("csc_X_csc"),     matmul_csc_csc},
   {STR("csr_X_csc"),     matmul_csr_csc},
+  {STR("csc_X_dense"),   matmul_csc_dense},
+  {STR("csc_X_csr"),     matmul_csc_csr},
+  {STR("csc_X_csc"),     matmul_csc_csc},
 };
 
 #include <math.h>
@@ -372,7 +468,7 @@ int main(int arg_count, char **args)
     if (strcmp(args[5], "verify") == 0)
     {
       // Arbitrary sparsity to check
-      Operation_Parameters params = init_params(&arena, row_count, col_count, inner_count, 0.1);
+      Operation_Parameters params = init_params(&arena, row_count, col_count, inner_count, 0.4);
 
       b32 had_failure = false;
       Repetition_Tester dummy = {0};
@@ -411,26 +507,24 @@ int main(int arg_count, char **args)
     }
   }
 
-  f64 densities[20] = {0};
-  f64 density_delta = 0.001;
-  f64 density_accum = 0.01;
-  for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
+#if 1
+  f64 densities[] =
   {
-    densities[density_idx] = density_accum;
-
-    // A little floating point error but good enough
-    if ((density_idx % 10) == 0)
-    {
-      density_delta *= 10;
-    }
-    density_accum += density_delta;
-  }
+    0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09,
+    0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,
+  };
+#else
+  f64 densities[] =
+  {
+    0.1,
+  };
+#endif
 
   Repetition_Tester testers[STATIC_COUNT(test_entries)][STATIC_COUNT(densities)] = {0};
 
   u32 non_zero_counts[STATIC_COUNT(densities)][2] = {0};
 
-  for (usize density_idx = 1; density_idx < STATIC_COUNT(densities); density_idx++)
+  for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
   {
     // FIXME: So SLOW! But don't know of a better way to test a bunch of densities of different
     // matrix sizes
@@ -467,19 +561,21 @@ int main(int arg_count, char **args)
   {
     Operation_Entry *entry = test_entries + func_idx;
 
-    // FIXME: Holy jank, simplify
-    String timestamp = string_create_timestamp(&arena);
-    mkdir(string_to_c_string(&arena, timestamp), 0777);
+    // C standard lib just sucks. why no recursive directory creation!?
+    String timestamp = string_timestamp(&arena);
+    mkdir("data/", 0755);
+    String dir = string_formatted(&arena, "data/%.*s", STRF(timestamp));
+    mkdir(string_to_c_string(&arena, dir), 0755);
 
-    String join[] = {timestamp, STR("/"), entry->name,  STR(".csv"), };
-    String filename = string_join_array(&arena, (String_Array){.v = join, .count = STATIC_COUNT(join)}, STR(""));
+    String join[] = {STR("data/"), timestamp, STR("/"), entry->name,  STR(".csv")};
+    String filename = string_join_array(&arena, (String_Array)TO_ARRAY(join), STR(""));
 
     FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
 
     if (csv)
     {
       LOG_INFO("Dumping csv: %.*s", STRF(filename));
-      fprintf(csv, "row_count,col_count,inner_count,left_non_zero_count,right_non_zero_count,density,flops,memops,time\n");
+      fprintf(csv, "row_count,col_count,inner_count,left_non_zero_count,right_non_zero_count,density,flops,memops,time,bytes\n");
 
       for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
       {
@@ -488,14 +584,15 @@ int main(int arg_count, char **args)
         u64 flops   = v.v[REPTEST_VALUE_FLOP_COUNT];
         u64 memops  = v.v[REPTEST_VALUE_MEMOP_COUNT];
         u64 time    = v.v[REPTEST_VALUE_TIME];
+        u64 bytes   = v.v[REPTEST_VALUE_BYTE_COUNT];
         f64 density = densities[density_idx];
 
         u32 left_non_zero_count  = non_zero_counts[density_idx][0];
         u32 right_non_zero_count = non_zero_counts[density_idx][1];
 
-        fprintf(csv, "%u,%u,%u,%u,%u,%f,%lu,%lu,%lu\n",
+        fprintf(csv, "%u,%u,%u,%u,%u,%f,%lu,%lu,%lu,%lu\n",
                 row_count, col_count, inner_count, left_non_zero_count, right_non_zero_count,
-                density, flops, memops, time);
+                density, flops, memops, time, bytes);
       }
     }
     else
