@@ -34,14 +34,37 @@ struct Operation_Parameters
   Dense_Matrix output;
 };
 
+extern void read256_asm(u64 count, u8 *data);
+extern void fmadd_asm(u64 count);
+
+static u8 bandwidth_buffer[GB(1)] = {0};
+
 static
-void roofline_bandwidth(Repetition_Tester *tester, Operation_Parameters *params)
+void roofline_bandwidth(Repetition_Tester *tester)
 {
+  u64 byte_count = STATIC_COUNT(bandwidth_buffer);
+
+  repetition_tester_begin_time(tester);
+
+  read256_asm(byte_count, bandwidth_buffer);
+
+  repetition_tester_close_time(tester);
+
+  repetition_tester_count_bytes(tester, byte_count);
 }
 
 static
-void roofline_flops(Repetition_Tester *tester, Operation_Parameters *params)
+void roofline_flops(Repetition_Tester *tester)
 {
+  u64 flop_count = GB(4);
+
+  repetition_tester_begin_time(tester);
+
+  fmadd_asm(flop_count);
+
+  repetition_tester_close_time(tester);
+
+  repetition_tester_count_flops(tester, flop_count);
 }
 
 static
@@ -395,7 +418,6 @@ void matmul_dense_csc(Repetition_Tester *tester, Operation_Parameters *params)
   repetition_tester_close_time(tester);
 }
 
-
 Operation_Entry test_entries[] =
 {
   {STR("dense_X_dense"), matmul_dense_dense},
@@ -504,6 +526,44 @@ int main(int arg_count, char **args)
       {
         LOG_INFO("All entries match reference");
       }
+    }
+  }
+
+  // Roofline
+  {
+    {
+      Repetition_Tester bandwidth_tester = {0};
+      repetition_tester_new_wave(&bandwidth_tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
+
+      printf("\n--- Roofline Bandwidth ---\n");
+      printf("                                                          \r");
+      while (repetition_tester_is_testing(&bandwidth_tester))
+      {
+        roofline_bandwidth(&bandwidth_tester);
+      }
+      Repetition_Test_Values v = bandwidth_tester.results.min;
+      u64 time    = v.v[REPTEST_VALUE_TIME];
+      u64 bytes   = v.v[REPTEST_VALUE_BYTE_COUNT];
+
+      printf("Roofline bandwidth: %f\n", (f64)bytes/time);
+    }
+
+    {
+      Repetition_Tester flop_tester = {0};
+      repetition_tester_new_wave(&flop_tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
+
+      printf("\n--- Roofline flops/s ---\n");
+      printf("                                                          \r");
+      while (repetition_tester_is_testing(&flop_tester))
+      {
+        roofline_flops(&flop_tester);
+      }
+
+      Repetition_Test_Values v = flop_tester.results.min;
+      u64 time    = v.v[REPTEST_VALUE_TIME];
+      u64 flops   = v.v[REPTEST_VALUE_FLOP_COUNT];
+
+      printf("Roofline flops/cycle: %f\n", (f64)flops/time);
     }
   }
 

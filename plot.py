@@ -129,13 +129,22 @@ for i, csv_file in enumerate(csv_files):
     plt.title('Runtime Performance')
     plt.grid(True)
 
+    plt.subplot(1,4,4)
+
     flops_per_byte = observed_flops / byte
     flops_per_cycle = observed_flops / time
+    # HACK: Just hardcoding after measuring. Automate this by dumping it from roofline test
+    peak_flops_per_cycle = 27.311
+    peak_bytes_per_cycle = 30.041
 
-    plt.subplot(1,4,4)
+    plt.axhline(y=peak_flops_per_cycle, color='black', linestyle='--', label='Peak FLOP/cycle')
+    x = np.logspace(-3, 3, 100)
+    plt.plot(x, np.minimum(peak_bytes_per_cycle * x, peak_flops_per_cycle),
+            color='black', linestyle='-', label='Memory bound')
+
     plt.plot(flops_per_byte, flops_per_cycle, 'o-', color=colors[i], label=csv_file, markersize=4)
-    # plt.xscale('log')
-    # plt.yscale('log')
+    plt.xscale('log')
+    plt.yscale('log')
     plt.xlabel('Arithmetic Intensity (FLOP/byte)')
     plt.ylabel('FLOP/cycle')
     plt.title('Roofline')
