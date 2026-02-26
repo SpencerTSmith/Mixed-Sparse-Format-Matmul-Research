@@ -35,12 +35,18 @@ def formula_csc_csc(LRC, LCC, RCC, LNZ, RNZ):
     memops = (2 * RCC) + (4 * RNZ) + (4 * RNZ * LNZ / LCC)
     return flops, memops
 
+def formula_csr_csc(LRC, LCC, RCC, LNZ, RNZ):
+    flops = (2 * RNZ * LNZ / LCC)
+    memops = (2 * RCC) + (4 * RNZ) + (4 * RNZ * LNZ / LCC)
+    return flops, memops
+
 formula_map = {
     'dense_X_dense': formula_dense_dense,
     'csr_X_dense':   formula_csr_dense,
     'csc_X_dense':   formula_csc_dense,
     'csr_X_csr':     formula_csr_csr,
     'csc_X_csc':     formula_csc_csc,
+    'csr_X_csc':     formula_csr_csc,
 }
 
 csv_files = sys.argv[1:]

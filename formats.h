@@ -1,7 +1,7 @@
 #ifndef FORMATS_H
 #define FORMATS_H
 
-#include "common.h"
+#include "../common.h"
 
 // Row major
 typedef struct Dense_Matrix Dense_Matrix;

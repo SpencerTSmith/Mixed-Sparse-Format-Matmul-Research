@@ -2,26 +2,11 @@
 #define COMMON_IMPLEMENTATION
 
 
-#include "common.h"
+#include "../common.h"
 #include "formats.h"
-#include "benchmark/benchmark_inc.h"
-
-String string_make_formatted(Arena *arena, const char *format_string, ...)
-{
-  u8 *base = arena_new(arena, u8);
-  va_list args;
-  va_start(args, format_string);
-  // TODO: no stdlib bullshit
-  vsnprintf(base, arena->commit_size - arena->next_offset, format_string, args);
-  va_end(args);
-
-  String result = string_from_c_string(base);
-
-  // FIXME: DANGER!
-  arena->next_offset += result.count + 1;
-
-  return result;
-}
+#include "formats.c"
+#include "../benchmark/benchmark_inc.h"
+#include "../benchmark/benchmark_inc.c"
 
 #include <time.h>
 String string_create_timestamp(Arena *arena)
@@ -35,8 +20,8 @@ String string_create_timestamp(Arena *arena)
   i32 min   = time_thing->tm_min;
   i32 sec   = time_thing->tm_sec;
 
-  String result = string_make_formatted(arena, "%d-%d-%d_%d:%d:%d",
-                                        year, month, day, hour, min, sec);
+  String result = string_formatted(arena, "%d-%d-%d_%d:%d:%d",
+                                   year, month, day, hour, min, sec);
 
   return result;
 }
@@ -54,9 +39,6 @@ String string_create_timestamp(Arena *arena)
 #define LOAD(src)       src;       repetition_tester_count_memops(tester, 1)
 #define STORE(dst, src) dst = src; repetition_tester_count_memops(tester, 1)
 #endif // OBSERVE_MEMOPS
-
-#include "formats.c"
-#include "benchmark/benchmark_inc.c"
 
 typedef struct Operation_Parameters Operation_Parameters;
 struct Operation_Parameters
@@ -288,29 +270,29 @@ void matmul_csr_csc(Repetition_Tester *tester, Operation_Parameters *params)
       usize right_col_start = LOAD(right.col_pointers[right_col]);
       usize right_col_end   = LOAD(right.col_pointers[right_col + 1]);
 
-      f64 sum = 0.0;
+      f64 result_value = 0.0;
 
       usize left_cursor  = left_row_start;
       usize right_cursor = right_col_start;
       while (left_cursor < left_row_end && right_cursor < right_col_end)
       {
-        usize k_left  = left.col_indices[left_cursor];
-        usize k_right = right.row_indices[right_cursor];
-        usize k = MIN(k_left, k_right);
+        usize left_col  = LOAD(left.col_indices[left_cursor]);
+        usize right_row = LOAD(right.row_indices[right_cursor]);
+        usize k = MIN(left_col, right_row);
 
-        if (k_left == k && k_right == k)
+        if (left_col == k && right_row == k)
         {
           f64 left_value  = LOAD(left.values[left_cursor]);
           f64 right_value = LOAD(right.values[right_cursor]);
-          sum += left_value * right_value;
+          FMADD(result_value, left_value, right_value);
 
         }
-        left_cursor  += (usize)(k_left == k);
-        right_cursor += (usize)(k_right == k);
+        left_cursor  += (usize)(left_col == k);
+        right_cursor += (usize)(right_row == k);
       }
 
       usize output_index = left_row * output.col_count + right_col;
-      output.values[output_index] = sum;
+      STORE(output.values[output_index], result_value);
     }
   }
 
