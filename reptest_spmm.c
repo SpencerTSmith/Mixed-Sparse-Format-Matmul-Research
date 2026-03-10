@@ -370,7 +370,7 @@ void matmul_dense_csr(Repetition_Tester *tester, Operation_Parameters *params)
         f64 right_value = LOAD(right.values[rj]);
 
         usize output_index = row * output.col_count + col;
-        f64 output_value   = output.values[output_index];
+        f64 output_value   = LOAD(output.values[output_index]);
 
         FMADD(output_value, left_value, right_value);
 

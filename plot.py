@@ -9,7 +9,9 @@ def formula_dense_dense(LRC, LCC, RCC, LNZ, RNZ):
     return flops, memops
 
 def formula_dense_csr(LRC, LCC, RCC, LNZ, RNZ):
-    return 0, 0
+    flops = 2 * LRC * RNZ
+    memops = (3 * LRC * RRC) + (4 * LRC * RRC * RNZ)
+    return flops, memops
 
 def formula_dense_csc(LRC, LCC, RCC, LNZ, RNZ):
     return 0, 0
