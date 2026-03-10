@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import os
 
 def formula_dense_dense(LRC, LCC, RCC, LNZ, RNZ):
     flops = 2 * LRC * LCC * RCC
@@ -10,11 +11,13 @@ def formula_dense_dense(LRC, LCC, RCC, LNZ, RNZ):
 
 def formula_dense_csr(LRC, LCC, RCC, LNZ, RNZ):
     flops = 2 * LRC * RNZ
-    memops = (3 * LRC * RRC) + (4 * LRC * RRC * RNZ)
+    memops = (3 * LRC * RRC) + (4 * LRC * RNZ)
     return flops, memops
 
 def formula_dense_csc(LRC, LCC, RCC, LNZ, RNZ):
-    return 0, 0
+    flops = 2 * LRC * RNZ
+    memops = (3 * LRC * RCC) + (3 * LRC * RNZ)
+    return flops, memops
 
 def formula_csr_dense(LRC, LCC, RCC, LNZ, RNZ):
     flops = 2 * LNZ * RCC
@@ -42,7 +45,9 @@ def formula_csc_dense(LRC, LCC, RCC, LNZ, RNZ):
     return flops, memops
 
 def formula_csc_csr(LRC, LCC, RCC, LNZ, RNZ):
-    return 0, 0
+    flops = 2 * LNZ * RNZ / RRC
+    memops = (4 * RRC) + (2 * LNZ) + (4 * LNZ * RNZ / RRC)
+    return flops, memops
 
 def formula_csc_csc(LRC, LCC, RCC, LNZ, RNZ):
     flops = (2 * RNZ * LNZ / LCC)
@@ -81,7 +86,8 @@ for i, csv_file in enumerate(csv_files):
     time = data['time'].values
     byte = data['bytes'].values
 
-    formula_func = formula_map.get(csv_file.removesuffix('.csv'), None)
+    basename = os.path.basename(csv_file).removesuffix('.csv')
+    formula_func = formula_map.get(basename, None)
 
     if not formula_func:
         print(f"No formula defined for file: {csv_file}")
@@ -103,54 +109,72 @@ for i, csv_file in enumerate(csv_files):
     if np.isscalar(formula_memops):
         formula_memops = np.full_like(densities, formula_memops)
 
-    plt.subplot(1,4,1)
-    plt.plot(densities, observed_flops, 'o', label=f'{csv_file}: Observed',
+    plt.subplot(2,3,1)
+    plt.plot(densities, observed_flops, 'o', label=f'{basename}: Observed',
              color=colors[i], markersize=4)
-    plt.plot(densities, formula_flops, '--', label=f'{csv_file}: Formula',
+    plt.plot(densities, formula_flops, '--', label=f'{basename}: Formula',
              color=colors[i],)
     plt.xlabel('Density')
     plt.ylabel('Flops')
     plt.title('Flops')
     plt.grid(True)
 
-    plt.subplot(1,4,2)
-    plt.plot(densities, observed_memops, 'o', label=f'{csv_file}: Observed',
+    plt.subplot(2,3,2)
+    plt.plot(densities, observed_memops, 'o', label=f'{basename}: Observed',
              color=colors[i], markersize=4)
-    plt.plot(densities, formula_memops, '--', label=f'{csv_file}: Formula',
+    plt.plot(densities, formula_memops, '--', label=f'{basename}: Formula',
              color=colors[i])
     plt.xlabel('Density')
     plt.ylabel('Memops')
     plt.title('Memops')
     plt.grid(True)
 
-    plt.subplot(1,4,3)
-    plt.plot(densities, time, '-', label=f'{csv_file}: Time',
+    plt.subplot(2,3,3)
+    plt.plot(densities, time, '-', label=f'{basename}: Time',
              color=colors[i], markersize=4)
     plt.xlabel('Density')
     plt.ylabel('Timestamp Cycles')
     plt.title('Runtime Performance')
     plt.grid(True)
 
-    plt.subplot(1,4,4)
+    plt.subplot(2,3,4)
+    relative_flop_error = (formula_flops - observed_flops) / observed_flops
+    plt.plot(densities, relative_flop_error, '--', label=f'{basename}',
+             color=colors[i])
+    plt.xlabel('Density')
+    plt.ylabel('Relative Error')
+    plt.title('Formula Flops Relative Error')
+    plt.grid(True)
+
+    plt.subplot(2,3,5)
+    relative_memop_error = (formula_memops - observed_memops) / observed_memops
+    plt.plot(densities, relative_memop_error, '--', label=f'{basename}',
+             color=colors[i])
+    plt.xlabel('Density')
+    plt.ylabel('Relative Error')
+    plt.title('Formula Memops Relative Error')
+    plt.grid(True)
 
     flops_per_byte = observed_flops / byte
     flops_per_cycle = observed_flops / time
+
     # HACK: Just hardcoding after measuring. Automate this by dumping it from roofline test
     peak_flops_per_cycle = 27.311
     peak_bytes_per_cycle = 30.041
 
-    plt.axhline(y=peak_flops_per_cycle, color='black', linestyle='--', label='Peak FLOP/cycle')
-    x = np.logspace(-3, 3, 100)
-    plt.plot(x, np.minimum(peak_bytes_per_cycle * x, peak_flops_per_cycle),
-            color='black', linestyle='-', label='Memory bound')
-
-    plt.plot(flops_per_byte, flops_per_cycle, 'o-', color=colors[i], label=csv_file, markersize=4)
+    plt.subplot(2,3,6)
+    plt.plot(flops_per_byte, flops_per_cycle, 'o-', color=colors[i], label=basename, markersize=4)
     plt.xscale('log')
     plt.yscale('log')
     plt.xlabel('Arithmetic Intensity (FLOP/byte)')
     plt.ylabel('FLOP/cycle')
     plt.title('Roofline')
     plt.grid(True)
+
+plt.axhline(y=peak_flops_per_cycle, color='black', linestyle='--', label='Peak FLOP/cycle')
+x = np.logspace(-3, 3, 100)
+plt.plot(x, np.minimum(peak_bytes_per_cycle * x, peak_flops_per_cycle),
+            color='black', linestyle='-', label='Memory bound')
 
 handles, labels = plt.gca().get_legend_handles_labels()
 plt.figlegend(handles, labels, loc='lower center', ncol=4, fontsize=7)

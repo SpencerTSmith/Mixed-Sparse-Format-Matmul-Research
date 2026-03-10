@@ -293,6 +293,7 @@ void matmul_csr_csc(Repetition_Tester *tester, Operation_Parameters *params)
           FMADD(result_value, left_value, right_value);
 
         }
+
         left_cursor  += (usize)(left_col == k);
         right_cursor += (usize)(right_row == k);
       }
@@ -340,7 +341,6 @@ void matmul_csc_csr(Repetition_Tester *tester, Operation_Parameters *params)
       }
     }
   }
-
 
   repetition_tester_close_time(tester);
 }
@@ -399,10 +399,10 @@ void matmul_dense_csc(Repetition_Tester *tester, Operation_Parameters *params)
       f64 output_value = 0.0;
 
       usize right_col_start = LOAD(right.col_pointers[col]);
-      usize right_col_close   = LOAD(right.col_pointers[col + 1]);
+      usize right_col_close = LOAD(right.col_pointers[col + 1]);
       for (usize kc = right_col_start; kc < right_col_close; kc++)
       {
-        usize k = right.row_indices[kc];
+        usize k = LOAD(right.row_indices[kc]);
         f64 right_value = LOAD(right.values[kc]);
 
         usize left_index = row * left.col_count + k;
@@ -572,6 +572,7 @@ int main(int arg_count, char **args)
   {
     0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09,
     0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,
+    1.0,
   };
 #else
   f64 densities[] =
