@@ -468,25 +468,40 @@ Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, u32
   return params;
 }
 
-int main(int arg_count, char **args)
+int main(int argc, char **argv)
 {
-  // TODO: Just use my args
-  if (arg_count < 5)
-  {
-    printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [inner_count] [verify/no-verify] [sweep-left/sweep-right/sweep-both]\n", args[0]);
-    return -1;
-  }
-
   Arena arena = arena_make(.reserve_size = GB(64));
 
-  u32 seconds_to_try_for_min = atoi(args[1]);
+  Args args = parse_args(&arena, argc, argv);
+  b32 verify = args_has_flag(&args, STR("verify"));
+
+  u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 3);
+
+  u32 row_count   = args_get_integer_value(&args, STR("row_count"), 16);
+  u32 col_count   = args_get_integer_value(&args, STR("col_count"), 16);
+  u32 inner_count = args_get_integer_value(&args, STR("inner_count"), 256);
+
+  String sweep_string = args_get_string_value(&args, STR("sweep"), STR("both"));
+
+  b32 sweep_left  = false;
+  b32 sweep_right = false;
+  if (string_match(sweep_string, STR("both")))
+  {
+    sweep_left  = true;
+    sweep_right = true;
+  }
+  else if (string_match(sweep_string, STR("left")))
+  {
+    sweep_left  = true;
+  }
+  else if (string_match(sweep_string, STR("right")))
+  {
+    sweep_right = true;
+  }
+
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
-  u32 row_count = atoi(args[2]);
-  u32 col_count = atoi(args[3]);
-  u32 inner_count = atoi(args[4]);
-
-  if (arg_count == 6 && (strcmp(args[5], "verify") == 0))
+  if (verify)
   {
     // Arbitrary sparsity to check
     Operation_Parameters params = init_params(&arena, row_count, col_count, inner_count, 0.4, 0.4);
@@ -524,25 +539,6 @@ int main(int arg_count, char **args)
     if (!had_failure)
     {
       LOG_INFO("All entries match reference");
-    }
-  }
-
-  b32 sweep_left  = false;
-  b32 sweep_right = false;
-  if (arg_count == 7)
-  {
-    if (strcmp(args[6], "sweep-left") == 0)
-    {
-      sweep_left = true;
-    }
-    else if (strcmp(args[6], "sweep-right") == 0)
-    {
-      sweep_right = true;
-    }
-    else if (strcmp(args[6], "sweep-both") == 0)
-    {
-      sweep_left  = true;
-      sweep_right = true;
     }
   }
 
