@@ -6,8 +6,8 @@ roofline_asm:
 
 observe: roofline_asm
 	gcc ${CFLAGS} -DOBSERVE_FLOPS -DOBSERVE_MEMOPS reptest_spmm.c roofline.a -o reptest.x
-	./reptest.x 3 16 16 256 verify
+	./reptest.x 3 16 16 256 verify sweep-left
 
 run: roofline_asm
 	gcc ${CFLAGS} roofline.a src/reptest_spmm.c roofline.a -o reptest.x
-	./reptest.x 3 16 16 256 verify
+	./reptest.x 3 16 16 256 verify sweep-left

@@ -293,7 +293,6 @@ void matmul_csr_csc(Repetition_Tester *tester, Operation_Parameters *params)
           FMADD(result_value, left_value, right_value);
 
         }
-
         left_cursor  += (usize)(left_col == k);
         right_cursor += (usize)(right_row == k);
       }
@@ -341,6 +340,7 @@ void matmul_csc_csr(Repetition_Tester *tester, Operation_Parameters *params)
       }
     }
   }
+
 
   repetition_tester_close_time(tester);
 }
@@ -399,10 +399,10 @@ void matmul_dense_csc(Repetition_Tester *tester, Operation_Parameters *params)
       f64 output_value = 0.0;
 
       usize right_col_start = LOAD(right.col_pointers[col]);
-      usize right_col_close = LOAD(right.col_pointers[col + 1]);
+      usize right_col_close   = LOAD(right.col_pointers[col + 1]);
       for (usize kc = right_col_start; kc < right_col_close; kc++)
       {
-        usize k = LOAD(right.row_indices[kc]);
+        usize k = right.row_indices[kc];
         f64 right_value = LOAD(right.values[kc]);
 
         usize left_index = row * left.col_count + k;
@@ -441,10 +441,10 @@ b32 epsilon_equal(f64 a, f64 b)
   return fabs(a - b) <= epsilon;
 }
 
-Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, u32 inner_count, f64 density)
+Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, u32 inner_count, f64 left_density, f64 right_density)
 {
-  Dense_Matrix left_dense  = make_random_dense_matrix(arena, row_count, inner_count, density);
-  Dense_Matrix right_dense = make_random_dense_matrix(arena, inner_count, col_count, density);
+  Dense_Matrix left_dense  = make_random_dense_matrix(arena, row_count, inner_count, left_density);
+  Dense_Matrix right_dense = make_random_dense_matrix(arena, inner_count, col_count, right_density);
   Dense_Matrix output =
   {
     .row_count = row_count,
@@ -470,9 +470,10 @@ Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, u32
 
 int main(int arg_count, char **args)
 {
+  // TODO: Just use my args
   if (arg_count < 5)
   {
-    printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [inner_count] [verify/no-verify]\n", args[0]);
+    printf("Usage: %s [seconds_to_try_for_min] [row_count] [col_count] [inner_count] [verify/no-verify] [sweep-left/sweep-right/sweep-both]\n", args[0]);
     return -1;
   }
 
@@ -485,48 +486,115 @@ int main(int arg_count, char **args)
   u32 col_count = atoi(args[3]);
   u32 inner_count = atoi(args[4]);
 
-  if (arg_count == 6)
+  if (arg_count == 6 && (strcmp(args[5], "verify") == 0))
   {
-    if (strcmp(args[5], "verify") == 0)
+    // Arbitrary sparsity to check
+    Operation_Parameters params = init_params(&arena, row_count, col_count, inner_count, 0.4, 0.4);
+
+    b32 had_failure = false;
+    Repetition_Tester dummy = {0};
+    // Just gonna take a copy of the dense dense to compare against
+    matmul_dense_dense(&dummy, &params);
+
+    usize count = params.output.row_count * params.output.col_count;
+    f64 *reference = arena_calloc(&arena, count, f64);
+    MEM_COPY(reference, params.output.values, sizeof(f64) * count);
+
+    for (isize i = 1; i < STATIC_COUNT(test_entries); i++)
     {
-      // Arbitrary sparsity to check
-      Operation_Parameters params = init_params(&arena, row_count, col_count, inner_count, 0.4);
+      Operation_Entry *entry = test_entries + i;
 
-      b32 had_failure = false;
-      Repetition_Tester dummy = {0};
-      // Just gonna take a copy of the dense dense to compare against
-      matmul_dense_dense(&dummy, &params);
+      MEM_SET(params.output.values, sizeof(f64) * params.output.row_count * params.output.col_count, 0);
+      entry->function(&dummy, &params);
 
-      usize count = params.output.row_count * params.output.col_count;
-      f64 *reference = arena_calloc(&arena, count, f64);
-      MEM_COPY(reference, params.output.values, sizeof(f64) * count);
-
-      for (isize i = 1; i < STATIC_COUNT(test_entries); i++)
+      for (isize v = 0; v < count; v++)
       {
-        Operation_Entry *entry = test_entries + i;
-
-        MEM_SET(params.output.values, sizeof(f64) * params.output.row_count * params.output.col_count, 0);
-        entry->function(&dummy, &params);
-
-        for (isize v = 0; v < count; v++)
+        if (!epsilon_equal(params.output.values[v], reference[v]))
         {
-          if (!epsilon_equal(params.output.values[v], reference[v]))
-          {
-            LOG_ERROR("Entry '%.*s' does not match reference (%f:%f)",
-                      STRF(entry->name), reference[v], params.output.values[v]);
-            had_failure = true;
-            break;
-          }
+          LOG_ERROR("Entry '%.*s' does not match reference (%f:%f)",
+                    STRF(entry->name), reference[v], params.output.values[v]);
+          had_failure = true;
+          break;
         }
       }
+    }
 
-      arena_clear(&arena);
+    arena_clear(&arena);
 
-      if (!had_failure)
+    if (!had_failure)
+    {
+      LOG_INFO("All entries match reference");
+    }
+  }
+
+  b32 sweep_left  = false;
+  b32 sweep_right = false;
+  if (arg_count == 7)
+  {
+    if (strcmp(args[6], "sweep-left") == 0)
+    {
+      sweep_left = true;
+    }
+    else if (strcmp(args[6], "sweep-right") == 0)
+    {
+      sweep_right = true;
+    }
+    else if (strcmp(args[6], "sweep-both") == 0)
+    {
+      sweep_left  = true;
+      sweep_right = true;
+    }
+  }
+
+#if 1
+  f64 densities[] =
+  {
+    0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09,
+    0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9, 1.0,
+  };
+#else
+  f64 densities[] =
+  {
+    0.1,
+  };
+#endif
+
+  Repetition_Tester testers[STATIC_COUNT(test_entries)][STATIC_COUNT(densities)] = {0};
+
+  u32 non_zero_counts[STATIC_COUNT(densities)][2] = {0};
+
+  for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
+  {
+    // TODO: Make the non-sweeping density controllable.
+    f64 left_density = sweep_left ? densities[density_idx] : 1.0;
+    f64 right_density = sweep_right ? densities[density_idx] : 1.0;
+
+    // FIXME: So SLOW! But don't know of a better way to test a bunch of densities of different
+    // matrix sizes
+    Operation_Parameters params = init_params(&arena,
+                                              row_count, col_count, inner_count,
+                                              left_density, right_density);
+
+    // NOTE: Should be the same across all formats, so just look at csr
+    non_zero_counts[density_idx][0] = params.left.csr.non_zero_count;
+    non_zero_counts[density_idx][1] = params.right.csr.non_zero_count;
+
+    for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
+    {
+      Repetition_Tester *tester = &testers[func_idx][density_idx];
+      Operation_Entry *entry = test_entries + func_idx;
+
+      printf("\n--- %.*s @ %.4f X %.4f density ---\n", STRF(entry->name), left_density, right_density);
+      printf("                                                          \r");
+      repetition_tester_new_wave(tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
+
+      while (repetition_tester_is_testing(tester))
       {
-        LOG_INFO("All entries match reference");
+        entry->function(tester, &params);
       }
     }
+
+    arena_clear(&arena); // Reset any memory taken by params
   }
 
   // Roofline
@@ -565,56 +633,6 @@ int main(int arg_count, char **args)
 
       printf("Roofline flops/cycle: %f\n", (f64)flops/time);
     }
-  }
-
-#if 1
-  f64 densities[] =
-  {
-    0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09,
-    0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,
-    1.0,
-  };
-#else
-  f64 densities[] =
-  {
-    0.1,
-  };
-#endif
-
-  Repetition_Tester testers[STATIC_COUNT(test_entries)][STATIC_COUNT(densities)] = {0};
-
-  u32 non_zero_counts[STATIC_COUNT(densities)][2] = {0};
-
-  for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
-  {
-    // FIXME: So SLOW! But don't know of a better way to test a bunch of densities of different
-    // matrix sizes
-    Operation_Parameters params = init_params(&arena,
-                                              row_count, col_count, inner_count,
-                                              densities[density_idx]);
-
-    // NOTE: Should be the same across all formats, so just look at csr
-    non_zero_counts[density_idx][0] = params.left.csr.non_zero_count;
-    non_zero_counts[density_idx][1] = params.right.csr.non_zero_count;
-
-    f64 density = densities[density_idx];
-
-    for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
-    {
-      Repetition_Tester *tester = &testers[func_idx][density_idx];
-      Operation_Entry *entry = test_entries + func_idx;
-
-      printf("\n--- %.*s @ %.4f density ---\n", STRF(entry->name), density);
-      printf("                                                          \r");
-      repetition_tester_new_wave(tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
-
-      while (repetition_tester_is_testing(tester))
-      {
-        entry->function(tester, &params);
-      }
-    }
-
-    arena_clear(&arena); // Reset any memory taken by params
   }
 
   // Dump csv
