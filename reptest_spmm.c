@@ -402,7 +402,7 @@ void matmul_dense_csc(Repetition_Tester *tester, Operation_Parameters *params)
       usize right_col_close   = LOAD(right.col_pointers[col + 1]);
       for (usize kc = right_col_start; kc < right_col_close; kc++)
       {
-        usize k = right.row_indices[kc];
+        usize k = LOAD(right.row_indices[kc]);
         f64 right_value = LOAD(right.values[kc]);
 
         usize left_index = row * left.col_count + k;
