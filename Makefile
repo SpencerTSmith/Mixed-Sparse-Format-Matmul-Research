@@ -1,7 +1,7 @@
 CFLAGS := -g -DDEBUG -O0 -lm
 
-SECONDS := 3
-SWEEP   := left
+SECONDS := 2
+SWEEP   := right
 
 roofline_asm:
 	nasm -f elf64 -o roofline.o roofline.asm
