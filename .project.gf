@@ -1,4 +1,4 @@
 [executable]
-path=reptest.x
-arguments=5 16 16 256 verify
+path=sparse_blis.x
+arguments=--verify
 ask_directory=1

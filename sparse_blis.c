@@ -49,20 +49,16 @@ struct Blocking_Description
   usize col_count;
 };
 
-typedef struct Multiformat_Matrix Multiformat_Matrix;
+typedef struct Multiformat_Matrix Multisparse_Matrix;
 struct Multiformat_Matrix
 {
   // Overall.
   usize row_count;
   usize col_count;
 
-  // How many blocks
+  Matrix_Union *blocks;
   usize blocks_row_count;
   usize blocks_col_count;
-
-  // For left  blocks should be of size MR x KC
-  // For right blocks should be of size KC x NR
-  Matrix_Union *blocks;
 };
 
 
@@ -77,11 +73,11 @@ Dense_Matrix pack_matrix_block(Arena *arena, Dense_Matrix parent, usize row_star
     .col_count = col_block_size,
   };
 
-  for (usize row = row_start; row < row_block_size; row += 1)
+  for (usize row = 0; row < row_block_size; row += 1)
   {
-    for (usize col = col_start; col < col_block_size; col += 1)
+    for (usize col = 0; col < col_block_size; col += 1)
     {
-      result.values[row * result.col_count + col] = parent.values[row * parent.col_count + col];
+      result.values[row * result.col_count + col] = parent.values[(row + row_start) * parent.col_count + (col + col_start)];
     }
   }
 
@@ -89,15 +85,17 @@ Dense_Matrix pack_matrix_block(Arena *arena, Dense_Matrix parent, usize row_star
 }
 
 static
-Multiformat_Matrix multi_sparsify(Arena *arena, Dense_Matrix matrix,
+Multisparse_Matrix multi_sparsify(Arena *arena, Dense_Matrix matrix,
                                   Blocking_Description blocking)
 {
-  Multiformat_Matrix result = {0};
-  result.blocks_row_count = result.row_count / blocking.row_count;
-  result.blocks_col_count = result.col_count / blocking.col_count;
+  Multisparse_Matrix result = {0};
   result.row_count = matrix.row_count;
   result.col_count = matrix.col_count;
-  result.blocks = arena_calloc(arena, result.blocks_row_count * result.blocks_col_count, f64);
+  result.blocks_row_count = result.row_count / blocking.row_count;
+  result.blocks_col_count = result.col_count / blocking.col_count;
+  ASSERT(result.row_count % blocking.row_count == 0, "Block size must be a factor of matrix size.");
+  ASSERT(result.col_count % blocking.col_count == 0, "Block size must be a factor of matrix size.");
+  result.blocks = arena_calloc(arena, result.blocks_row_count * result.blocks_col_count, Matrix_Union);
 
   for (usize block_row = 0; block_row < result.blocks_row_count; block_row += 1)
   {
@@ -113,6 +111,7 @@ Multiformat_Matrix multi_sparsify(Arena *arena, Dense_Matrix matrix,
       // if we make it sparse.
       Dense_Matrix dense_block = pack_matrix_block(arena, matrix, actual_row, actual_col,
                                                    blocking.row_count, blocking.col_count);
+
       Matrix_Union sub_matrix = {0};
       switch (format)
       {
@@ -154,22 +153,169 @@ Multiformat_Matrix multi_sparsify(Arena *arena, Dense_Matrix matrix,
   return result;
 }
 
-static
-Matrix_Union get_matrix_block(Multiformat_Matrix matrix, usize row_block, usize col_block)
+typedef enum Matrix_Format_Dispatch
 {
-  // TODO:
-  Matrix_Union result = {0};
+  MAT_COMBO_DENSE_DENSE,
+  MAT_COMBO_DENSE_CSR,
+  MAT_COMBO_DENSE_CSC,
+  MAT_COMBO_CSR_DENSE,
+  MAT_COMBO_CSR_CSR,
+  MAT_COMBO_CSR_CSC,
+  MAT_COMBO_CSC_DENSE,
+  MAT_COMBO_CSC_CSR,
+  MAT_COMBO_CSC_CSC,
+} Matrix_Format_Dispatch;
 
-  return result;
+static
+void do_sparse_microkernel(Dense_Matrix output, Matrix_Union left_union, Matrix_Union right_union)
+{
+  ASSERT(left_union.format != MAT_NONE, "Invalid Matrix Format for micro-kernel.");
+  ASSERT(right_union.format != MAT_NONE, "Invalid Matrix Format for micro-kernel.");
+
+  Matrix_Format_Dispatch dispatch = (left_union.format - 1) * (MAT_COUNT - 1) + (right_union.format - 1);
+  switch (dispatch)
+  {
+    default:
+    {
+      LOG_ERROR("Invalid matrix format dispatch.");;
+    }
+    case MAT_COMBO_DENSE_DENSE:
+    {
+      Dense_Matrix left  = left_union.dense;
+      Dense_Matrix right = right_union.dense;
+      dense_x_dense(output, left, right);
+    } break;
+    case MAT_COMBO_DENSE_CSR:
+    {
+      Dense_Matrix left = left_union.dense;
+      CSR_Matrix right  = right_union.csr;
+      dense_x_csr(output, left, right);
+    } break;
+    case MAT_COMBO_DENSE_CSC:
+    {
+      Dense_Matrix left = left_union.dense;
+      CSC_Matrix right  = right_union.csc;
+      dense_x_csc(output, left, right);
+    } break;
+    case MAT_COMBO_CSR_DENSE:
+    {
+      CSR_Matrix left    = left_union.csr;
+      Dense_Matrix right = right_union.dense;
+      csr_x_dense(output, left, right);
+    } break;
+    case MAT_COMBO_CSR_CSR:
+    {
+      CSR_Matrix left  = left_union.csr;
+      CSR_Matrix right = right_union.csr;
+      csr_x_csr(output, left, right);
+    } break;
+    case MAT_COMBO_CSR_CSC:
+    {
+      CSR_Matrix left  = left_union.csr;
+      CSC_Matrix right = right_union.csc;
+      csr_x_csc(output, left, right);
+    } break;
+    case MAT_COMBO_CSC_DENSE:
+    {
+      CSC_Matrix left    = left_union.csc;
+      Dense_Matrix right = right_union.dense;
+      csc_x_dense(output, left, right);
+    } break;
+    case MAT_COMBO_CSC_CSR:
+    {
+      CSC_Matrix left  = left_union.csc;
+      CSR_Matrix right = right_union.csr;
+      csc_x_csr(output, left, right);
+    } break;
+    case MAT_COMBO_CSC_CSC:
+    {
+      CSC_Matrix left  = left_union.csc;
+      CSC_Matrix right = right_union.csc;
+      csc_x_csc(output, left, right);
+    } break;
+  }
 }
 
 static
-Dense_Matrix do_sparse_microkernel(Matrix_Union left, Matrix_Union right)
+Dense_Matrix sparse_blis(Arena *arena, Multisparse_Matrix left, Multisparse_Matrix right)
 {
-  // TODO:
-  Dense_Matrix result = {0};
+  ASSERT(left.col_count == right.row_count, "Matrices are not compatible for multiplication.");
 
-  return result;
+  Dense_Matrix output =
+  {
+    .row_count = left.row_count,
+    .col_count = right.col_count,
+    .values = arena_calloc(arena, left.row_count * right.col_count, f64),
+  };
+
+  usize block_m = left.blocks_row_count;
+  usize block_n = right.blocks_col_count;
+  usize block_k = left.blocks_col_count;
+
+  // I still really don't understand what this blocking gets us when sparse. A simpler loop structure I
+  // think would be able to get all the reuse out of our smaller blocks.
+
+  // Since we iterate by blocks and not be elements, gotta change steps and conditions.
+  for (usize block_j_o = 0; block_j_o < block_n; block_j_o += BLOCK_NC / BLOCK_NR)
+  {
+    for (usize block_p_o = 0; block_p_o < block_k; block_p_o += BLOCK_KC / BLOCK_KU)
+    {
+      // DLT for B usually here.
+
+      for (usize block_i_o = 0; block_i_o < block_m; block_i_o += BLOCK_MC / BLOCK_MR)
+      {
+        // DLT for A usually here.
+
+        for (usize block_j_i = 0; block_j_i < BLOCK_NC / BLOCK_NR; block_j_i += 1)
+        {
+          for (usize block_i_i = 0; block_i_i < BLOCK_MC / BLOCK_MR; block_i_i += 1)
+          {
+            Dense_Matrix temp =
+            {
+              .values = (f64[BLOCK_MR * BLOCK_NR]) {0},
+              .row_count = BLOCK_MR,
+              .col_count = BLOCK_NR,
+            };
+
+            for (usize block_p_i = 0; block_p_i < BLOCK_KC / BLOCK_KU; block_p_i += 1)
+            {
+              usize block_i = block_i_o + block_i_i;
+              usize block_j = block_j_o + block_j_i;
+              usize block_p = block_p_o + block_p_i;
+
+              Matrix_Union left_block  = left.blocks[block_i * left.blocks_col_count + block_p];
+              Matrix_Union right_block = right.blocks[block_p * right.blocks_col_count + block_j];
+              do_sparse_microkernel(temp, left_block, right_block);
+            }
+
+            // Update output with temp
+            for (usize j_r = 0; j_r < BLOCK_NR; j_r += 1)
+            {
+              for (usize i_r = 0; i_r < BLOCK_MR; i_r += 1)
+              {
+                usize row = (block_i_o + block_i_i) * BLOCK_MR + i_r;
+                usize col = (block_j_o + block_j_i) * BLOCK_NR + j_r;
+
+                output.values[row * output.col_count + col] += temp.values[i_r * temp.col_count + j_r];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return output;
+}
+
+#include <math.h>
+
+static
+b32 epsilon_equal(f64 a, f64 b)
+{
+  f64 epsilon = 0.00001;
+
+  return fabs(a - b) <= epsilon;
 }
 
 int main(int argc, char **argv)
@@ -177,77 +323,64 @@ int main(int argc, char **argv)
   Arena arena = arena_make(.reserve_size = GB(64));
   Args args = parse_args(&arena, argc, argv);
 
+  b32 verify = args_has_flag(&args, STR("verify"));
+
   f64 left_density  = args_get_f64_value(&args, STR("left_density"),  0.1);
   f64 right_density = args_get_f64_value(&args, STR("right_density"), 0.1);
 
   // TODO: Load from file argument
-  Dense_Matrix left_dense  = make_random_dense_matrix(&arena, BLOCK_MR, BLOCK_KC, left_density);
-  Dense_Matrix right_dense = make_random_dense_matrix(&arena, BLOCK_KC, BLOCK_NR, right_density);
+#define MATRIX_SIZE 1024
+  Dense_Matrix left_dense  = make_random_dense_matrix(&arena, MATRIX_SIZE, MATRIX_SIZE, left_density);
+  Dense_Matrix right_dense = make_random_dense_matrix(&arena, MATRIX_SIZE, MATRIX_SIZE, right_density);
 
   Blocking_Description left_blocking =
   {
-    .block_formats = (Matrix_Format[BLOCK_MR * BLOCK_KC]){0}, // TODO
+    .block_formats = (Matrix_Format[(MATRIX_SIZE/BLOCK_MR) * (MATRIX_SIZE/BLOCK_KU)]){0},
     .row_count     = BLOCK_MR,
-    .col_count     = BLOCK_KC,
+    .col_count     = BLOCK_KU,
   };
-  Multiformat_Matrix left  = multi_sparsify(&arena, left_dense, left_blocking);
+  for (usize i = 0; i < (MATRIX_SIZE/BLOCK_MR) * (MATRIX_SIZE/BLOCK_KU); i += 1) { left_blocking.block_formats[i] = MAT_DENSE; }
+  Multisparse_Matrix left  = multi_sparsify(&arena, left_dense, left_blocking);
 
   Blocking_Description right_blocking =
   {
-    .block_formats = (Matrix_Format[BLOCK_KC * BLOCK_NR]){0}, // TODO
-    .row_count     = BLOCK_KC,
+    .block_formats = (Matrix_Format[(MATRIX_SIZE/BLOCK_KU) * (MATRIX_SIZE/BLOCK_NR)]){0},
+    .row_count     = BLOCK_KU,
     .col_count     = BLOCK_NR,
   };
-  Multiformat_Matrix right = multi_sparsify(&arena, right_dense, right_blocking);
+  for (usize i = 0; i < (MATRIX_SIZE/BLOCK_KU) * (MATRIX_SIZE/BLOCK_NR); i += 1) { right_blocking.block_formats[i] = MAT_CSC; }
+  Multisparse_Matrix right = multi_sparsify(&arena, right_dense, right_blocking);
 
-  ASSERT(left.col_count == right.row_count, "Matrices are not compatible for multiplication.");
+  Dense_Matrix output = sparse_blis(&arena, left, right);
 
-  Dense_Matrix output =
+  if (verify)
   {
-    .row_count = left.row_count,
-    .col_count = right.col_count,
-    .values = arena_calloc(&arena, left.row_count * right.col_count, f64),
-  };
+    b32 had_failure = false;
 
-  // TODO: Fringes if present
-  usize m = left.row_count;
-  usize n = right.col_count;
-  usize k = left.col_count;
-
-  for (usize j_o = 0; j_o < n; j_o += BLOCK_NC)
-  {
-    for (usize p_o = 0; p_o < k; p_o += BLOCK_KC)
+    Dense_Matrix reference =
     {
-      // DLT for B usually here.
+      .row_count = left.row_count,
+      .col_count = right.col_count,
+      .values = arena_calloc(&arena, left.row_count * right.col_count, f64),
+    };
 
-      for (usize i_o = 0; i_o < BLOCK_NR; i_o += BLOCK_MC)
+    dense_x_dense(reference, left_dense, right_dense);
+
+    for (usize i = 0; i < output.row_count * output.col_count; i += 1)
+    {
+      if (!epsilon_equal(output.values[i], reference.values[i]))
       {
-        // DLT for A usually here.
-
-        for (usize j_i = 0; j_i < BLOCK_NC; j_i += BLOCK_NR)
-        {
-          for (usize i_i = 0; i_i < BLOCK_NC; i_i += BLOCK_NR)
-          {
-            Matrix_Union left_block  = get_matrix_block(left, i_i, j_i);
-            Matrix_Union right_block = get_matrix_block(left, j_i, i_i);
-            Dense_Matrix temp = do_sparse_microkernel(left_block, right_block);
-
-            // Update output with temp
-            for (usize j_r = 0; j_r < BLOCK_NR; j_r += 1)
-            {
-              for (usize i_r = 0; i_r < BLOCK_MR; i_r += 1)
-              {
-                // TODO: allow for different orderings
-                usize j = j_o + j_i + j_r;
-                usize i = i_o + i_i + i_r;
-
-                output.values[i * output.col_count + j] +=
-                  temp.values[i_r * temp.col_count + j_r];
-              }
-            }
-          }
-        }
+        LOG_ERROR("Output does not match reference (%f:%f)", reference.values[i], output.values[i]);
+        had_failure = true;
+        break;
       }
+    }
+
+    arena_clear(&arena);
+
+    if (!had_failure)
+    {
+      LOG_INFO("All entries match reference");
     }
   }
 }

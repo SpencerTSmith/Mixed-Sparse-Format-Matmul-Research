@@ -47,23 +47,6 @@ typedef enum Matrix_Format
   MAT_COUNT,
 } Matrix_Format;
 
-typedef enum Matrix_Format_Combo
-{
-  MAT_COMBO_NONE,
-
-  MAT_COMBO_DENSE_DENSE,
-  MAT_COMBO_DENSE_CSR,
-  MAT_COMBO_DENSE_CSC,
-  MAT_COMBO_CSR_DENSE,
-  MAT_COMBO_CSR_CSR,
-  MAT_COMBO_CSR_CSC,
-  MAT_COMBO_CSC_DENSE,
-  MAT_COMBO_CSC_CSR,
-  MAT_COMBO_CSC_CSC,
-
-  MAT_COMBO_COUNT,
-} Matrix_Format_Combo;
-
 typedef struct Matrix_Union Matrix_Union;
 struct Matrix_Union
 {
@@ -85,13 +68,32 @@ struct Matrix_Reps
   CSC_Matrix   csc;
 };
 
+// FIXME: TODO: Implementations are just copy pasted from the reptest, figure out how to reuse instead while still keeping macro capabilities....
 static
-Dense_Matrix make_random_dense_matrix(Arena *arena, u32 row_count, u32 col_count, f64 density);
+void dense_x_dense(Dense_Matrix output, Dense_Matrix left, Dense_Matrix right);
 
 static
-CSR_Matrix csr_from_dense(Arena *arena, Dense_Matrix *dense);
+void dense_x_csr(Dense_Matrix output, Dense_Matrix left, CSR_Matrix right);
 
 static
-CSC_Matrix csc_from_dense(Arena *arena, Dense_Matrix *dense);
+void dense_x_csc(Dense_Matrix output, Dense_Matrix left, CSC_Matrix right);
+
+static
+void csr_x_dense(Dense_Matrix output, CSR_Matrix left, Dense_Matrix right);
+
+static
+void csr_x_csr(Dense_Matrix output, CSR_Matrix left, CSR_Matrix right);
+
+static
+void csr_x_csc(Dense_Matrix output, CSR_Matrix left, CSC_Matrix right);
+
+static
+void csc_x_dense(Dense_Matrix output, CSC_Matrix left, Dense_Matrix right);
+
+static
+void csc_x_csr(Dense_Matrix output, CSC_Matrix left, CSR_Matrix right);
+
+static
+void csc_x_csc(Dense_Matrix output, CSC_Matrix left, CSC_Matrix right);
 
 #endif // FORMATS_H
