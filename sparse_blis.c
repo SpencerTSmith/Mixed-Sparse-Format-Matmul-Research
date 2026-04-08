@@ -41,6 +41,10 @@
 #error "KU must be a factor of KC.\n"
 #endif
 
+#define BLOCK_I (BLOCK_MC / BLOCK_MR)
+#define BLOCK_J (BLOCK_NC / BLOCK_NR)
+#define BLOCK_P (BLOCK_KC / BLOCK_KU)
+
 typedef struct Blocking_Description Blocking_Description;
 struct Blocking_Description
 {
@@ -95,6 +99,7 @@ Multisparse_Matrix multi_sparsify(Arena *arena, Dense_Matrix matrix,
   result.blocks_col_count = result.col_count / blocking.col_count;
   ASSERT(result.row_count % blocking.row_count == 0, "Block size must be a factor of matrix size.");
   ASSERT(result.col_count % blocking.col_count == 0, "Block size must be a factor of matrix size.");
+
   result.blocks = arena_calloc(arena, result.blocks_row_count * result.blocks_col_count, Matrix_Union);
 
   for (usize block_row = 0; block_row < result.blocks_row_count; block_row += 1)
@@ -178,7 +183,8 @@ void do_sparse_microkernel(Dense_Matrix output, Matrix_Union left_union, Matrix_
     default:
     {
       LOG_ERROR("Invalid matrix format dispatch.");;
-    }
+    } break;
+
     case MAT_COMBO_DENSE_DENSE:
     {
       Dense_Matrix left  = left_union.dense;
@@ -256,19 +262,19 @@ Dense_Matrix sparse_blis(Arena *arena, Multisparse_Matrix left, Multisparse_Matr
   // think would be able to get all the reuse out of our smaller blocks.
 
   // Since we iterate by blocks and not be elements, gotta change steps and conditions.
-  for (usize block_j_o = 0; block_j_o < block_n; block_j_o += BLOCK_NC / BLOCK_NR)
+  for (usize block_j_o = 0; block_j_o < block_n; block_j_o += BLOCK_J)
   {
-    for (usize block_p_o = 0; block_p_o < block_k; block_p_o += BLOCK_KC / BLOCK_KU)
+    for (usize block_p_o = 0; block_p_o < block_k; block_p_o += BLOCK_P)
     {
       // DLT for B usually here.
 
-      for (usize block_i_o = 0; block_i_o < block_m; block_i_o += BLOCK_MC / BLOCK_MR)
+      for (usize block_i_o = 0; block_i_o < block_m; block_i_o += BLOCK_I)
       {
         // DLT for A usually here.
 
-        for (usize block_j_i = 0; block_j_i < BLOCK_NC / BLOCK_NR; block_j_i += 1)
+        for (usize block_j_i = 0; block_j_i < BLOCK_J; block_j_i += 1)
         {
-          for (usize block_i_i = 0; block_i_i < BLOCK_MC / BLOCK_MR; block_i_i += 1)
+          for (usize block_i_i = 0; block_i_i < BLOCK_I; block_i_i += 1)
           {
             Dense_Matrix temp =
             {
@@ -277,7 +283,7 @@ Dense_Matrix sparse_blis(Arena *arena, Multisparse_Matrix left, Multisparse_Matr
               .col_count = BLOCK_NR,
             };
 
-            for (usize block_p_i = 0; block_p_i < BLOCK_KC / BLOCK_KU; block_p_i += 1)
+            for (usize block_p_i = 0; block_p_i < BLOCK_P; block_p_i += 1)
             {
               usize block_i = block_i_o + block_i_i;
               usize block_j = block_j_o + block_j_i;
