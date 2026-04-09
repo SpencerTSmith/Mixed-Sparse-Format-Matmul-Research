@@ -16,10 +16,13 @@ from plot import *
 #   0 ---> dd
 #   1 ---> ds
 #   2 ---> sd
-#   3 ---> ss
-#
 min_format = 0
 max_format = 2
+
+def dummy_csr_csc(LRC, LCC, RCC, LNZ, RNZ):
+    flops = 2 ** 32
+    memops = 2 ** 32
+    return flops, memops
 
 FORMULA_MAP = {
     (0, 0): formula_dense_dense,
@@ -27,7 +30,7 @@ FORMULA_MAP = {
     (0, 2): formula_dense_csc,
     (1, 0): formula_csr_dense,
     (1, 1): formula_csr_csr,
-    (1, 2): formula_csr_csc,
+    (1, 2): dummy_csr_csc,
     (2, 0): formula_csc_dense,
     (2, 1): formula_csc_csr,
     (2, 2): formula_csc_csc,
@@ -48,20 +51,26 @@ model.sparse_formats_range = RangeSet(min_format,max_format)
 model.density_range = RangeSet(1,9) # 10% -- 90%
 
 def density_to_nnz(density_idx, rows, cols):
-    return max(1, int(density_idx / 10 * rows * cols))
+    return int(density_idx / 10 * rows * cols)
 
 costs = {}
 for fa in range(min_format, max_format + 1):
     for fb in range(min_format, max_format + 1):
-        for dA in range(1, 10):
-            for dB in range(1, 10):
+        for dA in range(0, 10):
+            for dB in range(0, 10):
                 LRC = 16
                 LCC = 256
                 RCC = 16
                 LNZ = density_to_nnz(dA, LRC, LCC)
                 RNZ = density_to_nnz(dB, LCC, RCC)
                 flops, memops = FORMULA_MAP[fa, fb](LRC, LCC, RCC, LNZ, RNZ)
-                costs[fa, fb, dA, dB] = memops
+                costs[fa, fb, dA, dB] = flops + memops
+
+# densityA={}
+# for m in range(0, M):
+#     for n in range(0, N):
+#         for density_idx in range(0, 1):
+#             densityA[m,n] = density_idx
 
 # Densities
 # These would be the actual densities of each block of A and B
@@ -173,4 +182,4 @@ for p in model.p_range:
         chosen = next(fb for fb in model.sparse_formats_range if value(model.b_format[p,j,fb]) > 0.5)
         print(f"  B[{p},{j}] (density={densityB[p,j]*10}%) -> {format_names[chosen]}")
 
-print(f"\n=== Total cost: {value(model.total_time):.0f} memops ===")
+print(f"\n=== Total cost: {value(model.total_time):.0f} ===")

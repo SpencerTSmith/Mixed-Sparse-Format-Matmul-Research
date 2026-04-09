@@ -545,8 +545,7 @@ int main(int argc, char **argv)
 #if 1
   f64 densities[] =
   {
-    0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09,
-    0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9, 1.0,
+    0.0, 0.01, 0.05, 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9, 1.0,
   };
 #else
   f64 densities[] =
@@ -593,8 +592,17 @@ int main(int argc, char **argv)
     arena_clear(&arena); // Reset any memory taken by params
   }
 
+  String timestamp = string_timestamp(&arena);
+  mkdir("data/", 0755);
+  String dir = string_formatted(&arena, "data/%.*s", STRF(timestamp));
+  mkdir(string_to_c_string(&arena, dir), 0755);
+
   // Roofline
   {
+    String join[] = {STR("data/"), timestamp, STR("/roofline.csv")};
+    String filename = string_join_array(&arena, (String_Array)TO_ARRAY(join), STR(""));
+
+    FILE *roofline_dump = fopen(string_to_c_string(&arena, filename), "w");
     {
       Repetition_Tester bandwidth_tester = {0};
       repetition_tester_new_wave(&bandwidth_tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
@@ -609,7 +617,7 @@ int main(int argc, char **argv)
       u64 time    = v.v[REPTEST_VALUE_TIME];
       u64 bytes   = v.v[REPTEST_VALUE_BYTE_COUNT];
 
-      printf("Roofline bandwidth: %f\n", (f64)bytes/time);
+      fprintf(roofline_dump, "%f,", (f64)bytes/time);
     }
 
     {
@@ -627,7 +635,7 @@ int main(int argc, char **argv)
       u64 time    = v.v[REPTEST_VALUE_TIME];
       u64 flops   = v.v[REPTEST_VALUE_FLOP_COUNT];
 
-      printf("Roofline flops/cycle: %f\n", (f64)flops/time);
+      fprintf(roofline_dump, "%f\n", (f64)flops/time);
     }
   }
 
@@ -635,12 +643,6 @@ int main(int argc, char **argv)
   for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
   {
     Operation_Entry *entry = test_entries + func_idx;
-
-    // C standard lib just sucks. why no recursive directory creation!?
-    String timestamp = string_timestamp(&arena);
-    mkdir("data/", 0755);
-    String dir = string_formatted(&arena, "data/%.*s", STRF(timestamp));
-    mkdir(string_to_c_string(&arena, dir), 0755);
 
     String join[] = {STR("data/"), timestamp, STR("/"), entry->name,  STR(".csv")};
     String filename = string_join_array(&arena, (String_Array)TO_ARRAY(join), STR(""));

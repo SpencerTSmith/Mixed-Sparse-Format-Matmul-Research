@@ -36,9 +36,10 @@ def formula_csr_csr(LRC, LCC, RCC, LNZ, RNZ):
     memops = (2 * LRC) + (4 * LNZ) + (4 * LNZ * RNZ / LCC)
     return flops, memops
 
+# TODO: Figure this out... messing up other stuff now
 def formula_csr_csc(LRC, LCC, RCC, LNZ, RNZ):
-    flops = 10**9
-    memops = 10**9
+    flops = 0
+    memops = 0
     return flops, memops
 
 def formula_csc_dense(LRC, LCC, RCC, LNZ, RNZ):
@@ -161,10 +162,6 @@ if __name__ == "__main__":
         flops_per_byte = observed_flops / byte
         flops_per_cycle = observed_flops / time
 
-        # HACK: Just hardcoding after measuring. Automate this by dumping it from roofline test
-        peak_flops_per_cycle = 27.311
-        peak_bytes_per_cycle = 30.041
-
         plt.subplot(2,3,6)
         plt.plot(flops_per_byte, flops_per_cycle, 'o-', color=colors[i], label=basename, markersize=4)
         plt.xscale('log')
@@ -174,11 +171,15 @@ if __name__ == "__main__":
         plt.title('Roofline')
         plt.grid(True)
 
-        plt.axhline(y=peak_flops_per_cycle, color='black', linestyle='--', label='Peak FLOP/cycle')
-        x = np.logspace(-3, 3, 100)
-        plt.plot(x, np.minimum(peak_bytes_per_cycle * x, peak_flops_per_cycle),
-                    color='black', linestyle='-', label='Memory bound')
 
+
+    # HACK: Just hardcoding after measuring. Automate this by dumping it from roofline test
+    peak_flops_per_cycle = 27.311
+    peak_bytes_per_cycle = 30.041
+    plt.axhline(y=peak_flops_per_cycle, color='black', linestyle='--', label='Peak FLOP/cycle')
+    x = np.logspace(-3, 3, 100)
+    plt.plot(x, np.minimum(peak_bytes_per_cycle * x, peak_flops_per_cycle),
+                color='black', linestyle='-', label='Memory bound')
     handles, labels = plt.gca().get_legend_handles_labels()
     plt.figlegend(handles, labels, loc='lower center', ncol=4, fontsize=7)
 
