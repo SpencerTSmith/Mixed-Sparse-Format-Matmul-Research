@@ -11,7 +11,7 @@ def formula_dense_dense(LRC, LCC, RCC, LNZ, RNZ):
 
 def formula_dense_csr(LRC, LCC, RCC, LNZ, RNZ):
     flops = 2 * LRC * RNZ
-    memops = (3 * LRC * RRC) + (4 * LRC * RNZ)
+    memops = (3 * LRC * LCC) + (4 * LRC * RNZ)
     return flops, memops
 
 def formula_dense_csc(LRC, LCC, RCC, LNZ, RNZ):
@@ -28,16 +28,18 @@ def formula_csr_csr(LRC, LCC, RCC, LNZ, RNZ):
     # THE SAME!
     left_density = LNZ / (LRC * LCC)
     right_density = RNZ / (LCC * RCC)
-    expected_work = left_density * right_density * LRC * RCC * RRC
+    expected_work = left_density * right_density * LRC * RCC * LCC
 
     # THE SAME!
     # RNZ / RRC works for estimating the average non-zeroes in rows
-    flops = (2 * LNZ * RNZ / RRC)
-    memops = (2 * LRC) + (4 * LNZ) + (4 * LNZ * RNZ / RRC)
+    flops = (2 * LNZ * RNZ / LCC)
+    memops = (2 * LRC) + (4 * LNZ) + (4 * LNZ * RNZ / LCC)
     return flops, memops
 
 def formula_csr_csc(LRC, LCC, RCC, LNZ, RNZ):
-    return 0, 0
+    flops = 10**9
+    memops = 10**9
+    return flops, memops
 
 def formula_csc_dense(LRC, LCC, RCC, LNZ, RNZ):
     flops = 2 * LNZ * RCC
@@ -45,8 +47,8 @@ def formula_csc_dense(LRC, LCC, RCC, LNZ, RNZ):
     return flops, memops
 
 def formula_csc_csr(LRC, LCC, RCC, LNZ, RNZ):
-    flops = 2 * LNZ * RNZ / RRC
-    memops = (4 * RRC) + (2 * LNZ) + (4 * LNZ * RNZ / RRC)
+    flops = 2 * LNZ * RNZ / LCC
+    memops = (4 * LCC) + (2 * LNZ) + (4 * LNZ * RNZ / LCC)
     return flops, memops
 
 def formula_csc_csc(LRC, LCC, RCC, LNZ, RNZ):
@@ -66,119 +68,120 @@ formula_map = {
     'csc_X_csc':     formula_csc_csc,
 }
 
-csv_files = sys.argv[1:]
+if __name__ == "__main__":
+    csv_files = sys.argv[1:]
 
-plt.figure(figsize=(24,5))
+    plt.figure(figsize=(24,5))
 
-colors = plt.cm.tab10(np.linspace(0, 1, len(csv_files)))
+    colors = plt.cm.tab10(np.linspace(0, 1, len(csv_files)))
 
-for i, csv_file in enumerate(csv_files):
-    data = pd.read_csv(csv_file)
+    for i, csv_file in enumerate(csv_files):
+        data = pd.read_csv(csv_file)
 
-    row_count      = data['row_count'].iloc[0]
-    col_count      = data['col_count'].iloc[0]
-    inner_count    = data['inner_count'].iloc[0]
-    densities      = data['density'].values
+        row_count      = data['row_count'].iloc[0]
+        col_count      = data['col_count'].iloc[0]
+        inner_count    = data['inner_count'].iloc[0]
+        densities      = data['density'].values
 
-    observed_flops  = data['flops'].values
-    observed_memops = data['memops'].values
+        observed_flops  = data['flops'].values
+        observed_memops = data['memops'].values
 
-    time = data['time'].values
-    byte = data['bytes'].values
+        time = data['time'].values
+        byte = data['bytes'].values
 
-    basename = os.path.basename(csv_file).removesuffix('.csv')
-    formula_func = formula_map.get(basename, None)
+        basename = os.path.basename(csv_file).removesuffix('.csv')
+        formula_func = formula_map.get(basename, None)
 
-    if not formula_func:
-        print(f"No formula defined for file: {csv_file}")
-        continue
+        if not formula_func:
+            print(f"No formula defined for file: {csv_file}")
+            continue
 
-    LRC = row_count
-    LCC = inner_count
-    RRC = inner_count
-    RCC = col_count
+        LRC = row_count
+        LCC = inner_count
+        RRC = inner_count
+        RCC = col_count
 
-    LNZ = data['left_non_zero_count'].values
-    RNZ = data['right_non_zero_count'].values
+        LNZ = data['left_non_zero_count'].values
+        RNZ = data['right_non_zero_count'].values
 
-    formula_flops, formula_memops = formula_func(LRC, LCC, RCC, LNZ, RNZ)
+        formula_flops, formula_memops = formula_func(LRC, LCC, RCC, LNZ, RNZ)
 
-    # If we produce a single value and not a series
-    if np.isscalar(formula_flops):
-        formula_flops = np.full_like(densities, formula_flops)
-    if np.isscalar(formula_memops):
-        formula_memops = np.full_like(densities, formula_memops)
+        # If we produce a single value and not a series
+        if np.isscalar(formula_flops):
+            formula_flops = np.full_like(densities, formula_flops)
+        if np.isscalar(formula_memops):
+            formula_memops = np.full_like(densities, formula_memops)
 
-    plt.subplot(2,3,1)
-    plt.plot(densities, observed_flops, 'o', label=f'{basename}: Observed',
-             color=colors[i], markersize=4)
-    plt.plot(densities, formula_flops, '--', label=f'{basename}: Formula',
-             color=colors[i],)
-    plt.xlabel('Density')
-    plt.ylabel('Flops')
-    plt.title('Flops')
-    plt.grid(True)
+        plt.subplot(2,3,1)
+        plt.plot(densities, observed_flops, 'o', label=f'{basename}: Observed',
+                color=colors[i], markersize=4)
+        plt.plot(densities, formula_flops, '--', label=f'{basename}: Formula',
+                color=colors[i],)
+        plt.xlabel('Density')
+        plt.ylabel('Flops')
+        plt.title('Flops')
+        plt.grid(True)
 
-    plt.subplot(2,3,2)
-    plt.plot(densities, observed_memops, 'o', label=f'{basename}: Observed',
-             color=colors[i], markersize=4)
-    plt.plot(densities, formula_memops, '--', label=f'{basename}: Formula',
-             color=colors[i])
-    plt.xlabel('Density')
-    plt.ylabel('Memops')
-    plt.title('Memops')
-    plt.grid(True)
+        plt.subplot(2,3,2)
+        plt.plot(densities, observed_memops, 'o', label=f'{basename}: Observed',
+                color=colors[i], markersize=4)
+        plt.plot(densities, formula_memops, '--', label=f'{basename}: Formula',
+                color=colors[i])
+        plt.xlabel('Density')
+        plt.ylabel('Memops')
+        plt.title('Memops')
+        plt.grid(True)
 
-    plt.subplot(2,3,3)
-    plt.plot(densities, time, '-', label=f'{basename}: Time',
-             color=colors[i], markersize=4)
-    plt.xlabel('Density')
-    plt.ylabel('Timestamp Cycles')
-    plt.title('Runtime Performance')
-    plt.grid(True)
+        plt.subplot(2,3,3)
+        plt.plot(densities, time, '-', label=f'{basename}: Time',
+                color=colors[i], markersize=4)
+        plt.xlabel('Density')
+        plt.ylabel('Timestamp Cycles')
+        plt.title('Runtime Performance')
+        plt.grid(True)
 
-    plt.subplot(2,3,4)
-    relative_flop_error = (formula_flops - observed_flops) / observed_flops
-    plt.plot(densities, relative_flop_error, '--', label=f'{basename}',
-             color=colors[i])
-    plt.xlabel('Density')
-    plt.ylabel('Relative Error')
-    plt.title('Formula Flops Relative Error')
-    plt.grid(True)
+        plt.subplot(2,3,4)
+        relative_flop_error = (formula_flops - observed_flops) / observed_flops
+        plt.plot(densities, relative_flop_error, '--', label=f'{basename}',
+                color=colors[i])
+        plt.xlabel('Density')
+        plt.ylabel('Relative Error')
+        plt.title('Formula Flops Relative Error')
+        plt.grid(True)
 
-    plt.subplot(2,3,5)
-    relative_memop_error = (formula_memops - observed_memops) / observed_memops
-    plt.plot(densities, relative_memop_error, '--', label=f'{basename}',
-             color=colors[i])
-    plt.xlabel('Density')
-    plt.ylabel('Relative Error')
-    plt.title('Formula Memops Relative Error')
-    plt.grid(True)
+        plt.subplot(2,3,5)
+        relative_memop_error = (formula_memops - observed_memops) / observed_memops
+        plt.plot(densities, relative_memop_error, '--', label=f'{basename}',
+                color=colors[i])
+        plt.xlabel('Density')
+        plt.ylabel('Relative Error')
+        plt.title('Formula Memops Relative Error')
+        plt.grid(True)
 
-    flops_per_byte = observed_flops / byte
-    flops_per_cycle = observed_flops / time
+        flops_per_byte = observed_flops / byte
+        flops_per_cycle = observed_flops / time
 
-    # HACK: Just hardcoding after measuring. Automate this by dumping it from roofline test
-    peak_flops_per_cycle = 27.311
-    peak_bytes_per_cycle = 30.041
+        # HACK: Just hardcoding after measuring. Automate this by dumping it from roofline test
+        peak_flops_per_cycle = 27.311
+        peak_bytes_per_cycle = 30.041
 
-    plt.subplot(2,3,6)
-    plt.plot(flops_per_byte, flops_per_cycle, 'o-', color=colors[i], label=basename, markersize=4)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.xlabel('Arithmetic Intensity (FLOP/byte)')
-    plt.ylabel('FLOP/cycle')
-    plt.title('Roofline')
-    plt.grid(True)
+        plt.subplot(2,3,6)
+        plt.plot(flops_per_byte, flops_per_cycle, 'o-', color=colors[i], label=basename, markersize=4)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.xlabel('Arithmetic Intensity (FLOP/byte)')
+        plt.ylabel('FLOP/cycle')
+        plt.title('Roofline')
+        plt.grid(True)
 
-plt.axhline(y=peak_flops_per_cycle, color='black', linestyle='--', label='Peak FLOP/cycle')
-x = np.logspace(-3, 3, 100)
-plt.plot(x, np.minimum(peak_bytes_per_cycle * x, peak_flops_per_cycle),
-            color='black', linestyle='-', label='Memory bound')
+        plt.axhline(y=peak_flops_per_cycle, color='black', linestyle='--', label='Peak FLOP/cycle')
+        x = np.logspace(-3, 3, 100)
+        plt.plot(x, np.minimum(peak_bytes_per_cycle * x, peak_flops_per_cycle),
+                    color='black', linestyle='-', label='Memory bound')
 
-handles, labels = plt.gca().get_legend_handles_labels()
-plt.figlegend(handles, labels, loc='lower center', ncol=4, fontsize=7)
+    handles, labels = plt.gca().get_legend_handles_labels()
+    plt.figlegend(handles, labels, loc='lower center', ncol=4, fontsize=7)
 
-plt.tight_layout()
-plt.savefig("plot.png")
-plt.show()
+    plt.tight_layout()
+    plt.savefig("plot.png")
+    plt.show()

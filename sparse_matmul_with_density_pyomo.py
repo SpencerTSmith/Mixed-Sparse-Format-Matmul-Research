@@ -10,6 +10,8 @@
 
 from pyomo.environ import *
 
+from plot import *
+
 # We are going to encode are formats as follows:
 #   0 ---> dd
 #   1 ---> ds
@@ -17,7 +19,19 @@ from pyomo.environ import *
 #   3 ---> ss
 #
 min_format = 0
-max_format = 3
+max_format = 2
+
+FORMULA_MAP = {
+    (0, 0): formula_dense_dense,
+    (0, 1): formula_dense_csr,
+    (0, 2): formula_dense_csc,
+    (1, 0): formula_csr_dense,
+    (1, 1): formula_csr_csr,
+    (1, 2): formula_csr_csc,
+    (2, 0): formula_csc_dense,
+    (2, 1): formula_csc_csr,
+    (2, 2): formula_csc_csc,
+}
 
 M=2
 N=2
@@ -31,83 +45,23 @@ model.j_range = RangeSet(0,N-1)
 model.p_range = RangeSet(0,K-1)
 model.sparse_formats_range = RangeSet(min_format,max_format)
 
-
 model.density_range = RangeSet(1,9) # 10% -- 90%
 
-# These are the costs associated with multiplying two formats together.
-# The numbers are fudged here, and should be made real.
-#
-#
-#   Example costs[0,1,8,2] = 23 means if format of A = 0 (dd) and B =1 (ds)
-#                            and the density of A is 80% and the density of
-#                            B is 20% then the runtime is 5 units.
-#
-costs={}
-costs[0,0,1,2]=51
-costs[0,0,1,7]=52
-costs[0,0,8,2]=53
-costs[0,0,8,7]=543
-costs[0,1,1,2]=21
-costs[0,1,1,7]=22
-costs[0,1,8,2]=23
-costs[0,1,8,7]=24
-costs[0,2,1,2]=313
-costs[0,2,1,7]=32
-costs[0,2,8,2]=33
-costs[0,2,8,7]=343
-costs[0,3,1,2]=41
-costs[0,3,1,7]=42
-costs[0,3,8,2]=43
-costs[0,3,8,7]=44
-costs[1,0,1,2]=413
-costs[1,0,1,7]=42
-costs[1,0,8,2]=433
-costs[1,0,8,7]=44
-costs[1,1,1,2]=31
-costs[1,1,1,7]=32
-costs[1,1,8,2]=33
-costs[1,1,8,7]=343
-costs[1,2,1,2]=21
-costs[1,2,1,7]=22
-costs[1,2,8,2]=23
-costs[1,2,8,7]=24
-costs[1,3,1,2]=11
-costs[1,3,1,7]=12
-costs[1,3,8,2]=13
-costs[1,3,8,7]=143
-costs[2,0,1,2]=31
-costs[2,0,1,7]=32
-costs[2,0,8,2]=33
-costs[2,0,8,7]=34
-costs[2,1,1,2]=21
-costs[2,1,1,7]=223
-costs[2,1,8,2]=23
-costs[2,1,8,7]=24
-costs[2,2,1,2]=11
-costs[2,2,1,7]=123
-costs[2,2,8,2]=13
-costs[2,2,8,7]=14
-costs[2,3,1,2]=41
-costs[2,3,1,7]=42
-costs[2,3,8,2]=433
-costs[2,3,8,7]=44
-costs[3,0,1,2]=11
-costs[3,0,1,7]=12
-costs[3,0,8,2]=13
-costs[3,0,8,7]=14
-costs[3,1,1,2]=41
-costs[3,1,1,7]=423
-costs[3,1,8,2]=43
-costs[3,1,8,7]=44
-costs[3,2,1,2]=213
-costs[3,2,1,7]=22
-costs[3,2,8,2]=233
-costs[3,2,8,7]=24
-costs[3,3,1,2]=313
-costs[3,3,1,7]=323
-costs[3,3,8,2]=33
-costs[3,3,8,7]=34
+def density_to_nnz(density_idx, rows, cols):
+    return max(1, int(density_idx / 10 * rows * cols))
 
+costs = {}
+for fa in range(min_format, max_format + 1):
+    for fb in range(min_format, max_format + 1):
+        for dA in range(1, 10):
+            for dB in range(1, 10):
+                LRC = 16
+                LCC = 256
+                RCC = 16
+                LNZ = density_to_nnz(dA, LRC, LCC)
+                RNZ = density_to_nnz(dB, LCC, RCC)
+                flops, memops = FORMULA_MAP[fa, fb](LRC, LCC, RCC, LNZ, RNZ)
+                costs[fa, fb, dA, dB] = memops
 
 # Densities
 # These would be the actual densities of each block of A and B
@@ -122,7 +76,6 @@ densityB[0,0]=2
 densityB[0,1]=7
 densityB[1,0]=7
 densityB[1,1]=2
-
 
 ##############
 # Parameters #
@@ -185,7 +138,7 @@ model.c_range_check_b.display()
 # The cost for the individual multiplies is dependent on the formats and densities of A and B
 # which is encoded in both the expression and how we map the format assignment to A and B
 
-model.total_time = sum(model.costs[fa,fa,model.densityA[i,p],model.densityB[p,j]]*model.a_format[i,p,fa]*model.b_format[p,j,fb]
+model.total_time = sum(model.costs[fa,fb,model.densityA[i,p],model.densityB[p,j]]*model.a_format[i,p,fa]*model.b_format[p,j,fb]
                        for fa in model.sparse_formats_range
                        for fb in model.sparse_formats_range
                        for i in model.i_range for j in model.j_range for p in model.p_range)
@@ -205,3 +158,19 @@ model.display()
 model.pprint()
 
 print(value(model.total_time))
+
+format_names = {0: "dense", 1: "CSR", 2: "CSC"}
+
+print("\n=== Optimal A formats ===")
+for i in model.i_range:
+    for p in model.p_range:
+        chosen = next(fa for fa in model.sparse_formats_range if value(model.a_format[i,p,fa]) > 0.5)
+        print(f"  A[{i},{p}] (density={densityA[i,p]*10}%) -> {format_names[chosen]}")
+
+print("\n=== Optimal B formats ===")
+for p in model.p_range:
+    for j in model.j_range:
+        chosen = next(fb for fb in model.sparse_formats_range if value(model.b_format[p,j,fb]) > 0.5)
+        print(f"  B[{p},{j}] (density={densityB[p,j]*10}%) -> {format_names[chosen]}")
+
+print(f"\n=== Total cost: {value(model.total_time):.0f} memops ===")
