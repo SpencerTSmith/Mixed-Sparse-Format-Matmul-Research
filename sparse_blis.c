@@ -45,12 +45,16 @@
 #define BLOCK_J (BLOCK_NC / BLOCK_NR)
 #define BLOCK_P (BLOCK_KC / BLOCK_KU)
 
+// Contains info for allocation order and type.
 typedef struct Blocking_Description Blocking_Description;
 struct Blocking_Description
 {
   Matrix_Format *block_formats;
   usize row_count;
   usize col_count;
+
+  usize outer_step;
+  usize inner_step;
 };
 
 typedef struct Multiformat_Matrix Multisparse_Matrix;
@@ -64,7 +68,6 @@ struct Multiformat_Matrix
   usize blocks_row_count;
   usize blocks_col_count;
 };
-
 
 static
 Dense_Matrix pack_matrix_block(Arena *arena, Dense_Matrix parent, usize row_start, usize col_start,
@@ -102,56 +105,65 @@ Multisparse_Matrix multi_sparsify(Arena *arena, Dense_Matrix matrix,
 
   result.blocks = arena_calloc(arena, result.blocks_row_count * result.blocks_col_count, Matrix_Union);
 
-  for (usize block_row = 0; block_row < result.blocks_row_count; block_row += 1)
+  for (usize outer = 0; outer < result.blocks_col_count; outer += blocking.outer_step)
   {
-    for (usize block_col = 0; block_col < result.blocks_col_count; block_col += 1)
+    for (usize inner = 0; inner < result.blocks_row_count; inner += blocking.inner_step)
     {
-      Matrix_Format format =
-        blocking.block_formats[block_row * result.blocks_col_count + block_col];
-
-      usize actual_row = block_row * blocking.row_count;
-      usize actual_col = block_col * blocking.col_count;
-
-      // TODO: Consider allocating this on scratch arena first as not needed
-      // if we make it sparse.
-      Dense_Matrix dense_block = pack_matrix_block(arena, matrix, actual_row, actual_col,
-                                                   blocking.row_count, blocking.col_count);
-
-      Matrix_Union sub_matrix = {0};
-      switch (format)
+      for (usize inner_i = 0; inner_i < blocking.inner_step; inner_i += 1)
       {
-        default:
+        for (usize outer_i = 0; outer_i < blocking.outer_step; outer_i += 1)
         {
-          LOG_ERROR("Invalid matrix format.");
-        } break;
+          usize block_row = inner + inner_i;
+          usize block_col = outer + outer_i;
 
-        case MAT_DENSE:
-        {
-          sub_matrix = (Matrix_Union)
+          Matrix_Format format =
+            blocking.block_formats[block_row * result.blocks_col_count + block_col];
+
+          usize actual_row = block_row * blocking.row_count;
+          usize actual_col = block_col * blocking.col_count;
+
+          // TODO: Consider allocating this on scratch arena first as not needed
+          // if we make it sparse.
+          Dense_Matrix dense_block = pack_matrix_block(arena, matrix, actual_row, actual_col,
+                                                       blocking.row_count, blocking.col_count);
+
+          Matrix_Union sub_matrix = {0};
+          switch (format)
           {
-            .format = MAT_DENSE,
-            .dense  = dense_block,
-          };
-        } break;
-        case MAT_CSR:
-        {
-          sub_matrix = (Matrix_Union)
-          {
-            .format = MAT_CSR,
-            .csr    = csr_from_dense(arena, &dense_block),
-          };
-        } break;
-        case MAT_CSC:
-        {
-          sub_matrix = (Matrix_Union)
-          {
-            .format = MAT_CSC,
-            .csc    = csc_from_dense(arena, &dense_block),
-          };
-        } break;
+            default:
+              {
+                LOG_ERROR("Invalid matrix format.");
+              } break;
+
+            case MAT_DENSE:
+              {
+                sub_matrix = (Matrix_Union)
+                {
+                  .format = MAT_DENSE,
+                  .dense  = dense_block,
+                };
+              } break;
+            case MAT_CSR:
+              {
+                sub_matrix = (Matrix_Union)
+                {
+                  .format = MAT_CSR,
+                  .csr    = csr_from_dense(arena, &dense_block),
+                };
+              } break;
+            case MAT_CSC:
+              {
+                sub_matrix = (Matrix_Union)
+                {
+                  .format = MAT_CSC,
+                  .csc    = csc_from_dense(arena, &dense_block),
+                };
+              } break;
+          }
+
+          result.blocks[block_row * result.blocks_col_count + block_col] = sub_matrix;
+        }
       }
-
-      result.blocks[block_row * result.blocks_col_count + block_col] = sub_matrix;
     }
   }
 
@@ -344,6 +356,8 @@ int main(int argc, char **argv)
     .block_formats = (Matrix_Format[(MATRIX_SIZE/BLOCK_MR) * (MATRIX_SIZE/BLOCK_KU)]){0},
     .row_count     = BLOCK_MR,
     .col_count     = BLOCK_KU,
+    .outer_step    = BLOCK_I,
+    .inner_step    = BLOCK_P,
   };
   for (usize i = 0; i < (MATRIX_SIZE/BLOCK_MR) * (MATRIX_SIZE/BLOCK_KU); i += 1) { left_blocking.block_formats[i] = MAT_DENSE; }
   Multisparse_Matrix left  = multi_sparsify(&arena, left_dense, left_blocking);
@@ -353,6 +367,8 @@ int main(int argc, char **argv)
     .block_formats = (Matrix_Format[(MATRIX_SIZE/BLOCK_KU) * (MATRIX_SIZE/BLOCK_NR)]){0},
     .row_count     = BLOCK_KU,
     .col_count     = BLOCK_NR,
+    .outer_step    = BLOCK_J,
+    .inner_step    = BLOCK_P,
   };
   for (usize i = 0; i < (MATRIX_SIZE/BLOCK_KU) * (MATRIX_SIZE/BLOCK_NR); i += 1) { right_blocking.block_formats[i] = MAT_CSC; }
   Multisparse_Matrix right = multi_sparsify(&arena, right_dense, right_blocking);
