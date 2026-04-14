@@ -38,7 +38,7 @@ def block_densities(matrix, block_rows, block_cols):
     densities = {}
 
     for i, row_start, in enumerate(range(0,M,block_rows)):
-        for j, col_start in enumerate(range(0,N,block_rows)):
+        for j, col_start in enumerate(range(0,N,block_cols)):
             block = matrix[row_start:row_start+block_rows,col_start:col_start+block_cols]
 
             d = np.count_nonzero(block) / block.size * 10
@@ -74,9 +74,10 @@ LRC = 16
 LCC = 8
 RCC = 16
 
-M=int(16/LRC)
-N=int(16/RCC)
-K=int(16/LCC)
+MATRIX_SIZE = 32
+M = MATRIX_SIZE // LRC
+N = MATRIX_SIZE // RCC
+K = MATRIX_SIZE // LCC
 
 # Create a simple model
 model = ConcreteModel()
@@ -106,9 +107,9 @@ for fa in range(min_format, max_format + 1):
 
 # Densities
 # These would be the actual densities of each block of A and B
-densityA=block_densities(diagonal(M), 16, 8)
+densityA=block_densities(diagonal(MATRIX_SIZE), LRC, LCC)
 
-densityB=block_densities(diagonal(M), 8, 16)
+densityB=block_densities(diagonal(MATRIX_SIZE), LCC, RCC)
 
 ##############
 # Parameters #
