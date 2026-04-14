@@ -20,8 +20,10 @@ def diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
     matrix = np.zeros((size,size))
 
     for i in range(size):
-        if rng.random() < diag_density:
-            matrix[i, i] = rng.random()
+        for b in range(-16,17):
+            j = i + b
+            if j >= 0 and j < size and rng.random() < diag_density:
+                matrix[i, j] = rng.random()
 
     extra = int(noise_density * size * size)
 
@@ -74,7 +76,7 @@ LRC = 16
 LCC = 8
 RCC = 16
 
-MATRIX_SIZE = 32
+MATRIX_SIZE = 128
 M = MATRIX_SIZE // LRC
 N = MATRIX_SIZE // RCC
 K = MATRIX_SIZE // LCC
