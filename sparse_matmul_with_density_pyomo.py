@@ -12,6 +12,40 @@ from pyomo.environ import *
 
 from plot import *
 
+import numpy as np
+
+def diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
+    rng = np.random.default_rng(seed)
+
+    matrix = np.zeros((size,size))
+
+    for i in range(size):
+        if rng.random() < diag_density:
+            matrix[i, i] = rng.random()
+
+    extra = int(noise_density * size * size)
+
+    rows = rng.integers(0, size, extra)
+    cols = rng.integers(0, size, extra)
+
+    matrix[rows, cols] = rng.random(extra)
+
+    return matrix
+
+def block_densities(matrix, block_rows, block_cols):
+    M, N = matrix.shape
+
+    densities = {}
+
+    for i, row_start, in enumerate(range(0,M,block_rows)):
+        for j, col_start in enumerate(range(0,N,block_rows)):
+            block = matrix[row_start:row_start+block_rows,col_start:col_start+block_cols]
+
+            d = np.count_nonzero(block) / block.size * 10
+            densities[i,j] = int(d)
+
+    return densities
+
 # We are going to encode are formats as follows:
 #   0 ---> dd
 #   1 ---> ds
@@ -36,9 +70,13 @@ FORMULA_MAP = {
     (2, 2): formula_csc_csc,
 }
 
-M=2
-N=2
-K=2
+LRC = 16
+LCC = 8
+RCC = 16
+
+M=int(16/LRC)
+N=int(16/RCC)
+K=int(16/LCC)
 
 # Create a simple model
 model = ConcreteModel()
@@ -48,7 +86,7 @@ model.j_range = RangeSet(0,N-1)
 model.p_range = RangeSet(0,K-1)
 model.sparse_formats_range = RangeSet(min_format,max_format)
 
-model.density_range = RangeSet(1,9) # 10% -- 90%
+model.density_range = RangeSet(0,9)
 
 def density_to_nnz(density_idx, rows, cols):
     return int(density_idx / 10 * rows * cols)
@@ -59,7 +97,7 @@ for fa in range(min_format, max_format + 1):
         for dA in range(0, 10):
             for dB in range(0, 10):
                 LRC = 16
-                LCC = 256
+                LCC = 8
                 RCC = 16
                 LNZ = density_to_nnz(dA, LRC, LCC)
                 RNZ = density_to_nnz(dB, LCC, RCC)
@@ -68,17 +106,9 @@ for fa in range(min_format, max_format + 1):
 
 # Densities
 # These would be the actual densities of each block of A and B
-densityA={}
-densityA[0,0]=8
-densityA[0,1]=1
-densityA[1,0]=1
-densityA[1,1]=8
+densityA=block_densities(diagonal(M), 16, 8)
 
-densityB={}
-densityB[0,0]=2
-densityB[0,1]=7
-densityB[1,0]=7
-densityB[1,1]=2
+densityB=block_densities(diagonal(M), 8, 16)
 
 ##############
 # Parameters #
@@ -89,23 +119,23 @@ model.costs = Param(model.sparse_formats_range,
                     model.density_range,
                     model.density_range,
                     initialize=costs, default=100)
-model.costs.display()
+# model.costs.display()
 
 model.densityA = Param(model.i_range, model.p_range, initialize=densityA, default=0)
-model.densityA.display()
+# model.densityA.display()
 
 model.densityB = Param(model.p_range, model.j_range, initialize=densityB, default=0)
-model.densityB.display()
+# model.densityB.display()
 
 
 #############
 # Variables #
 #############
 model.a_format = Var(model.i_range,model.p_range,model.sparse_formats_range,within=NonNegativeIntegers, bounds=(0,1))
-model.a_format.display()
+# model.a_format.display()
 
 model.b_format = Var(model.p_range,model.j_range,model.sparse_formats_range,within=NonNegativeIntegers, bounds=(0,1))
-model.b_format.display()
+# model.b_format.display()
 
 ################
 # Constraints  #
@@ -119,8 +149,7 @@ for i in model.i_range:
         model.c_range_check_a.add(sum(model.a_format[i,p,fa] for fa in model.sparse_formats_range) == 1)
 
 
-model.c_range_check_a.display()
-#
+# model.c_range_check_a.display()
 
 
 model.c_range_check_b = ConstraintList()
@@ -129,7 +158,7 @@ for p in model.p_range:
         model.c_range_check_b.add(sum(model.b_format[p,j,fb] for fb in model.sparse_formats_range) == 1)
 
 
-model.c_range_check_b.display()
+# model.c_range_check_b.display()
 
 
 
@@ -148,7 +177,7 @@ model.total_time = sum(model.costs[fa,fb,model.densityA[i,p],model.densityB[p,j]
 
 
 model.objective = Objective(rule=model.total_time, sense=minimize)
-model.objective.display()
+# model.objective.display()
 
 # Solve the model using MindtPy
 SolverFactory('mindtpy').solve(model, mip_solver='glpk', nlp_solver='ipopt')
@@ -156,7 +185,7 @@ SolverFactory('mindtpy').solve(model, mip_solver='glpk', nlp_solver='ipopt')
 print("======= DONE ========")
 print("= LOOK at the assignments of a_format and b_format")
 
-model.objective.display()
+# model.objective.display()
 model.display()
 model.pprint()
 
