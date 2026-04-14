@@ -66,12 +66,6 @@ for fa in range(min_format, max_format + 1):
                 flops, memops = FORMULA_MAP[fa, fb](LRC, LCC, RCC, LNZ, RNZ)
                 costs[fa, fb, dA, dB] = flops + memops
 
-# densityA={}
-# for m in range(0, M):
-#     for n in range(0, N):
-#         for density_idx in range(0, 1):
-#             densityA[m,n] = density_idx
-
 # Densities
 # These would be the actual densities of each block of A and B
 densityA={}

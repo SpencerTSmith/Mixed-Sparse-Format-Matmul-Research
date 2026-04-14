@@ -1,6 +1,9 @@
 #define LOG_TITLE "SPARSE_BLIS"
 #define COMMON_IMPLEMENTATION
 
+#include "../benchmark/benchmark_inc.h"
+#include "../benchmark/benchmark_inc.c"
+
 #include "../common.h"
 #include "formats.h"
 #include "formats.c"
