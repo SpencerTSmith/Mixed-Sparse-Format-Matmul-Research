@@ -13,6 +13,34 @@ from pyomo.environ import *
 from plot import *
 
 import numpy as np
+import struct
+
+def dump_matrix(f, matrix):
+    rows, cols = matrix.shape
+    f.write(struct.pack('QQ', rows, cols))
+    # row-major f64
+    f.write(matrix.astype(np.float64).tobytes())
+
+with open('problem.bin', 'wb') as f:
+    f.write(struct.pack('QQQ', M, N, K))
+
+    # A formats
+    for i in range(M):
+        for p in range(K):
+            chosen = next(fa for fa in sparse_formats_range
+                         if value(model.a_format[i,p,fa]) > 0.5)
+            f.write(struct.pack('B', chosen))
+
+    # B formats
+    for p in range(K):
+        for j in range(N):
+            chosen = next(fb for fb in sparse_formats_range
+                         if value(model.b_format[p,j,fb]) > 0.5)
+            f.write(struct.pack('B', chosen))
+
+    # Matrices
+    dump_matrix(f, A)
+    dump_matrix(f, B)
 
 def diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
     rng = np.random.default_rng(seed)
