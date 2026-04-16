@@ -123,7 +123,7 @@ Dense_Matrix make_random_dense_matrix(Arena *arena, u32 row_count, u32 col_count
 #endif
 
 #ifndef STORE
-#define STORE(dst, src) dst += src
+#define STORE(dst, src) dst = src
 #endif
 
 // AHHHHHH
@@ -134,7 +134,8 @@ void dense_x_dense(Dense_Matrix output, Dense_Matrix left, Dense_Matrix right)
   {
     for (usize col = 0; col < right.col_count; col++)
     {
-      f64 dot = 0.0;
+      usize output_index = row * output.col_count + col;
+      f64 dot = LOAD(output.values[output_index]);
 
       for (usize i = 0; i < left.col_count; i++)
       {
@@ -146,7 +147,6 @@ void dense_x_dense(Dense_Matrix output, Dense_Matrix left, Dense_Matrix right)
         FMADD(dot, left_value, right_value);
       }
 
-      usize output_index = row * output.col_count + col;
       STORE(output.values[output_index], dot);
     }
   }
@@ -190,7 +190,7 @@ void dense_x_csc(Dense_Matrix output, Dense_Matrix left, CSC_Matrix right)
     for (usize col = 0; col < right.col_count; col++)
     {
       usize output_index = row * output.col_count + col;
-      f64 output_value = 0.0;
+      f64 output_value = LOAD(output.values[output_index]);
 
       usize right_col_start = LOAD(right.col_pointers[col]);
       usize right_col_close   = LOAD(right.col_pointers[col + 1]);
@@ -289,7 +289,8 @@ void csr_x_csc(Dense_Matrix output, CSR_Matrix left, CSC_Matrix right)
       usize right_col_start = LOAD(right.col_pointers[right_col]);
       usize right_col_end   = LOAD(right.col_pointers[right_col + 1]);
 
-      f64 result_value = 0.0;
+      usize output_index = left_row * output.col_count + right_col;
+      f64 result_value = LOAD(output.values[output_index]);
 
       usize left_cursor  = left_row_start;
       usize right_cursor = right_col_start;
@@ -310,7 +311,6 @@ void csr_x_csc(Dense_Matrix output, CSR_Matrix left, CSC_Matrix right)
         right_cursor += (usize)(right_row == k);
       }
 
-      usize output_index = left_row * output.col_count + right_col;
       STORE(output.values[output_index], result_value);
     }
   }

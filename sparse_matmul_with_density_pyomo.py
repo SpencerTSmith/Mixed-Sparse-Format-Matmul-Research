@@ -15,33 +15,6 @@ from plot import *
 import numpy as np
 import struct
 
-def dump_matrix(f, matrix):
-    rows, cols = matrix.shape
-    f.write(struct.pack('QQ', rows, cols))
-    # row-major f64
-    f.write(matrix.astype(np.float64).tobytes())
-
-with open('problem.bin', 'wb') as f:
-    f.write(struct.pack('QQQ', M, N, K))
-
-    # A formats
-    for i in range(M):
-        for p in range(K):
-            chosen = next(fa for fa in sparse_formats_range
-                         if value(model.a_format[i,p,fa]) > 0.5)
-            f.write(struct.pack('B', chosen))
-
-    # B formats
-    for p in range(K):
-        for j in range(N):
-            chosen = next(fb for fb in sparse_formats_range
-                         if value(model.b_format[p,j,fb]) > 0.5)
-            f.write(struct.pack('B', chosen))
-
-    # Matrices
-    dump_matrix(f, A)
-    dump_matrix(f, B)
-
 def diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
     rng = np.random.default_rng(seed)
 
@@ -78,8 +51,8 @@ def block_densities(matrix, block_rows, block_cols):
 
 # We are going to encode are formats as follows:
 #   0 ---> dd
-#   1 ---> ds
-#   2 ---> sd
+#   1 ---> sd
+#   2 ---> ds
 min_format = 0
 max_format = 2
 
@@ -101,7 +74,7 @@ FORMULA_MAP = {
 }
 
 LRC = 16
-LCC = 8
+LCC = 16
 RCC = 16
 
 MATRIX_SIZE = 128
@@ -127,19 +100,19 @@ for fa in range(min_format, max_format + 1):
     for fb in range(min_format, max_format + 1):
         for dA in range(0, 10):
             for dB in range(0, 10):
-                LRC = 16
-                LCC = 8
-                RCC = 16
                 LNZ = density_to_nnz(dA, LRC, LCC)
                 RNZ = density_to_nnz(dB, LCC, RCC)
                 flops, memops = FORMULA_MAP[fa, fb](LRC, LCC, RCC, LNZ, RNZ)
                 costs[fa, fb, dA, dB] = flops + memops
 
+matrixA = diagonal(MATRIX_SIZE)
+matrixB = diagonal(MATRIX_SIZE)
+
 # Densities
 # These would be the actual densities of each block of A and B
-densityA=block_densities(diagonal(MATRIX_SIZE), LRC, LCC)
+densityA=block_densities(matrixA, LRC, LCC)
 
-densityB=block_densities(diagonal(MATRIX_SIZE), LCC, RCC)
+densityB=block_densities(matrixB, LCC, RCC)
 
 ##############
 # Parameters #
@@ -237,3 +210,30 @@ for p in model.p_range:
         print(f"  B[{p},{j}] (density={densityB[p,j]*10}%) -> {format_names[chosen]}")
 
 print(f"\n=== Total cost: {value(model.total_time):.0f} ===")
+
+def dump_matrix(f, matrix):
+    rows, cols = matrix.shape
+    f.write(struct.pack('II', rows, cols))
+    # row-major f64
+    f.write(matrix.astype(np.float64).tobytes())
+
+with open('solution.bin', 'wb') as f:
+    f.write(struct.pack('QQQ', M, N, K))
+
+    # A formats
+    for i in range(M):
+        for p in range(K):
+            chosen = next(fa for fa in model.sparse_formats_range
+                         if value(model.a_format[i,p,fa]) > 0.5)
+            f.write(struct.pack('B', chosen + 1))
+
+    # B formats
+    for p in range(K):
+        for j in range(N):
+            chosen = next(fb for fb in model.sparse_formats_range
+                         if value(model.b_format[p,j,fb]) > 0.5)
+            f.write(struct.pack('B', chosen + 1))
+
+    # Matrices
+    dump_matrix(f, matrixA)
+    dump_matrix(f, matrixB)

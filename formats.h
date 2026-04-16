@@ -36,7 +36,7 @@ struct CSC_Matrix
   f64 *values;
 };
 
-typedef enum Matrix_Format
+enum Matrix_Format
 {
   MAT_NONE,
 
@@ -45,7 +45,8 @@ typedef enum Matrix_Format
   MAT_CSC,
 
   MAT_COUNT,
-} Matrix_Format;
+};
+typedef u8 Matrix_Format;
 
 typedef struct Matrix_Union Matrix_Union;
 struct Matrix_Union
