@@ -19,6 +19,12 @@ def formula_dense_csc(LRC, LCC, RCC, LNZ, RNZ):
     memops = (3 * LRC * RCC) + (3 * LRC * RNZ)
     return flops, memops
 
+def formula_dense_coo(LRC, LCC, RCC, LNZ, RNZ):
+    row_sparsity  = LCC *  RNZ / LCC
+    flops  = 2 * LRC * RNZ
+    memops = (2 * RNZ) + (LRC * row_sparsity) + (4 * LRC * RNZ)
+    return flops, memops
+
 def formula_csr_dense(LRC, LCC, RCC, LNZ, RNZ):
     flops = 2 * LNZ * RCC
     memops = (2 * LRC) + (2 * LNZ) + (3 * LNZ * RCC)
@@ -42,6 +48,12 @@ def formula_csr_csc(LRC, LCC, RCC, LNZ, RNZ):
     memops = 0
     return flops, memops
 
+def formula_csr_coo(LRC, LCC, RCC, LNZ, RNZ):
+    matches = LNZ * RNZ / LCC
+    flops  = 2 * matches
+    memops = (2 * LRC) + (LNZ) + (LRC * RNZ) + (4 * matches)
+    return flops, memops
+
 def formula_csc_dense(LRC, LCC, RCC, LNZ, RNZ):
     flops = 2 * LNZ * RCC
     memops = (2 * LCC) + (2 * LNZ) + (3 * LNZ * RCC)
@@ -57,16 +69,53 @@ def formula_csc_csc(LRC, LCC, RCC, LNZ, RNZ):
     memops = (2 * RCC) + (4 * RNZ) + (4 * RNZ * LNZ / LCC)
     return flops, memops
 
+def formula_csc_coo(LRC, LCC, RCC, LNZ, RNZ):
+    RS      = np.minimum(LCC, RNZ)
+    matches = LNZ * RNZ / LCC
+    flops   = 2 * matches
+    memops  = (2 * RNZ) + (2 * RS) + (4 * matches)
+    return flops, memops
+
+def formula_coo_dense(LRC, LCC, RCC, LNZ, RNZ):
+    flops  = 2 * LNZ * RCC
+    memops = (3 * LNZ) + (3 * LNZ * RCC)
+    return flops, memops
+
+def formula_coo_csr(LRC, LCC, RCC, LNZ, RNZ):
+    matches = LNZ * RNZ / LCC
+    flops   = 2 * matches
+    memops  = (5 * LNZ) + (4 * matches)
+    return flops, memops
+
+def formula_coo_csc(LRC, LCC, RCC, LNZ, RNZ):
+    LS      = np.minimum(LRC, LNZ)
+    matches = LNZ * RNZ / LCC
+    flops   = 2 * matches
+    memops  = (LNZ) + (2 * RCC * LS) + (LNZ * RCC) + (RNZ * LS) + (3 * matches)
+    return flops, memops
+
+def formula_coo_coo(LRC, LCC, RCC, LNZ, RNZ):
+    flops = 0
+    memops = 0
+    return flops, memops
+
 formula_map = {
     'dense_X_dense': formula_dense_dense,
     'dense_X_csr':   formula_dense_csr,
     'dense_X_csc':   formula_dense_csc,
+    'dense_X_coo':   formula_dense_coo,
     'csr_X_dense':   formula_csr_dense,
     'csr_X_csr':     formula_csr_csr,
     'csr_X_csc':     formula_csr_csc,
+    'csr_X_coo':     formula_csr_coo,
     'csc_X_dense':   formula_csc_dense,
     'csc_X_csr':     formula_csc_csr,
     'csc_X_csc':     formula_csc_csc,
+    'csc_X_coo':     formula_csc_coo,
+    'coo_X_dense':   formula_coo_dense,
+    'coo_X_csr':     formula_coo_csr,
+    'coo_X_csc':     formula_coo_csc,
+    'coo_X_coo':     formula_coo_coo,
 }
 
 if __name__ == "__main__":
@@ -77,6 +126,12 @@ if __name__ == "__main__":
     colors = plt.cm.tab10(np.linspace(0, 1, len(csv_files)))
 
     for i, csv_file in enumerate(csv_files):
+        if 'roofline' in csv_file:
+            continue
+
+        if 'coo_X_csc' not in csv_file:
+            continue
+
         data = pd.read_csv(csv_file)
 
         row_count      = data['row_count'].iloc[0]
@@ -99,7 +154,6 @@ if __name__ == "__main__":
 
         LRC = row_count
         LCC = inner_count
-        RRC = inner_count
         RCC = col_count
 
         LNZ = data['left_non_zero_count'].values

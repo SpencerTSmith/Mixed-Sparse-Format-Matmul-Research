@@ -8,16 +8,11 @@
 #include "../benchmark/benchmark_inc.h"
 #include "../benchmark/benchmark_inc.c"
 
-#ifndef OBSERVE_FLOPS
-#define FMADD(dst, a, b) dst += (a * b)
-#else
+#ifdef OBSERVE_FLOPS
 #define FMADD(dst, a, b) dst += (a * b); repetition_tester_count_flops(tester, 2)
 #endif // OBSERVE_FLOPS
 
-#ifndef OBSERVE_MEMOPS
-#define LOAD(src)       src
-#define STORE(dst, src) dst = src
-#else
+#ifdef OBSERVE_MEMOPS
 #define LOAD(src)       src;                          \
   repetition_tester_count_memops(tester, 1);          \
   repetition_tester_count_bytes(tester, sizeof(src))
@@ -76,271 +71,7 @@ void matmul_dense_dense(Repetition_Tester *tester, Operation_Parameters *params)
 
   repetition_tester_begin_time(tester);
 
-  for (usize row = 0; row < left.row_count; row++)
-  {
-    for (usize col = 0; col < right.col_count; col++)
-    {
-      f64 dot = 0.0;
-
-      for (usize i = 0; i < left.col_count; i++)
-      {
-        usize left_index  = row * left.col_count + i;
-        usize right_index = i * right.col_count + col;
-        f64 left_value  = LOAD(left.values[left_index]);
-        f64 right_value = LOAD(right.values[right_index]);
-
-        FMADD(dot, left_value, right_value);
-      }
-
-      usize output_index = row * output.col_count + col;
-      STORE(output.values[output_index], dot);
-    }
-  }
-
-  repetition_tester_close_time(tester);
-}
-
-static
-void matmul_csr_dense(Repetition_Tester *tester, Operation_Parameters *params)
-{
-  CSR_Matrix left     = params->left.csr;
-  Dense_Matrix right  = params->right.dense;
-  Dense_Matrix output = params->output;
-
-  repetition_tester_begin_time(tester);
-
-  for (usize row = 0; row < left.row_count; row++)
-  {
-    // Double count?
-    usize row_start = LOAD(left.row_pointers[row]);
-    usize row_end   = LOAD(left.row_pointers[row + 1]);
-
-    for (usize i = row_start; i < row_end; i++)
-    {
-      usize left_col = LOAD(left.col_indices[i]);
-      f64 left_value = LOAD(left.values[i]);
-
-      for (usize right_col = 0; right_col < right.col_count; right_col++)
-      {
-        usize right_index  = left_col * right.col_count + right_col; // ALU op
-        usize output_index = row * output.col_count + right_col;     // ALU op
-
-        f64 right_value   = LOAD(right.values[right_index]);
-        f64 current_value = LOAD(output.values[output_index]);
-
-        f64 result_value = current_value;
-        FMADD(result_value, left_value, right_value);
-
-        STORE(output.values[output_index], result_value);
-      }
-    }
-  }
-
-  repetition_tester_close_time(tester);
-}
-
-static
-void matmul_csc_dense(Repetition_Tester *tester, Operation_Parameters *params)
-{
-  CSC_Matrix left     = params->left.csc;
-  Dense_Matrix right  = params->right.dense;
-  Dense_Matrix output = params->output;
-
-  repetition_tester_begin_time(tester);
-
-  for (usize col = 0; col < left.col_count; col++)
-  {
-    usize col_start = LOAD(left.col_pointers[col]);
-    usize col_end   = LOAD(left.col_pointers[col + 1]);
-
-    for (usize i = col_start; i < col_end; i++)
-    {
-      usize left_row = LOAD(left.row_indices[i]);
-      f64 left_value = LOAD(left.values[i]);
-
-      for (usize right_col = 0; right_col < right.col_count; right_col++)
-      {
-        usize right_index  = col * right.col_count + right_col;
-        usize output_index = left_row * output.col_count + right_col;
-
-        f64 right_value   = LOAD(right.values[right_index]);
-        f64 current_value = LOAD(output.values[output_index]);
-
-        f64 result_value = current_value;
-        FMADD(result_value, left_value, right_value);
-
-        STORE(output.values[output_index], result_value);
-      }
-    }
-  }
-
-  repetition_tester_close_time(tester);
-}
-
-static
-void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
-{
-  CSR_Matrix left  = params->left.csr;
-  CSR_Matrix right = params->right.csr;
-  Dense_Matrix output = params->output;
-
-  repetition_tester_begin_time(tester);
-
-  for (usize left_row = 0; left_row < left.row_count; left_row++)
-  {
-    usize left_row_start = LOAD(left.row_pointers[left_row]);
-    usize left_row_end   = LOAD(left.row_pointers[left_row + 1]);
-
-    for (usize i = left_row_start; i < left_row_end; i++)
-    {
-      usize left_col = LOAD(left.col_indices[i]);
-      f64 left_value = LOAD(left.values[i]);
-
-      usize right_row_start = LOAD(right.row_pointers[left_col]);
-      usize right_row_end   = LOAD(right.row_pointers[left_col + 1]);
-      for (usize j = right_row_start; j < right_row_end; j++)
-      {
-        usize right_col = LOAD(right.col_indices[j]);
-        f64 right_value = LOAD(right.values[j]);
-
-        usize output_index = left_row * output.col_count + right_col;
-        f64 current_value = LOAD(output.values[output_index]);
-
-        f64 result_value = current_value;
-        FMADD(result_value, left_value, right_value);
-
-        STORE(output.values[output_index], result_value);
-      }
-    }
-  }
-
-  repetition_tester_close_time(tester);
-}
-
-static
-void matmul_csc_csc(Repetition_Tester *tester, Operation_Parameters *params)
-{
-  CSC_Matrix left  = params->left.csc;
-  CSC_Matrix right = params->right.csc;
-  Dense_Matrix output = params->output;
-
-  repetition_tester_begin_time(tester);
-
-  for (usize right_col = 0; right_col < right.col_count; right_col++)
-  {
-    usize right_col_start = LOAD(right.col_pointers[right_col]);
-    usize right_col_end   = LOAD(right.col_pointers[right_col + 1]);
-
-    for (usize i = right_col_start; i < right_col_end; i++)
-    {
-      usize right_row = LOAD(right.row_indices[i]);
-      f64 right_value = LOAD(right.values[i]);
-
-      usize left_col_start = LOAD(left.col_pointers[right_row]);
-      usize left_col_end   = LOAD(left.col_pointers[right_row + 1]);
-      for (usize j = left_col_start; j < left_col_end; j++)
-      {
-        usize left_row = LOAD(left.row_indices[j]);
-        f64 left_value = LOAD(left.values[j]);
-
-        usize output_index = left_row * output.col_count + right_col;
-        f64 current_value = LOAD(output.values[output_index]);
-
-        f64 result_value = current_value;
-        FMADD(result_value, left_value, right_value);
-
-        STORE(output.values[output_index], result_value);
-      }
-    }
-  }
-
-  repetition_tester_close_time(tester);
-}
-
-static
-void matmul_csr_csc(Repetition_Tester *tester, Operation_Parameters *params)
-{
-  CSR_Matrix left  = params->left.csr;
-  CSC_Matrix right = params->right.csc;
-  Dense_Matrix output = params->output;
-
-  repetition_tester_begin_time(tester);
-
-  for (usize left_row = 0; left_row < left.row_count; left_row++)
-  {
-    usize left_row_start = LOAD(left.row_pointers[left_row]);
-    usize left_row_end   = LOAD(left.row_pointers[left_row + 1]);
-
-    for (usize right_col = 0; right_col < right.col_count; right_col++)
-    {
-      usize right_col_start = LOAD(right.col_pointers[right_col]);
-      usize right_col_end   = LOAD(right.col_pointers[right_col + 1]);
-
-      f64 result_value = 0.0;
-
-      usize left_cursor  = left_row_start;
-      usize right_cursor = right_col_start;
-      while (left_cursor < left_row_end && right_cursor < right_col_end)
-      {
-        usize left_col  = LOAD(left.col_indices[left_cursor]);
-        usize right_row = LOAD(right.row_indices[right_cursor]);
-        usize k = MIN(left_col, right_row);
-
-        if (left_col == k && right_row == k)
-        {
-          f64 left_value  = LOAD(left.values[left_cursor]);
-          f64 right_value = LOAD(right.values[right_cursor]);
-          FMADD(result_value, left_value, right_value);
-
-        }
-        left_cursor  += (usize)(left_col == k);
-        right_cursor += (usize)(right_row == k);
-      }
-
-      usize output_index = left_row * output.col_count + right_col;
-      STORE(output.values[output_index], result_value);
-    }
-  }
-
-  repetition_tester_close_time(tester);
-}
-
-static
-void matmul_csc_csr(Repetition_Tester *tester, Operation_Parameters *params)
-{
-  CSC_Matrix left  = params->left.csc;
-  CSR_Matrix right = params->right.csr;
-  Dense_Matrix output = params->output;
-
-  repetition_tester_begin_time(tester);
-
-  for (usize k = 0; k < right.row_count; k++)
-  {
-    usize left_col_start = LOAD(left.col_pointers[k]);
-    usize left_col_close = LOAD(left.col_pointers[k + 1]);
-
-    usize right_row_start = LOAD(right.row_pointers[k]);
-    usize right_row_close = LOAD(right.row_pointers[k + 1]);
-
-    for (usize left_col = left_col_start; left_col < left_col_close; left_col++)
-    {
-      usize row = LOAD(left.row_indices[left_col]);
-      f64 left_value  = LOAD(left.values[left_col]);
-
-      for (usize right_row = right_row_start; right_row < right_row_close; right_row++)
-      {
-        usize col = LOAD(right.col_indices[right_row]);
-        f64 right_value = LOAD(right.values[right_row]);
-
-        usize output_index = row * output.col_count + col;
-        f64 output_value   = LOAD(output.values[output_index]);
-        FMADD(output_value, left_value, right_value);
-
-        STORE(output.values[output_index], output_value);
-      }
-    }
-  }
-
+  dense_x_dense_impl;
 
   repetition_tester_close_time(tester);
 }
@@ -354,31 +85,7 @@ void matmul_dense_csr(Repetition_Tester *tester, Operation_Parameters *params)
 
   repetition_tester_begin_time(tester);
 
-  for (usize row = 0; row < left.row_count; row++)
-  {
-    for (usize k = 0; k < right.row_count; k++)
-    {
-      usize left_index = row * left.col_count + k;
-      f64 left_value   = LOAD(left.values[left_index]);
-
-      usize right_row_start = LOAD(right.row_pointers[k]);
-      usize right_row_close = LOAD(right.row_pointers[k + 1]);
-
-      for (usize rj = right_row_start; rj < right_row_close; rj++)
-      {
-        usize col = LOAD(right.col_indices[rj]);
-        f64 right_value = LOAD(right.values[rj]);
-
-        usize output_index = row * output.col_count + col;
-        f64 output_value   = LOAD(output.values[output_index]);
-
-        FMADD(output_value, left_value, right_value);
-
-        STORE(output.values[output_index], output_value);
-      }
-    }
-  }
-
+  dense_x_csr_impl;
   repetition_tester_close_time(tester);
 }
 
@@ -391,29 +98,189 @@ void matmul_dense_csc(Repetition_Tester *tester, Operation_Parameters *params)
 
   repetition_tester_begin_time(tester);
 
-  for (usize row = 0; row < left.row_count; row++)
-  {
-    for (usize col = 0; col < right.col_count; col++)
-    {
-      usize output_index = row * output.col_count + col;
-      f64 output_value = 0.0;
+  dense_x_csc_impl;
 
-      usize right_col_start = LOAD(right.col_pointers[col]);
-      usize right_col_close   = LOAD(right.col_pointers[col + 1]);
-      for (usize kc = right_col_start; kc < right_col_close; kc++)
-      {
-        usize k = LOAD(right.row_indices[kc]);
-        f64 right_value = LOAD(right.values[kc]);
+  repetition_tester_close_time(tester);
+}
 
-        usize left_index = row * left.col_count + k;
-        f64 left_value = LOAD(left.values[left_index]);
+static
+void matmul_dense_coo(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  Dense_Matrix left   = params->left.dense;
+  COO_Matrix right    = params->right.coo;
+  Dense_Matrix output = params->output;
 
-        FMADD(output_value, left_value, right_value);
-      }
+  repetition_tester_begin_time(tester);
 
-      STORE(output.values[output_index], output_value);
-    }
-  }
+  dense_x_coo_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_csr_dense(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSR_Matrix left     = params->left.csr;
+  Dense_Matrix right  = params->right.dense;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  csr_x_dense_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSR_Matrix left  = params->left.csr;
+  CSR_Matrix right = params->right.csr;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  csr_x_csr_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_csr_csc(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSR_Matrix left  = params->left.csr;
+  CSC_Matrix right = params->right.csc;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  csr_x_csc_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_csr_coo(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSR_Matrix left  = params->left.csr;
+  COO_Matrix right = params->right.coo;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  csr_x_coo_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_csc_dense(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSC_Matrix left     = params->left.csc;
+  Dense_Matrix right  = params->right.dense;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  csc_x_dense_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_csc_csr(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSC_Matrix left  = params->left.csc;
+  CSR_Matrix right = params->right.csr;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  csc_x_csr_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_csc_csc(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSC_Matrix left  = params->left.csc;
+  CSC_Matrix right = params->right.csc;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  csc_x_csc_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_csc_coo(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  CSC_Matrix left  = params->left.csc;
+  COO_Matrix right = params->right.coo;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  csc_x_coo_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_coo_dense(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  COO_Matrix left    = params->left.coo;
+  Dense_Matrix right = params->right.dense;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  coo_x_dense_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_coo_csr(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  COO_Matrix left  = params->left.coo;
+  CSR_Matrix right = params->right.csr;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  coo_x_csr_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_coo_csc(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  COO_Matrix left  = params->left.coo;
+  CSC_Matrix right = params->right.csc;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  coo_x_csc_impl;
+
+  repetition_tester_close_time(tester);
+}
+
+static
+void matmul_coo_coo(Repetition_Tester *tester, Operation_Parameters *params)
+{
+  COO_Matrix left  = params->left.coo;
+  COO_Matrix right = params->right.coo;
+  Dense_Matrix output = params->output;
+
+  repetition_tester_begin_time(tester);
+
+  coo_x_coo_impl;
 
   repetition_tester_close_time(tester);
 }
@@ -423,12 +290,19 @@ Operation_Entry test_entries[] =
   {STR("dense_X_dense"), matmul_dense_dense},
   {STR("dense_X_csr"),   matmul_dense_csr},
   {STR("dense_X_csc"),   matmul_dense_csc},
+  {STR("dense_X_coo"),   matmul_dense_coo},
   {STR("csr_X_dense"),   matmul_csr_dense},
   {STR("csr_X_csr"),     matmul_csr_csr},
   {STR("csr_X_csc"),     matmul_csr_csc},
+  {STR("csr_X_coo"),     matmul_csr_coo},
   {STR("csc_X_dense"),   matmul_csc_dense},
   {STR("csc_X_csr"),     matmul_csc_csr},
   {STR("csc_X_csc"),     matmul_csc_csc},
+  {STR("csc_X_coo"),     matmul_csc_coo},
+  {STR("coo_X_dense"),   matmul_coo_dense},
+  {STR("coo_X_csr"),     matmul_coo_csr},
+  {STR("coo_X_csc"),     matmul_coo_csc},
+  {STR("coo_X_coo"),     matmul_coo_coo},
 };
 
 #include <math.h>
@@ -457,10 +331,12 @@ Operation_Parameters init_params(Arena *arena, u32 row_count, u32 col_count, u32
     .left.dense = left_dense,
     .left.csr = csr_from_dense(arena, &left_dense),
     .left.csc = csc_from_dense(arena, &left_dense),
+    .left.coo = coo_from_dense(arena, &left_dense),
 
     .right.dense = right_dense,
     .right.csr = csr_from_dense(arena, &right_dense),
     .right.csc = csc_from_dense(arena, &right_dense),
+    .right.coo = coo_from_dense(arena, &right_dense),
 
     .output = output,
   };
@@ -477,9 +353,9 @@ int main(int argc, char **argv)
 
   u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 3);
 
-  u32 row_count   = args_get_integer_value(&args, STR("row_count"), 16);
-  u32 col_count   = args_get_integer_value(&args, STR("col_count"), 16);
-  u32 inner_count = args_get_integer_value(&args, STR("inner_count"), 256);
+  u32 row_count   = args_get_integer_value(&args, STR("row_count"), 32);
+  u32 col_count   = args_get_integer_value(&args, STR("col_count"), 32);
+  u32 inner_count = args_get_integer_value(&args, STR("inner_count"), 32);
 
   String sweep_string = args_get_string_value(&args, STR("sweep"), STR("both"));
 

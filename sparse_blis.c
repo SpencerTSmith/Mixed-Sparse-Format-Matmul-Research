@@ -60,8 +60,8 @@ struct Blocking_Description
   usize inner_step;
 };
 
-typedef struct Multiformat_Matrix Multisparse_Matrix;
-struct Multiformat_Matrix
+typedef struct Multisparse_Matrix Multisparse_Matrix;
+struct Multisparse_Matrix
 {
   // Overall.
   usize row_count;
@@ -210,49 +210,73 @@ void do_sparse_microkernel(Dense_Matrix output, Matrix_Union left_union, Matrix_
     {
       Dense_Matrix left = left_union.dense;
       CSR_Matrix right  = right_union.csr;
-      dense_x_csr(output, left, right);
+      if (right.non_zero_count)
+      {
+        dense_x_csr(output, left, right);
+      }
     } break;
     case MAT_COMBO_DENSE_CSC:
     {
       Dense_Matrix left = left_union.dense;
       CSC_Matrix right  = right_union.csc;
-      dense_x_csc(output, left, right);
+      if (right.non_zero_count)
+      {
+        dense_x_csc(output, left, right);
+      }
     } break;
     case MAT_COMBO_CSR_DENSE:
     {
       CSR_Matrix left    = left_union.csr;
       Dense_Matrix right = right_union.dense;
-      csr_x_dense(output, left, right);
+      if (left.non_zero_count)
+      {
+        csr_x_dense(output, left, right);
+      }
     } break;
     case MAT_COMBO_CSR_CSR:
     {
       CSR_Matrix left  = left_union.csr;
       CSR_Matrix right = right_union.csr;
-      csr_x_csr(output, left, right);
+      if (left.non_zero_count && right.non_zero_count)
+      {
+        csr_x_csr(output, left, right);
+      }
     } break;
     case MAT_COMBO_CSR_CSC:
     {
       CSR_Matrix left  = left_union.csr;
       CSC_Matrix right = right_union.csc;
-      csr_x_csc(output, left, right);
+      if (left.non_zero_count && right.non_zero_count)
+      {
+        csr_x_csc(output, left, right);
+      }
     } break;
     case MAT_COMBO_CSC_DENSE:
     {
       CSC_Matrix left    = left_union.csc;
       Dense_Matrix right = right_union.dense;
-      csc_x_dense(output, left, right);
+      if (left.non_zero_count)
+      {
+        csc_x_dense(output, left, right);
+      }
     } break;
     case MAT_COMBO_CSC_CSR:
     {
       CSC_Matrix left  = left_union.csc;
       CSR_Matrix right = right_union.csr;
-      csc_x_csr(output, left, right);
+      if (left.non_zero_count && right.non_zero_count)
+      {
+        csc_x_csr(output, left, right);
+      }
     } break;
     case MAT_COMBO_CSC_CSC:
     {
       CSC_Matrix left  = left_union.csc;
       CSC_Matrix right = right_union.csc;
-      csc_x_csc(output, left, right);
+      if (left.non_zero_count && right.non_zero_count)
+      {
+        csc_x_csc(output, left, right);
+      }
     } break;
   }
 }
@@ -373,19 +397,11 @@ Matrix_Solution load_matrix_solution(Arena *arena, String filename)
     fread(result.left_blocking.block_formats, sizeof(Matrix_Format),
           block_m_count * block_k_count, file);
 
-    // printf("%u\n", result.left_blocking.block_formats[0]);
-    // printf("%u\n", result.left_blocking.block_formats[1]);
-    // printf("%u\n", result.left_blocking.block_formats[2]);
-
     result.right_blocking.block_formats = arena_calloc(arena,
                                                        block_n_count * block_k_count,
                                                        Matrix_Format);
     fread(result.right_blocking.block_formats, sizeof(Matrix_Format),
           block_n_count * block_k_count, file);
-
-    // printf("%u\n", result.right_blocking.block_formats[0]);
-    // printf("%u\n", result.right_blocking.block_formats[1]);
-    // printf("%u\n", result.right_blocking.block_formats[2]);
 
     fread(&result.left.row_count, sizeof(result.left.row_count), 1, file);
     fread(&result.left.col_count, sizeof(result.left.col_count), 1, file);
@@ -407,17 +423,56 @@ struct Operation_Parameters
   String name;
   Multisparse_Matrix left;
   Multisparse_Matrix right;
+  Matrix_Union left_union;
+  Matrix_Union right_union;
   Dense_Matrix output;
 };
 
 static
 void reptest_solution(Repetition_Tester *tester, Operation_Parameters params)
 {
-  repetition_tester_begin_time(tester);
+  if (params.left_union.format == MAT_NONE)
+  {
+    repetition_tester_begin_time(tester);
 
-  sparse_blis(&params.output, params.left, params.right);
+    sparse_blis(&params.output, params.left, params.right);
 
-  repetition_tester_close_time(tester);
+    repetition_tester_close_time(tester);
+  }
+  else
+  {
+    repetition_tester_begin_time(tester);
+
+    do_sparse_microkernel(params.output, params.left_union, params.right_union);
+
+    repetition_tester_close_time(tester);
+  }
+}
+
+static
+Matrix_Format format_from_string(String string)
+{
+  Matrix_Format format = MAT_NONE;
+
+  if (string_match(STR("MAT_DENSE"), string))
+  {
+    format = MAT_DENSE;
+  }
+  else if (string_match(STR("MAT_CSR"), string))
+  {
+    format = MAT_CSR;
+  }
+  else if (string_match(STR("MAT_CSC"), string))
+  {
+    format = MAT_CSR;
+  }
+  else
+  {
+    format = MAT_DENSE;
+    LOG_ERROR("Unkown matrix format string, defaulting to dense.");
+  }
+
+  return format;
 }
 
 int main(int argc, char **argv)
@@ -427,9 +482,28 @@ int main(int argc, char **argv)
 
   b32 verify = args_has_flag(&args, STR("verify"));
 
+  String left_constant_blocking_string = args_get_string_value(&args,
+                                                              STR("left_constant_blocking"),
+                                                              STR("MAT_CSC"));
+  String right_constant_blocking_string = args_get_string_value(&args,
+                                                                STR("right_constant_blocking"),
+                                                                STR("MAT_CSR"));
+
+  String left_global_string = args_get_string_value(&args,
+                                                    STR("left_global"),
+                                                    STR("MAT_CSR"));
+
+  String right_global_string = args_get_string_value(&args,
+                                                    STR("right_global"),
+                                                    STR("MAT_CSC"));
+
+  Matrix_Format left_constant_blocking = format_from_string(left_constant_blocking_string);
+  Matrix_Format right_constant_blocking = format_from_string(right_constant_blocking_string);
+  Matrix_Format left_global = format_from_string(left_global_string);
+  Matrix_Format right_global = format_from_string(right_global_string);
+
   Matrix_Solution solution = load_matrix_solution(&arena, STR("solution.bin"));
 
-  // TODO: Parameterize these.
   Blocking_Description constant_left_blocking =
   {
     .block_formats = arena_calloc(&arena, solution.left_blocking.inner_step * solution.left_blocking.outer_step, Matrix_Format),
@@ -440,7 +514,7 @@ int main(int argc, char **argv)
   };
   for (usize i = 0; i < solution.left_blocking.inner_step * solution.left_blocking.outer_step; i += 1)
   {
-    constant_left_blocking.block_formats[i] = MAT_CSC;
+    constant_left_blocking.block_formats[i] = left_constant_blocking;
   }
   Blocking_Description constant_right_blocking =
   {
@@ -452,10 +526,17 @@ int main(int argc, char **argv)
   };
   for (usize i = 0; i < solution.right_blocking.inner_step * solution.right_blocking.outer_step; i += 1)
   {
-    constant_right_blocking.block_formats[i] = MAT_CSC;
+    constant_right_blocking.block_formats[i] = right_constant_blocking;
   }
 
-  Operation_Parameters params[2] =
+  // TODO: more ergonomic
+  String join[] = {STR("Constant_Blocking"), left_constant_blocking_string, right_constant_blocking_string};
+  String_Array array = (String_Array)TO_ARRAY(join);
+
+  String join2[] = {STR("Global"), left_global_string, right_global_string};
+  String_Array array2 = (String_Array)TO_ARRAY(join2);
+
+  Operation_Parameters params[] =
   {
     {
       .name  = STR("Optimal"),
@@ -469,9 +550,20 @@ int main(int argc, char **argv)
       }
     },
     {
-      .name = STR("Constant"),
+      .name = string_join_array(&arena, array, STR("x")),
       .left  = multi_sparsify(&arena, solution.left, constant_left_blocking),
       .right = multi_sparsify(&arena, solution.right, constant_right_blocking),
+      .output =
+      {
+        .row_count = solution.left.row_count,
+        .col_count = solution.right.col_count,
+        .values = arena_calloc(&arena, solution.left.row_count * solution.right.col_count, f64),
+      }
+    },
+    {
+      .name = string_join_array(&arena, array2, STR("x")),
+      .left_union = dense_to_format(&arena, solution.left, left_global),
+      .right_union = dense_to_format(&arena, solution.right, right_global),
       .output =
       {
         .row_count = solution.left.row_count,
@@ -516,7 +608,7 @@ int main(int argc, char **argv)
 
       f64 percent_better = (f64)(other_time - min_time)/(f64)(other_time) * 100.0;
 
-      printf("%.*s is %.4f%% better than %.*s\n", STRF(params[min_tester_index].name), percent_better, STRF(params[tester_index].name));
+      LOG_INFO("%.*s is %.4f%% better than %.*s\n", STRF(params[min_tester_index].name), percent_better, STRF(params[tester_index].name));
     }
   }
 

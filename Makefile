@@ -1,6 +1,6 @@
-CFLAGS := -g -DDEBUG -O0 -lm
+CFLAGS := -g -DDEBUG -lm
 
-SECONDS := 2
+SECONDS := 1
 SWEEP   := both
 
 roofline_asm:
@@ -8,11 +8,11 @@ roofline_asm:
 	ar rcs roofline.a roofline.o
 
 observe: roofline_asm
-	gcc ${CFLAGS} -DOBSERVE_FLOPS -DOBSERVE_MEMOPS reptest_spmm.c roofline.a -o reptest.x
+	gcc ${CFLAGS} -O0 -DOBSERVE_FLOPS -DOBSERVE_MEMOPS reptest_spmm.c roofline.a -o reptest.x
 	./reptest.x --verify --seconds_to_try_for_min=${SECONDS} --sweep=${SWEEP}
 
 run: roofline_asm
-	gcc ${CFLAGS} roofline.a src/reptest_spmm.c roofline.a -o reptest.x
+	gcc ${CFLAGS} -03 roofline.a reptest_spmm.c roofline.a -o reptest.x
 	./reptest.x --verify --seconds_to_try_for_min=${SECONDS} --sweep=${SWEEP}
 
 sparse_blis:
