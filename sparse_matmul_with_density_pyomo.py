@@ -15,7 +15,7 @@ from plot import *
 import numpy as np
 import struct
 
-def diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
+def make_diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
     rng = np.random.default_rng(seed)
 
     matrix = np.zeros((size,size))
@@ -53,31 +53,34 @@ def block_densities(matrix, block_rows, block_cols):
 #   0 ---> dd
 #   1 ---> sd
 #   2 ---> ds
+#   2 ---> ss
 min_format = 0
-max_format = 2
-
-def dummy_csr_csc(LRC, LCC, RCC, LNZ, RNZ):
-    flops = 2 ** 32
-    memops = 2 ** 32
-    return flops, memops
+max_format = 3
 
 FORMULA_MAP = {
     (0, 0): formula_dense_dense,
     (0, 1): formula_dense_csr,
     (0, 2): formula_dense_csc,
+    (0, 3): formula_dense_coo,
     (1, 0): formula_csr_dense,
     (1, 1): formula_csr_csr,
-    (1, 2): dummy_csr_csc,
+    (1, 2): formula_csr_csc,
+    (1, 3): formula_csr_coo,
     (2, 0): formula_csc_dense,
     (2, 1): formula_csc_csr,
     (2, 2): formula_csc_csc,
+    (2, 3): formula_csc_coo,
+    (3, 0): formula_coo_dense,
+    (3, 1): formula_coo_csr,
+    (3, 2): formula_coo_csc,
+    (3, 3): formula_coo_coo,
 }
 
 LRC = 16
 LCC = 16
 RCC = 16
 
-MATRIX_SIZE = 512
+MATRIX_SIZE = 128
 M = MATRIX_SIZE // LRC
 N = MATRIX_SIZE // RCC
 K = MATRIX_SIZE // LCC
@@ -103,10 +106,10 @@ for fa in range(min_format, max_format + 1):
                 LNZ = density_to_nnz(dA, LRC, LCC)
                 RNZ = density_to_nnz(dB, LCC, RCC)
                 flops, memops = FORMULA_MAP[fa, fb](LRC, LCC, RCC, LNZ, RNZ)
-                costs[fa, fb, dA, dB] = flops + memops
+                costs[fa, fb, dA, dB] = flops + (2 * memops)
 
-matrixA = diagonal(MATRIX_SIZE)
-matrixB = diagonal(MATRIX_SIZE)
+matrixA = make_diagonal(MATRIX_SIZE)
+matrixB = make_diagonal(MATRIX_SIZE)
 
 # Densities
 # These would be the actual densities of each block of A and B
@@ -195,7 +198,7 @@ model.pprint()
 
 print(value(model.total_time))
 
-format_names = {0: "dense", 1: "CSR", 2: "CSC"}
+format_names = {0: "dense", 1: "CSR", 2: "CSC", 3: "COO"}
 
 print("\n=== Optimal A formats ===")
 for i in model.i_range:

@@ -154,7 +154,6 @@ Dense_Matrix make_random_dense_matrix(Arena *arena, u32 row_count, u32 col_count
 #define STORE(dst, src) dst = src
 #endif
 
-// AHHHHHH
 static
 void dense_x_dense(Dense_Matrix output, Dense_Matrix left, Dense_Matrix right)
 {

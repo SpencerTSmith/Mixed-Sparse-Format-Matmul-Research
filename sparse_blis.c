@@ -134,34 +134,42 @@ Multisparse_Matrix multi_sparsify(Arena *arena, Dense_Matrix matrix,
           switch (format)
           {
             default:
-              {
-                LOG_ERROR("Invalid matrix format.");
-              } break;
+            {
+              LOG_ERROR("Invalid matrix format.");
+            } break;
 
             case MAT_DENSE:
+            {
+              sub_matrix = (Matrix_Union)
               {
-                sub_matrix = (Matrix_Union)
-                {
-                  .format = MAT_DENSE,
-                  .dense  = dense_block,
-                };
-              } break;
+                .format = MAT_DENSE,
+                .dense  = dense_block,
+              };
+            } break;
             case MAT_CSR:
+            {
+              sub_matrix = (Matrix_Union)
               {
-                sub_matrix = (Matrix_Union)
-                {
-                  .format = MAT_CSR,
-                  .csr    = csr_from_dense(arena, &dense_block),
-                };
-              } break;
+                .format = MAT_CSR,
+                .csr    = csr_from_dense(arena, &dense_block),
+              };
+            } break;
             case MAT_CSC:
+            {
+              sub_matrix = (Matrix_Union)
               {
-                sub_matrix = (Matrix_Union)
-                {
-                  .format = MAT_CSC,
-                  .csc    = csc_from_dense(arena, &dense_block),
-                };
-              } break;
+                .format = MAT_CSC,
+                .csc    = csc_from_dense(arena, &dense_block),
+              };
+            } break;
+            case MAT_COO:
+            {
+              sub_matrix = (Matrix_Union)
+              {
+                .format = MAT_COO,
+                .coo    = coo_from_dense(arena, &dense_block),
+              };
+            } break;
           }
 
           result.blocks[block_row * result.blocks_col_count + block_col] = sub_matrix;
@@ -178,16 +186,23 @@ typedef enum Matrix_Format_Dispatch
   MAT_COMBO_DENSE_DENSE,
   MAT_COMBO_DENSE_CSR,
   MAT_COMBO_DENSE_CSC,
+  MAT_COMBO_DENSE_COO,
   MAT_COMBO_CSR_DENSE,
   MAT_COMBO_CSR_CSR,
   MAT_COMBO_CSR_CSC,
+  MAT_COMBO_CSR_COO,
   MAT_COMBO_CSC_DENSE,
   MAT_COMBO_CSC_CSR,
   MAT_COMBO_CSC_CSC,
+  MAT_COMBO_CSC_COO,
+  MAT_COMBO_COO_DENSE,
+  MAT_COMBO_COO_CSR,
+  MAT_COMBO_COO_CSC,
+  MAT_COMBO_COO_COO,
 } Matrix_Format_Dispatch;
 
 static
-void do_sparse_microkernel(Dense_Matrix output, Matrix_Union left_union, Matrix_Union right_union)
+void do_sparse_matmul(Dense_Matrix output, Matrix_Union left_union, Matrix_Union right_union)
 {
   ASSERT(left_union.format != MAT_NONE, "Invalid Matrix Format for micro-kernel.");
   ASSERT(right_union.format != MAT_NONE, "Invalid Matrix Format for micro-kernel.");
@@ -224,6 +239,15 @@ void do_sparse_microkernel(Dense_Matrix output, Matrix_Union left_union, Matrix_
         dense_x_csc(output, left, right);
       }
     } break;
+    case MAT_COMBO_DENSE_COO:
+    {
+      Dense_Matrix left = left_union.dense;
+      COO_Matrix right  = right_union.coo;
+      if (right.non_zero_count)
+      {
+        dense_x_coo(output, left, right);
+      }
+    } break;
     case MAT_COMBO_CSR_DENSE:
     {
       CSR_Matrix left    = left_union.csr;
@@ -249,6 +273,15 @@ void do_sparse_microkernel(Dense_Matrix output, Matrix_Union left_union, Matrix_
       if (left.non_zero_count && right.non_zero_count)
       {
         csr_x_csc(output, left, right);
+      }
+    } break;
+    case MAT_COMBO_CSR_COO:
+    {
+      CSR_Matrix left  = left_union.csr;
+      COO_Matrix right = right_union.coo;
+      if (left.non_zero_count && right.non_zero_count)
+      {
+        csr_x_coo(output, left, right);
       }
     } break;
     case MAT_COMBO_CSC_DENSE:
@@ -278,6 +311,51 @@ void do_sparse_microkernel(Dense_Matrix output, Matrix_Union left_union, Matrix_
         csc_x_csc(output, left, right);
       }
     } break;
+    case MAT_COMBO_CSC_COO:
+    {
+      CSC_Matrix left  = left_union.csc;
+      COO_Matrix right = right_union.coo;
+      if (left.non_zero_count)
+      {
+        csc_x_coo(output, left, right);
+      }
+    } break;
+    case MAT_COMBO_COO_DENSE:
+    {
+      COO_Matrix left    = left_union.coo;
+      Dense_Matrix right = right_union.dense;
+      if (left.non_zero_count)
+      {
+        coo_x_dense(output, left, right);
+      }
+    } break;
+    case MAT_COMBO_COO_CSR:
+    {
+      COO_Matrix left  = left_union.coo;
+      CSR_Matrix right = right_union.csr;
+      if (left.non_zero_count && right.non_zero_count)
+      {
+        coo_x_csr(output, left, right);
+      }
+    } break;
+    case MAT_COMBO_COO_CSC:
+    {
+      COO_Matrix left  = left_union.coo;
+      CSC_Matrix right = right_union.csc;
+      if (left.non_zero_count && right.non_zero_count)
+      {
+        coo_x_csc(output, left, right);
+      }
+    } break;
+    case MAT_COMBO_COO_COO:
+    {
+      COO_Matrix left  = left_union.coo;
+      COO_Matrix right = right_union.coo;
+      if (left.non_zero_count)
+      {
+        coo_x_coo(output, left, right);
+      }
+    } break;
   }
 }
 
@@ -289,9 +367,6 @@ void sparse_blis(Dense_Matrix *output, Multisparse_Matrix left, Multisparse_Matr
   usize block_m = left.blocks_row_count;
   usize block_n = right.blocks_col_count;
   usize block_k = left.blocks_col_count;
-
-  // I still really don't understand what this blocking gets us when sparse. A simpler loop structure I
-  // think would be able to get all the reuse out of our smaller blocks.
 
   // Since we iterate by blocks and not be elements, gotta change steps and conditions.
   for (usize block_j_o = 0; block_j_o < block_n; block_j_o += BLOCK_J)
@@ -323,7 +398,7 @@ void sparse_blis(Dense_Matrix *output, Multisparse_Matrix left, Multisparse_Matr
 
               Matrix_Union left_block  = left.blocks[block_i * left.blocks_col_count + block_p];
               Matrix_Union right_block = right.blocks[block_p * right.blocks_col_count + block_j];
-              do_sparse_microkernel(temp, left_block, right_block);
+              do_sparse_matmul(temp, left_block, right_block);
             }
 
             // Update output with temp
@@ -443,7 +518,7 @@ void reptest_solution(Repetition_Tester *tester, Operation_Parameters params)
   {
     repetition_tester_begin_time(tester);
 
-    do_sparse_microkernel(params.output, params.left_union, params.right_union);
+    do_sparse_matmul(params.output, params.left_union, params.right_union);
 
     repetition_tester_close_time(tester);
   }
@@ -465,6 +540,10 @@ Matrix_Format format_from_string(String string)
   else if (string_match(STR("MAT_CSC"), string))
   {
     format = MAT_CSR;
+  }
+  else if (string_match(STR("MAT_COO"), string))
+  {
+    format = MAT_COO;
   }
   else
   {
@@ -491,11 +570,11 @@ int main(int argc, char **argv)
 
   String left_global_string = args_get_string_value(&args,
                                                     STR("left_global"),
-                                                    STR("MAT_CSR"));
+                                                    STR("MAT_CSC"));
 
   String right_global_string = args_get_string_value(&args,
                                                     STR("right_global"),
-                                                    STR("MAT_CSC"));
+                                                    STR("MAT_CSR"));
 
   Matrix_Format left_constant_blocking = format_from_string(left_constant_blocking_string);
   Matrix_Format right_constant_blocking = format_from_string(right_constant_blocking_string);

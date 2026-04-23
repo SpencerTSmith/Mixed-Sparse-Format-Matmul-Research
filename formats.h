@@ -68,6 +68,7 @@ struct Matrix_Union
     Dense_Matrix dense;
     CSR_Matrix   csr;
     CSC_Matrix   csc;
+    COO_Matrix   coo;
   };
 };
 
@@ -300,7 +301,6 @@ Matrix_Union dense_to_format(Arena *arena, Dense_Matrix matrix, Matrix_Format fo
           f64 left_value  = LOAD(left.values[left_cursor]);                  \
           f64 right_value = LOAD(right.values[right_cursor]);                \
           FMADD(result_value, left_value, right_value);                      \
-                                                                             \
         }                                                                    \
         left_cursor  += (usize)(left_col == k);                              \
         right_cursor += (usize)(right_row == k);                             \

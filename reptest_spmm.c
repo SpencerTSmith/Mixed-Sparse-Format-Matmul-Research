@@ -353,9 +353,9 @@ int main(int argc, char **argv)
 
   u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 3);
 
-  u32 row_count   = args_get_integer_value(&args, STR("row_count"), 32);
-  u32 col_count   = args_get_integer_value(&args, STR("col_count"), 32);
-  u32 inner_count = args_get_integer_value(&args, STR("inner_count"), 32);
+  u32 row_count   = args_get_integer_value(&args, STR("row_count"), 64);
+  u32 col_count   = args_get_integer_value(&args, STR("col_count"), 64);
+  u32 inner_count = args_get_integer_value(&args, STR("inner_count"), 64);
 
   String sweep_string = args_get_string_value(&args, STR("sweep"), STR("both"));
 
@@ -418,17 +418,10 @@ int main(int argc, char **argv)
     }
   }
 
-#if 1
   f64 densities[] =
   {
     0.0, 0.01, 0.05, 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9, 1.0,
   };
-#else
-  f64 densities[] =
-  {
-    0.1,
-  };
-#endif
 
   Repetition_Tester testers[STATIC_COUNT(test_entries)][STATIC_COUNT(densities)] = {0};
 
