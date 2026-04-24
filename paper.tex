@@ -51,7 +51,7 @@
 \begin{abstract}
 Sparse matrix-matrix multiplication (SpGEMM) is an important, performance-critical operation in many scientific and graph workloads, yet existing implementations rarely exploit fine-grained structural sparsity within the multiply itself, often focusing on a global compression strategy. In this work, we present a comprehensive benchmarking and instrumentation study of SpGEMM across a variety of storage formats, covering all permutations of input format pairings with dense output. Through runtime performance benchmarking and instrumentation, we observe the floating-point operation (FLOP) and memory operation (memop) counts for each format combination and derive analytical formulas that accurately approximate these costs as a function of matrix density and dimensions.
 
-With these findings, we introduce a BLIS-inspired sparse matrix multiplication algorithm that preserves the hierarchical loop ordering and blocking of BLIS while replacing the innermost micro-kernel with heterogeneous format sparse blocks drawn from the aforementioned four formats. We formulate the selection of per-block formats as an interger non-linear optimization problem, using the derived cost formulas to identify the globally optimal format assignment for a given combination of input matrices and their respective density distribution over the micro-blocks. The result is a high performance SpGEMM that is adaptable to a wide range of sparse datasets.
+With these findings, we introduce a BLIS-inspired sparse matrix multiplication algorithm that preserves the hierarchical loop ordering and blocking of BLIS while replacing the innermost micro-kernel with heterogeneous format sparse blocks drawn from the aforementioned four formats. We formulate the selection of per-block formats as an integer non-linear optimization problem, using the derived cost formulas to identify the globally optimal format assignment for a given combination of input matrices and their respective density distribution over the micro-blocks. The result is a high performance SpGEMM that is adaptable to a wide range of sparse datasets.
 \end{abstract}
 
 %%
@@ -248,22 +248,22 @@ as discussed in the Analysis section.
 \hline
 \textbf{Left} & \textbf{Right} & \textbf{Flops} & \textbf{Memops} \\
 \hline
-Dense & Dense & $2 L_{RC} \cdot L_{CC} R_{CC}$ & $2 L_{RC} L_{CC} R_{CC} + L_{RC} R_{CC}$ \\
-Dense & CSR   & $2 L_{RC} \cdot R_{NZ}$ & $3 L_{RC} L_{CC} + 4 L_{RC} R_{NZ}$ \\
-Dense & CSC   & $2 L_{RC} \cdot R_{NZ}$ & $3 L_{RC} R_{CC} + 3 L_{RC} R_{NZ}$ \\
-Dense & COO   & $2 L_{RC} \cdot R_{NZ}$ & $2 R_{NZ} + L_{RC} R_{NZ} + 4 L_{RC} R_{NZ}$ \\
-CSR   & Dense & $2 L_{NZ} \cdot R_{CC}$ & $2 L_{RC} + 2 L_{NZ} + 3 L_{NZ} R_{CC}$ \\
-CSR   & CSR   & $2 \cdot \text{matches}$ & $2 L_{RC} + 4 L_{NZ} + 4 \cdot \text{matches}$ \\
-CSR   & CSC   & $2 \cdot \text{matches}$ & $2 L_{RC} + 3 L_{RC} R_{CC} + L_{NZ} R_{CC} + L_{RC} R_{NZ} + 2 \cdot \text{matches} + L_{RC} R_{CC}$ \\
-CSR   & COO   & $2 \cdot \text{matches}$ & $2 L_{RC} + L_{NZ} + L_{RC} R_{NZ} + 4 \cdot \text{matches}$ \\
-CSC   & Dense & $2 L_{NZ} \cdot R_{CC}$ & $2 L_{CC} + 2 L_{NZ} + 3 L_{NZ} R_{CC}$ \\
-CSC   & CSR   & $2 \cdot \text{matches}$ & $4 L_{CC} + 2 L_{NZ} + 4 \cdot \text{matches}$ \\
-CSC   & CSC   & $2 \cdot \text{matches}$ & $2 R_{CC} + 4 R_{NZ} + 4 \cdot \text{matches}$ \\
-CSC   & COO   & $2 \cdot \text{matches}$ & $2 R_{NZ} + 2 R_S + 4 \cdot \text{matches}$ \\
-COO   & Dense & $2 L_{NZ} \cdot R_{CC}$ & $3 L_{NZ} + 3 L_{NZ} R_{CC}$ \\
-COO   & CSR   & $2 \cdot \text{matches}$ & $5 L_{NZ} + 4 \cdot \text{matches}$ \\
-COO   & CSC   & $2 \cdot \text{matches}$ & $L_{NZ} + 2 R_{CC} L_S + L_{NZ} R_{CC} + R_{NZ} L_S + 2 \cdot \text{matches} + L_S R_{CC}$ \\
-COO   & COO   & $2 \cdot \text{matches}$ & $3 L_{NZ} + R_{NZ} L_S + 4 \cdot \text{matches}$ \\
+DNS & DNS & $2 L_{RC} \cdot L_{CC} R_{CC}$ & $2 L_{RC} L_{CC} R_{CC} + L_{RC} R_{CC}$ \\
+DNS & CSR   & $2 L_{RC} \cdot R_{NZ}$ & $3 L_{RC} L_{CC} + 4 L_{RC} R_{NZ}$ \\
+DNS & CSC   & $2 L_{RC} \cdot R_{NZ}$ & $3 L_{RC} R_{CC} + 3 L_{RC} R_{NZ}$ \\
+DNS & COO   & $2 L_{RC} \cdot R_{NZ}$ & $2 R_{NZ} + L_{RC} R_{NZ} + 4 L_{RC} R_{NZ}$ \\
+CSR & DNS & $2 L_{NZ} \cdot R_{CC}$ & $2 L_{RC} + 2 L_{NZ} + 3 L_{NZ} R_{CC}$ \\
+CSR & CSR   & $2 \cdot \text{matches}$ & $2 L_{RC} + 4 L_{NZ} + 4 \cdot \text{matches}$ \\
+CSR & CSC   & $2 \cdot \text{matches}$ & $2 L_{RC} + 4 L_{RC} R_{CC} + L_{NZ} R_{CC} + L_{RC} R_{NZ} + 2 \cdot \text{matches}$ \\
+CSR & COO   & $2 \cdot \text{matches}$ & $2 L_{RC} + L_{NZ} + L_{RC} R_{NZ} + 4 \cdot \text{matches}$ \\
+CSC & DNS & $2 L_{NZ} \cdot R_{CC}$ & $2 L_{CC} + 2 L_{NZ} + 3 L_{NZ} R_{CC}$ \\
+CSC & CSR   & $2 \cdot \text{matches}$ & $4 L_{CC} + 2 L_{NZ} + 4 \cdot \text{matches}$ \\
+CSC & CSC   & $2 \cdot \text{matches}$ & $2 R_{CC} + 4 R_{NZ} + 4 \cdot \text{matches}$ \\
+CSC & COO   & $2 \cdot \text{matches}$ & $2 R_{NZ} + 2 R_S + 4 \cdot \text{matches}$ \\
+COO & DNS & $2 L_{NZ} \cdot R_{CC}$ & $3 L_{NZ} + 3 L_{NZ} R_{CC}$ \\
+COO & CSR   & $2 \cdot \text{matches}$ & $5 L_{NZ} + 4 \cdot \text{matches}$ \\
+COO & CSC   & $2 \cdot \text{matches}$ & $L_{NZ} + 2 R_{CC} L_S + L_{NZ} R_{CC} + R_{NZ} L_S + 2 \cdot \text{matches} + L_S R_{CC}$ \\
+COO & COO   & $2 \cdot \text{matches}$ & $3 L_{NZ} + R_{NZ} L_S + 4 \cdot \text{matches}$ \\
 \hline
 \end{tabular}
 \caption{Arithmetic and memory operation count formulae for all sixteen format combinations.
@@ -309,7 +309,7 @@ C = \min \sum_{i,j,p} \sum_{f_A, f_B}
 
 The product $a_{i,p,f_A} \cdot b_{p,j,f_B}$ makes this objective 'bilinear' (is this right? from looking stuff up it seems like this is the right term for it...) in the
 decision variables, which constitutes a Mixed Integer Nonlinear
-Program (MINLP). The solver is implemented using Pyomo (probalby outght to cite that here) with MindtPy as the MINLP solver backend, using GLPK for the MIP subproblems and IPOPT for the NLP
+Program (MINLP). The solver is implemented using Pyomo (probably ought to cite that here) with MindtPy as the MINLP solver backend, using GLPK for the MIP subproblems and IPOPT for the NLP
 solver. Once solved, the optimal format assignments are written alongside the
 input matrices to a binary file consumed by the sparse BLIS multiplication program.
 

@@ -19,8 +19,8 @@ struct CSR_Matrix
   u32 row_count;
 
   // Hmm, might be better to have just one buffer and relative pointers
-  u32 *row_pointers;
-  u32 *col_indices;
+  u8 *row_pointers;
+  u8 *col_indices;
   f64 *values;
 };
 
@@ -31,8 +31,8 @@ struct CSC_Matrix
   u32 col_count;
 
   // Hmm, might be better to have just one buffer and relative pointers
-  u32 *row_indices;
-  u32 *col_pointers;
+  u8 *row_indices;
+  u8 *col_pointers;
   f64 *values;
 };
 
@@ -41,8 +41,8 @@ struct COO_Matrix
 {
   u32 non_zero_count;
 
-  u32 *row_indices;
-  u32 *col_indices;
+  u8 *row_indices;
+  u8 *col_indices;
   f64 *values;
 };
 

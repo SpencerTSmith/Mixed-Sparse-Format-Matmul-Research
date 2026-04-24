@@ -21,15 +21,15 @@
 #endif
 
 #ifndef BLOCK_NR
-#define BLOCK_NR 16
+#define BLOCK_NR 32
 #endif
 
 #ifndef BLOCK_MR
-#define BLOCK_MR 16
+#define BLOCK_MR 32
 #endif
 
 #ifndef BLOCK_KU
-#define BLOCK_KU 16
+#define BLOCK_KU 32
 #endif
 
 #if (BLOCK_NC) % (BLOCK_NR) != 0

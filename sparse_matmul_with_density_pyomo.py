@@ -76,11 +76,11 @@ FORMULA_MAP = {
     (3, 3): formula_coo_coo,
 }
 
-LRC = 16
-LCC = 16
-RCC = 16
+LRC = 32
+LCC = 32
+RCC = 32
 
-MATRIX_SIZE = 128
+MATRIX_SIZE = 256
 M = MATRIX_SIZE // LRC
 N = MATRIX_SIZE // RCC
 K = MATRIX_SIZE // LCC
