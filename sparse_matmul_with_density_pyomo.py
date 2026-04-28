@@ -15,6 +15,8 @@ from plot import *
 import numpy as np
 import struct
 
+import time
+
 def make_diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
     rng = np.random.default_rng(seed)
 
@@ -187,14 +189,14 @@ model.objective = Objective(rule=model.total_time, sense=minimize)
 # model.objective.display()
 
 # Solve the model using MindtPy
-SolverFactory('mindtpy').solve(model, mip_solver='glpk', nlp_solver='ipopt')
+SolverFactory('mindtpy').solve(model, mip_solver='glpk', nlp_solver='ipopt', tee=True)
 
-print("======= DONE ========")
-print("= LOOK at the assignments of a_format and b_format")
+# print("======= DONE ========")
+# print("= LOOK at the assignments of a_format and b_format")
 
 # model.objective.display()
-model.display()
-model.pprint()
+# model.display()
+# model.pprint()
 
 print(value(model.total_time))
 

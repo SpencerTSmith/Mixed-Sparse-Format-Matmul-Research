@@ -26,8 +26,8 @@ CSR_Matrix csr_from_dense(Arena *arena, Dense_Matrix *dense)
   result.row_count = dense->row_count;
 
   result.values       = arena_calloc(arena, result.non_zero_count, f64);
-  result.col_indices  = arena_calloc(arena, result.non_zero_count, u8);
-  result.row_pointers = arena_calloc(arena, result.row_count + 1, u8);
+  result.col_indices  = arena_calloc(arena, result.non_zero_count, u16);
+  result.row_pointers = arena_calloc(arena, result.row_count + 1, u16);
 
   isize non_zero_index = 0;
   for (isize r = 0; r < dense->row_count; r++)
@@ -59,8 +59,8 @@ CSC_Matrix csc_from_dense(Arena *arena, Dense_Matrix *dense)
   result.col_count = dense->col_count;
 
   result.values       = arena_calloc(arena, result.non_zero_count, f64);
-  result.row_indices  = arena_calloc(arena, result.non_zero_count, u8);
-  result.col_pointers = arena_calloc(arena, result.col_count + 1, u8);
+  result.row_indices  = arena_calloc(arena, result.non_zero_count, u16);
+  result.col_pointers = arena_calloc(arena, result.col_count + 1, u16);
 
   isize non_zero_index = 0;
   for (isize c = 0; c < dense->col_count; c++)
@@ -89,8 +89,8 @@ COO_Matrix coo_from_dense(Arena *arena, Dense_Matrix *dense)
   COO_Matrix result = {0};
   result.non_zero_count = dense_non_zero_count(dense);
   result.values      = arena_calloc(arena, result.non_zero_count, f64);
-  result.row_indices = arena_calloc(arena, result.non_zero_count, u8);
-  result.col_indices = arena_calloc(arena, result.non_zero_count, u8);
+  result.row_indices = arena_calloc(arena, result.non_zero_count, u16);
+  result.col_indices = arena_calloc(arena, result.non_zero_count, u16);
 
   isize non_zero_index = 0;
   for (isize r = 0; r < dense->row_count; r++)
@@ -264,6 +264,7 @@ Matrix_Union dense_to_format(Arena *arena, Dense_Matrix matrix, Matrix_Format fo
     case MAT_DENSE: { result.dense = matrix; } break;
     case MAT_CSR: { result.csr = csr_from_dense(arena, &matrix); } break;
     case MAT_CSC: { result.csc = csc_from_dense(arena, &matrix); } break;
+    case MAT_COO: { result.coo = coo_from_dense(arena, &matrix); } break;
   }
 
   return result;

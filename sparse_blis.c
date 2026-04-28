@@ -130,47 +130,7 @@ Multisparse_Matrix multi_sparsify(Arena *arena, Dense_Matrix matrix,
           Dense_Matrix dense_block = pack_matrix_block(arena, matrix, actual_row, actual_col,
                                                        blocking.row_count, blocking.col_count);
 
-          Matrix_Union sub_matrix = {0};
-          switch (format)
-          {
-            default:
-            {
-              LOG_ERROR("Invalid matrix format.");
-            } break;
-
-            case MAT_DENSE:
-            {
-              sub_matrix = (Matrix_Union)
-              {
-                .format = MAT_DENSE,
-                .dense  = dense_block,
-              };
-            } break;
-            case MAT_CSR:
-            {
-              sub_matrix = (Matrix_Union)
-              {
-                .format = MAT_CSR,
-                .csr    = csr_from_dense(arena, &dense_block),
-              };
-            } break;
-            case MAT_CSC:
-            {
-              sub_matrix = (Matrix_Union)
-              {
-                .format = MAT_CSC,
-                .csc    = csc_from_dense(arena, &dense_block),
-              };
-            } break;
-            case MAT_COO:
-            {
-              sub_matrix = (Matrix_Union)
-              {
-                .format = MAT_COO,
-                .coo    = coo_from_dense(arena, &dense_block),
-              };
-            } break;
-          }
+          Matrix_Union sub_matrix = dense_to_format(arena, dense_block, format);
 
           result.blocks[block_row * result.blocks_col_count + block_col] = sub_matrix;
         }
@@ -439,6 +399,20 @@ struct Matrix_Solution
 };
 
 static
+const char *string_from_format(Matrix_Format format)
+{
+  const char *result = "";
+  switch (format)
+  {
+    case MAT_NONE:
+    {
+    } break;
+  }
+
+  return result;
+}
+
+static
 Matrix_Solution load_matrix_solution(Arena *arena, String filename)
 {
   Matrix_Solution result = {0};
@@ -583,42 +557,42 @@ int main(int argc, char **argv)
 
   Matrix_Solution solution = load_matrix_solution(&arena, STR("solution.bin"));
 
+  usize left_block_count  = (solution.left.row_count / solution.left_blocking.row_count)
+                          * (solution.left.col_count / solution.left_blocking.col_count);
+
+  usize right_block_count = (solution.right.row_count / solution.right_blocking.row_count)
+                          * (solution.right.col_count / solution.right_blocking.col_count);
+
+
   Blocking_Description constant_left_blocking =
   {
-    .block_formats = arena_calloc(&arena, solution.left_blocking.inner_step * solution.left_blocking.outer_step, Matrix_Format),
+    .block_formats = arena_calloc(&arena, left_block_count, Matrix_Format),
     .row_count     = solution.left_blocking.row_count,
     .col_count     = solution.left_blocking.col_count,
     .outer_step    = solution.left_blocking.outer_step,
     .inner_step    = solution.left_blocking.inner_step,
   };
-  for (usize i = 0; i < solution.left_blocking.inner_step * solution.left_blocking.outer_step; i += 1)
+  for (usize i = 0; i < left_block_count; i += 1)
   {
     constant_left_blocking.block_formats[i] = left_constant_blocking;
   }
   Blocking_Description constant_right_blocking =
   {
-    .block_formats = arena_calloc(&arena, solution.right_blocking.inner_step * solution.right_blocking.outer_step, Matrix_Format),
+    .block_formats = arena_calloc(&arena, right_block_count, Matrix_Format),
     .row_count     = solution.right_blocking.row_count,
     .col_count     = solution.right_blocking.col_count,
     .outer_step    = solution.right_blocking.outer_step,
     .inner_step    = solution.right_blocking.inner_step,
   };
-  for (usize i = 0; i < solution.right_blocking.inner_step * solution.right_blocking.outer_step; i += 1)
+  for (usize i = 0; i < right_block_count; i += 1)
   {
     constant_right_blocking.block_formats[i] = right_constant_blocking;
   }
 
-  // TODO: more ergonomic
-  String join[] = {STR("Constant_Blocking"), left_constant_blocking_string, right_constant_blocking_string};
-  String_Array array = (String_Array)TO_ARRAY(join);
-
-  String join2[] = {STR("Global"), left_global_string, right_global_string};
-  String_Array array2 = (String_Array)TO_ARRAY(join2);
-
   Operation_Parameters params[] =
   {
     {
-      .name  = STR("Optimal"),
+      .name  = STR("Solver"),
       .left  = multi_sparsify(&arena, solution.left, solution.left_blocking),
       .right = multi_sparsify(&arena, solution.right, solution.right_blocking),
       .output =
@@ -629,7 +603,9 @@ int main(int argc, char **argv)
       }
     },
     {
-      .name = string_join_array(&arena, array, STR("x")),
+      .name = string_formatted(&arena, "Constant Blocking %.*s x %.*s",
+                               STRF(left_constant_blocking_string),
+                               STRF(right_constant_blocking_string)),
       .left  = multi_sparsify(&arena, solution.left, constant_left_blocking),
       .right = multi_sparsify(&arena, solution.right, constant_right_blocking),
       .output =
@@ -640,7 +616,9 @@ int main(int argc, char **argv)
       }
     },
     {
-      .name = string_join_array(&arena, array2, STR("x")),
+      .name = string_formatted(&arena, "Global %.*s x %.*s",
+                               STRF(left_global_string),
+                               STRF(right_global_string)),
       .left_union = dense_to_format(&arena, solution.left, left_global),
       .right_union = dense_to_format(&arena, solution.right, right_global),
       .output =
