@@ -14,8 +14,34 @@ from plot import *
 
 import numpy as np
 import struct
+import json, ast, os
 
-import time
+NUM_DENSITY_BINS = 3
+BIN_REPRESENTATIVE_DENSITY = {0: 0.1, 1: 0.7, 2: 0.9}
+BIN_LABELS = {0: "(<10%)", 1: "(10-70%)", 2: "(>70%)"}
+
+def density_bin(frac):
+    if frac <= 0.1:   return 0
+    elif frac <= 0.7: return 1
+    else:              return 2
+
+def block_densities(matrix, block_rows, block_cols):
+    M, N = matrix.shape
+    densities = {}
+    for i, row_start in enumerate(range(0, M, block_rows)):
+        for j, col_start in enumerate(range(0, N, block_cols)):
+            block = matrix[row_start:row_start+block_rows, col_start:col_start+block_cols]
+            densities[i,j] = density_bin(np.count_nonzero(block) / block.size)
+    return densities
+
+def density_to_nnz(density_idx, rows, cols):
+    return int(density_idx / 10 * rows * cols)
+
+def dump_matrix(f, matrix):
+    rows, cols = matrix.shape
+    f.write(struct.pack('II', rows, cols))
+    # row-major f64
+    f.write(matrix.astype(np.float64).tobytes())
 
 def make_diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
     rng = np.random.default_rng(seed)
@@ -36,20 +62,6 @@ def make_diagonal(size, diag_density=0.8, noise_density=0.05, seed=42):
     matrix[rows, cols] = rng.random(extra)
 
     return matrix
-
-def block_densities(matrix, block_rows, block_cols):
-    M, N = matrix.shape
-
-    densities = {}
-
-    for i, row_start, in enumerate(range(0,M,block_rows)):
-        for j, col_start in enumerate(range(0,N,block_cols)):
-            block = matrix[row_start:row_start+block_rows,col_start:col_start+block_cols]
-
-            d = np.count_nonzero(block) / block.size * 10
-            densities[i,j] = int(d)
-
-    return densities
 
 # We are going to encode are formats as follows:
 #   0 ---> dd
@@ -95,20 +107,22 @@ model.j_range = RangeSet(0,N-1)
 model.p_range = RangeSet(0,K-1)
 model.sparse_formats_range = RangeSet(min_format,max_format)
 
-model.density_range = RangeSet(0,9)
+model.density_range = RangeSet(0, NUM_DENSITY_BINS - 1)
 
-def density_to_nnz(density_idx, rows, cols):
-    return int(density_idx / 10 * rows * cols)
-
-costs = {}
-for fa in range(min_format, max_format + 1):
-    for fb in range(min_format, max_format + 1):
-        for dA in range(0, 10):
-            for dB in range(0, 10):
-                LNZ = density_to_nnz(dA, LRC, LCC)
-                RNZ = density_to_nnz(dB, LCC, RCC)
-                flops, memops = FORMULA_MAP[fa, fb](LRC, LCC, RCC, LNZ, RNZ)
-                costs[fa, fb, dA, dB] = flops + (2 * memops)
+if True:
+    with open("runtime_sweep/costs_cache.json") as f:
+        raw = json.load(f)
+    costs = {ast.literal_eval(k): v for k, v in raw.items()}
+else:
+    costs = {}
+    for fa in range(min_format, max_format + 1):
+        for fb in range(min_format, max_format + 1):
+            for dA in range(NUM_DENSITY_BINS):
+                for dB in range(NUM_DENSITY_BINS):
+                    LNZ = int(BIN_REPRESENTATIVE_DENSITY[dA] * LRC * LCC)
+                    RNZ = int(BIN_REPRESENTATIVE_DENSITY[dB] * LCC * RCC)
+                    flops, memops = FORMULA_MAP[fa, fb](LRC, LCC, RCC, LNZ, RNZ)
+                    costs[fa, fb, dA, dB] = flops + (10 * memops)
 
 matrixA = make_diagonal(MATRIX_SIZE)
 matrixB = make_diagonal(MATRIX_SIZE)
@@ -128,23 +142,18 @@ model.costs = Param(model.sparse_formats_range,
                     model.density_range,
                     model.density_range,
                     initialize=costs, default=100)
-# model.costs.display()
 
 model.densityA = Param(model.i_range, model.p_range, initialize=densityA, default=0)
-# model.densityA.display()
 
 model.densityB = Param(model.p_range, model.j_range, initialize=densityB, default=0)
-# model.densityB.display()
 
 
 #############
 # Variables #
 #############
 model.a_format = Var(model.i_range,model.p_range,model.sparse_formats_range,within=NonNegativeIntegers, bounds=(0,1))
-# model.a_format.display()
 
 model.b_format = Var(model.p_range,model.j_range,model.sparse_formats_range,within=NonNegativeIntegers, bounds=(0,1))
-# model.b_format.display()
 
 ################
 # Constraints  #
@@ -157,20 +166,10 @@ for i in model.i_range:
     for p in model.p_range:
         model.c_range_check_a.add(sum(model.a_format[i,p,fa] for fa in model.sparse_formats_range) == 1)
 
-
-# model.c_range_check_a.display()
-
-
 model.c_range_check_b = ConstraintList()
 for p in model.p_range:
     for j in model.j_range:
         model.c_range_check_b.add(sum(model.b_format[p,j,fb] for fb in model.sparse_formats_range) == 1)
-
-
-# model.c_range_check_b.display()
-
-
-
 
 ##############
 # Objective  #
@@ -191,13 +190,6 @@ model.objective = Objective(rule=model.total_time, sense=minimize)
 # Solve the model using MindtPy
 SolverFactory('mindtpy').solve(model, mip_solver='glpk', nlp_solver='ipopt', tee=True)
 
-# print("======= DONE ========")
-# print("= LOOK at the assignments of a_format and b_format")
-
-# model.objective.display()
-# model.display()
-# model.pprint()
-
 print(value(model.total_time))
 
 format_names = {0: "dense", 1: "CSR", 2: "CSC", 3: "COO"}
@@ -206,21 +198,15 @@ print("\n=== Optimal A formats ===")
 for i in model.i_range:
     for p in model.p_range:
         chosen = next(fa for fa in model.sparse_formats_range if value(model.a_format[i,p,fa]) > 0.5)
-        print(f"  A[{i},{p}] (density={densityA[i,p]*10}%) -> {format_names[chosen]}")
+        print(f"  A[{i},{p}] (density={BIN_LABELS[densityA[i,p]]}) -> {format_names[chosen]}")
 
 print("\n=== Optimal B formats ===")
 for p in model.p_range:
     for j in model.j_range:
         chosen = next(fb for fb in model.sparse_formats_range if value(model.b_format[p,j,fb]) > 0.5)
-        print(f"  B[{p},{j}] (density={densityB[p,j]*10}%) -> {format_names[chosen]}")
+        print(f"  B[{p},{j}] (density={BIN_LABELS[densityB[p,j]]}) -> {format_names[chosen]}")
 
 print(f"\n=== Total cost: {value(model.total_time):.0f} ===")
-
-def dump_matrix(f, matrix):
-    rows, cols = matrix.shape
-    f.write(struct.pack('II', rows, cols))
-    # row-major f64
-    f.write(matrix.astype(np.float64).tobytes())
 
 with open('solution.bin', 'wb') as f:
     f.write(struct.pack('QQQ', M, N, K))

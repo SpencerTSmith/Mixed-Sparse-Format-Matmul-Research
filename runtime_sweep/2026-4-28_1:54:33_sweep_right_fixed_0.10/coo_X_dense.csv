@@ -1,0 +1,4 @@
+row_count,col_count,inner_count,left_non_zero_count,right_non_zero_count,density,flops,memops,time,bytes
+32,32,32,85,99,0.100000,0,0,1819,0
+32,32,32,117,710,0.700000,0,0,2295,0
+32,32,32,102,915,0.900000,0,0,2099,0

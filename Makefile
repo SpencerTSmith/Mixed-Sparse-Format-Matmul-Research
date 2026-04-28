@@ -9,12 +9,17 @@ roofline_asm:
 
 observe: roofline_asm
 	gcc ${CFLAGS} -O0 -DOBSERVE_FLOPS -DOBSERVE_MEMOPS reptest_spmm.c roofline.a -o reptest.x
+
+observe_run: observe
+	gcc ${CFLAGS} -O0 -DOBSERVE_FLOPS -DOBSERVE_MEMOPS reptest_spmm.c roofline.a -o reptest.x
 	./reptest.x --verify --seconds_to_try_for_min=${SECONDS} --sweep=${SWEEP}
 
-run: roofline_asm
-	gcc ${CFLAGS} -03 roofline.a reptest_spmm.c roofline.a -o reptest.x
+no_observe: roofline_asm
+	gcc ${CFLAGS} -O3 roofline.a reptest_spmm.c roofline.a -o reptest.x
+
+no_observe_run: roofline_asm no_observe
 	./reptest.x --verify --seconds_to_try_for_min=${SECONDS} --sweep=${SWEEP}
 
 sparse_blis:
-	gcc ${CFLAGS} sparse_blis.c -o sparse_blis.x
+	gcc ${CFLAGS} -O3 -fopenmp sparse_blis.c -o sparse_blis.x
 	./sparse_blis.x --verify

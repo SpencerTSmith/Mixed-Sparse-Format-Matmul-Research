@@ -1,6 +1,8 @@
 #define LOG_TITLE "SPARSE_BLIS"
 #define COMMON_IMPLEMENTATION
 
+#include <omp.h>
+
 #include "../benchmark/benchmark_inc.h"
 #include "../benchmark/benchmark_inc.c"
 
@@ -329,12 +331,14 @@ void sparse_blis(Dense_Matrix *output, Multisparse_Matrix left, Multisparse_Matr
   usize block_k = left.blocks_col_count;
 
   // Since we iterate by blocks and not be elements, gotta change steps and conditions.
+  #pragma omp parallel for num_threads(2)
   for (usize block_j_o = 0; block_j_o < block_n; block_j_o += BLOCK_J)
   {
     for (usize block_p_o = 0; block_p_o < block_k; block_p_o += BLOCK_P)
     {
       // DLT for B usually here.
 
+      // #pragma omp parallel for
       for (usize block_i_o = 0; block_i_o < block_m; block_i_o += BLOCK_I)
       {
         // DLT for A usually here.
@@ -549,7 +553,6 @@ int main(int argc, char **argv)
   String right_global_string = args_get_string_value(&args,
                                                     STR("right_global"),
                                                     STR("MAT_CSR"));
-
   Matrix_Format left_constant_blocking = format_from_string(left_constant_blocking_string);
   Matrix_Format right_constant_blocking = format_from_string(right_constant_blocking_string);
   Matrix_Format left_global = format_from_string(left_global_string);

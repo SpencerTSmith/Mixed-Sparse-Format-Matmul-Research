@@ -351,13 +351,17 @@ int main(int argc, char **argv)
   Args args = parse_args(&arena, argc, argv);
   b32 verify = args_has_flag(&args, STR("verify"));
 
-  u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 3);
+  u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 1);
 
   u32 row_count   = args_get_integer_value(&args, STR("row_count"), 64);
   u32 col_count   = args_get_integer_value(&args, STR("col_count"), 64);
   u32 inner_count = args_get_integer_value(&args, STR("inner_count"), 64);
 
+  f64 fixed_density = args_get_f64_value(&args, STR("fixed_density"), 1.0);
+
   String sweep_string = args_get_string_value(&args, STR("sweep"), STR("both"));
+
+  String out_dir = args_get_string_value(&args, STR("out_dir"), STR("data"));
 
   b32 sweep_left  = false;
   b32 sweep_right = false;
@@ -420,7 +424,7 @@ int main(int argc, char **argv)
 
   f64 densities[] =
   {
-    0.0, 0.01, 0.05, 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9, 1.0,
+    0.1, 0.7, 0.9
   };
 
   Repetition_Tester testers[STATIC_COUNT(test_entries)][STATIC_COUNT(densities)] = {0};
@@ -429,9 +433,8 @@ int main(int argc, char **argv)
 
   for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
   {
-    // TODO: Make the non-sweeping density controllable.
-    f64 left_density = sweep_left ? densities[density_idx] : 1.0;
-    f64 right_density = sweep_right ? densities[density_idx] : 1.0;
+    f64 left_density  = sweep_left  ? densities[density_idx] : fixed_density;
+    f64 right_density = sweep_right ? densities[density_idx] : fixed_density;
 
     // FIXME: So SLOW! But don't know of a better way to test a bunch of densities of different
     // matrix sizes
@@ -461,15 +464,17 @@ int main(int argc, char **argv)
     arena_clear(&arena); // Reset any memory taken by params
   }
 
+  mkdir(string_to_c_string(&arena, out_dir), 0755);
   String timestamp = string_timestamp(&arena);
-  mkdir("data/", 0755);
-  String dir = string_formatted(&arena, "data/%.*s", STRF(timestamp));
+  String test_run_info = string_formatted(&arena, "%.*s_sweep_%.*s_fixed_%.2f",
+                                          STRF(timestamp),
+                                          STRF(sweep_string), fixed_density);
+  String dir = string_formatted(&arena, "%.*s/%.*s", STRF(out_dir), STRF(test_run_info));
   mkdir(string_to_c_string(&arena, dir), 0755);
 
   // Roofline
   {
-    String join[] = {STR("data/"), timestamp, STR("/roofline.csv")};
-    String filename = string_join_array(&arena, (String_Array)TO_ARRAY(join), STR(""));
+    String filename = string_formatted(&arena, "%.*s/%s", STRF(dir), "roofline.csv");
 
     FILE *roofline_dump = fopen(string_to_c_string(&arena, filename), "w");
     {
@@ -513,8 +518,7 @@ int main(int argc, char **argv)
   {
     Operation_Entry *entry = test_entries + func_idx;
 
-    String join[] = {STR("data/"), timestamp, STR("/"), entry->name,  STR(".csv")};
-    String filename = string_join_array(&arena, (String_Array)TO_ARRAY(join), STR(""));
+    String filename = string_formatted(&arena, "%.*s/%.*s.csv", STRF(dir), STRF(entry->name));
 
     FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
 
