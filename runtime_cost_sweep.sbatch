@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 #SBATCH --partition=normal
+#SBATCH --container=el9hw
 #SBATCH --ntasks=1
 #SBATCH --mem=4G
 #SBATCH --time=01:00:00
