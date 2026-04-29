@@ -16,7 +16,7 @@
 
 mkdir -p runtime_sweep/
 
-make no_observe
+# make no_observe
 
 for right_density in 0.1 0.7 0.9; do
     ./reptest.x \
