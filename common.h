@@ -1234,11 +1234,11 @@ void *os_allocate(usize size, OS_Allocation_Flags flags)
   u32 map_flags = MAP_PRIVATE|MAP_ANONYMOUS;
   if (flags & OS_ALLOCATION_2MB_PAGES)
   {
-    map_flags |= (MAP_HUGETLB|MAP_HUGE_2MB);
+    map_flags |= (MAP_HUGETLB);
   }
   else if (flags & OS_ALLOCATION_1GB_PAGES) // Can't have both
   {
-    map_flags |= (MAP_HUGETLB|MAP_HUGE_1GB);
+    map_flags |= (MAP_HUGETLB);
   }
 
   if (flags & OS_ALLOCATION_PREFAULT)
