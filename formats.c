@@ -187,7 +187,17 @@ void csr_x_dense(Dense_Matrix output, CSR_Matrix left, Dense_Matrix right)
 static
 void csr_x_csr(Dense_Matrix output, CSR_Matrix left, CSR_Matrix right)
 {
+#define PARALLEL_FOR
   csr_x_csr_impl;
+#undef PARALLEL_FOR
+}
+
+static
+void csr_x_csr_parallel(Dense_Matrix output, CSR_Matrix left, CSR_Matrix right)
+{
+#define PARALLEL_FOR _Pragma("omp parallel for")
+  csr_x_csr_impl;
+#undef PARALLEL_FOR
 }
 
 static

@@ -140,7 +140,9 @@ void matmul_csr_csr(Repetition_Tester *tester, Operation_Parameters *params)
 
   repetition_tester_begin_time(tester);
 
+#define PARALLEL_FOR
   csr_x_csr_impl;
+#undef PARALLEL_FOR
 
   repetition_tester_close_time(tester);
 }

@@ -331,7 +331,7 @@ void sparse_blis(Dense_Matrix *output, Multisparse_Matrix left, Multisparse_Matr
   usize block_k = left.blocks_col_count;
 
   // Since we iterate by blocks and not be elements, gotta change steps and conditions.
-  #pragma omp parallel for num_threads(2)
+  #pragma omp parallel for
   for (usize block_j_o = 0; block_j_o < block_n; block_j_o += BLOCK_J)
   {
     for (usize block_p_o = 0; block_p_o < block_k; block_p_o += BLOCK_P)
@@ -494,9 +494,14 @@ void reptest_solution(Repetition_Tester *tester, Operation_Parameters params)
   }
   else
   {
+    ASSERT(params.left_union.format == MAT_CSR && params.right_union.format == MAT_CSR,
+           "I know this is hacky.");
+    CSR_Matrix left  = params.left_union.csr;
+    CSR_Matrix right = params.right_union.csr;
+
     repetition_tester_begin_time(tester);
 
-    do_sparse_matmul(params.output, params.left_union, params.right_union);
+    csr_x_csr_parallel(params.output, left, right);
 
     repetition_tester_close_time(tester);
   }
@@ -545,20 +550,17 @@ int main(int argc, char **argv)
   String right_constant_blocking_string = args_get_string_value(&args,
                                                                 STR("right_constant_blocking"),
                                                                 STR("MAT_CSR"));
+  String solution_filename = args_get_string_value(&args,
+                                                   STR("solution"),
+                                                   STR("solution.bin"));
 
-  String left_global_string = args_get_string_value(&args,
-                                                    STR("left_global"),
-                                                    STR("MAT_CSC"));
-
-  String right_global_string = args_get_string_value(&args,
-                                                    STR("right_global"),
-                                                    STR("MAT_CSR"));
   Matrix_Format left_constant_blocking = format_from_string(left_constant_blocking_string);
   Matrix_Format right_constant_blocking = format_from_string(right_constant_blocking_string);
-  Matrix_Format left_global = format_from_string(left_global_string);
-  Matrix_Format right_global = format_from_string(right_global_string);
+  Matrix_Format left_global  = MAT_CSR;
+  Matrix_Format right_global = MAT_CSR;
 
-  Matrix_Solution solution = load_matrix_solution(&arena, STR("solution.bin"));
+
+  Matrix_Solution solution = load_matrix_solution(&arena, solution_filename);
 
   usize left_block_count  = (solution.left.row_count / solution.left_blocking.row_count)
                           * (solution.left.col_count / solution.left_blocking.col_count);
@@ -619,10 +621,8 @@ int main(int argc, char **argv)
       }
     },
     {
-      .name = string_formatted(&arena, "Global %.*s x %.*s",
-                               STRF(left_global_string),
-                               STRF(right_global_string)),
-      .left_union = dense_to_format(&arena, solution.left, left_global),
+      .name = string_formatted(&arena, "Global CSR x CSR"),
+      .left_union  = dense_to_format(&arena, solution.left, left_global),
       .right_union = dense_to_format(&arena, solution.right, right_global),
       .output =
       {
@@ -636,6 +636,8 @@ int main(int argc, char **argv)
   Repetition_Tester testers[STATIC_COUNT(params)] = {0};
 
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
+
+  omp_set_num_threads(2);
 
   u64 min_time = ~(u64)0;
   usize min_tester_index = 0;

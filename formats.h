@@ -245,6 +245,7 @@ Matrix_Union dense_to_format(Arena *arena, Dense_Matrix matrix, Matrix_Format fo
 )
 
 #define csr_x_csr_impl STATEMENT(                                            \
+  PARALLEL_FOR                                                               \
   for (usize left_row = 0; left_row < left.row_count; left_row++)            \
   {                                                                          \
     usize left_row_start = LOAD(left.row_pointers[left_row]);                \
@@ -681,6 +682,9 @@ void csr_x_dense(Dense_Matrix output, CSR_Matrix left, Dense_Matrix right);
 
 static
 void csr_x_csr(Dense_Matrix output, CSR_Matrix left, CSR_Matrix right);
+
+static
+void csr_x_csr_parallel(Dense_Matrix output, CSR_Matrix left, CSR_Matrix right);
 
 static
 void csr_x_csc(Dense_Matrix output, CSR_Matrix left, CSC_Matrix right);
