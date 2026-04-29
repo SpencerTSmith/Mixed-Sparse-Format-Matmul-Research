@@ -14,10 +14,10 @@ observe_run: observe
 	gcc ${CFLAGS} -O0 -DOBSERVE_FLOPS -DOBSERVE_MEMOPS reptest_spmm.c roofline.a -o reptest.x
 	./reptest.x --verify --seconds_to_try_for_min=${SECONDS} --sweep=${SWEEP}
 
-no_observe: roofline_asm
+no_observe:
 	gcc ${CFLAGS} -O3 reptest_spmm.c -o reptest.x
 
-no_observe_run: roofline_asm no_observe
+no_observe_run: no_observe
 	./reptest.x --verify --seconds_to_try_for_min=${SECONDS} --sweep=${SWEEP}
 
 sparse_blis:
