@@ -3,10 +3,10 @@
 
 #include <omp.h>
 
-#include "../benchmark/benchmark_inc.h"
-#include "../benchmark/benchmark_inc.c"
+#include "benchmark/benchmark_inc.h"
+#include "benchmark/benchmark_inc.c"
 
-#include "../common.h"
+#include "common.h"
 #include "formats.h"
 #include "formats.c"
 

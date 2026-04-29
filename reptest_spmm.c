@@ -2,11 +2,11 @@
 #define COMMON_IMPLEMENTATION
 
 
-#include "../common.h"
+#include "common.h"
 #include "formats.h"
 #include "formats.c"
-#include "../benchmark/benchmark_inc.h"
-#include "../benchmark/benchmark_inc.c"
+#include "benchmark/benchmark_inc.h"
+#include "benchmark/benchmark_inc.c"
 
 #ifdef OBSERVE_FLOPS
 #define FMADD(dst, a, b) dst += (a * b); repetition_tester_count_flops(tester, 2)
