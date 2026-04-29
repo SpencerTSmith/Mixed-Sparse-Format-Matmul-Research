@@ -15,7 +15,7 @@ observe_run: observe
 	./reptest.x --verify --seconds_to_try_for_min=${SECONDS} --sweep=${SWEEP}
 
 no_observe: roofline_asm
-	gcc ${CFLAGS} -O3 roofline.a reptest_spmm.c roofline.a -o reptest.x
+	gcc ${CFLAGS} -O3 reptest_spmm.c -o reptest.x
 
 no_observe_run: roofline_asm no_observe
 	./reptest.x --verify --seconds_to_try_for_min=${SECONDS} --sweep=${SWEEP}
