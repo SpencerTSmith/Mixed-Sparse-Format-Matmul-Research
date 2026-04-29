@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH --partition=normal
+#SBATCH --partition=el9_test
 #SBATCH --container=el9hw
 #SBATCH --ntasks=1
 #SBATCH --mem=4G
