@@ -13,8 +13,6 @@
 #
 ##################################################
 
-make no_observe
-
 mkdir -p runtime_sweep/
 
 for right_density in 0.1 0.7 0.9; do
