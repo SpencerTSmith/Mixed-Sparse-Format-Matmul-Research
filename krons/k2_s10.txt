@@ -1,0 +1,6 @@
+# Synthetic Kronecker Graph Using RMAT
+# K : 2, Sample: 10# Number of edges: 3
+# Graph generation time (s): 0.04
+0 0
+1 0
+2 1
