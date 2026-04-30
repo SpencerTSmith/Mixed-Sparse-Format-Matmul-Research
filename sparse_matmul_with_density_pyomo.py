@@ -48,12 +48,15 @@ def density_to_nnz(density_idx, rows, cols):
     return int(density_idx / 10 * rows * cols)
 
 def dump_matrix(f, matrix):
-    # shape, nnz, then (row, col, val) triples
+
     size_r, size_c = matrix.shape
+    assert size_r <= 65535 and size_c <= 65535, f"Matrix dimensions {size_r}x{size_c} exceed u16 range"
+
     nnz = len(matrix.data)
     f.write(struct.pack('III', size_r, size_c, nnz))
-    for r, c, v in zip(matrix.row, matrix.col, matrix.data):
-        f.write(struct.pack('IId', r, c, v))
+    f.write(struct.pack(f'{nnz}H', *matrix.row))
+    f.write(struct.pack(f'{nnz}H', *matrix.col))
+    f.write(struct.pack(f'{nnz}d', *matrix.data))
 
 def load_edge_list(path):
     k = int(re.search(r'k(\d+)_', path).group(1))
@@ -68,6 +71,31 @@ def load_edge_list(path):
             r, c = line.split()
             rows.append(int(r))
             cols.append(int(c))
+    rows_arr = np.array(rows)
+    cols_arr = np.array(cols)
+    order = np.lexsort((cols_arr, rows_arr))
+    return SimpleNamespace(
+        row=rows_arr[order],
+        col=cols_arr[order],
+        data=np.ones(len(rows_arr), dtype=np.float64),
+        shape=(size, size)
+    )
+
+def make_diagonal_coo(size, band_width=16, diag_density=0.95, noise_density=0.00, seed=42):
+    rng = np.random.default_rng(seed)
+    rows, cols = [], []
+
+    for i in range(size):
+        for b in range(-band_width, band_width + 1):
+            j = i + b
+            if 0 <= j < size and rng.random() < diag_density:
+                rows.append(i)
+                cols.append(j)
+
+    extra = int(noise_density * size * size)
+    rows += list(rng.integers(0, size, extra))
+    cols += list(rng.integers(0, size, extra))
+
     rows_arr = np.array(rows)
     cols_arr = np.array(cols)
     order = np.lexsort((cols_arr, rows_arr))
@@ -110,6 +138,7 @@ if __name__ == "__main__":
         with open("runtime_sweep/costs_cache.json") as f:
             raw = json.load(f)
         costs = {ast.literal_eval(k): v for k, v in raw.items()}
+        print(costs)
     else:
         costs = {}
         for fa in range(min_format, max_format + 1):
@@ -121,8 +150,12 @@ if __name__ == "__main__":
                         flops, memops = FORMULA_MAP[fa, fb](LRC, LCC, RCC, LNZ, RNZ)
                         costs[fa, fb, dA, dB] = flops + (10 * memops)
 
-    matrixA = load_edge_list(sys.argv[1])
-    matrixB = load_edge_list(sys.argv[2])
+    if sys.argv[1] == "diagonal":
+        matrixA = make_diagonal_coo(256, band_width=16, diag_density=0.95, noise_density=0.0)
+        matrixB = make_diagonal_coo(256, band_width=16, diag_density=0.95, noise_density=0.0)
+    else:
+        matrixA = load_edge_list(sys.argv[1])
+        matrixB = load_edge_list(sys.argv[2])
 
     assert(matrixA.shape == matrixB.shape)
 
@@ -137,9 +170,9 @@ if __name__ == "__main__":
 
     # Densities
     # These would be the actual densities of each block of A and B
-    densityA=block_densities(matrixA, LRC, LCC)
+    densityA = block_densities(matrixA, LRC, LCC)
 
-    densityB=block_densities(matrixB, LCC, RCC)
+    densityB = block_densities(matrixB, LCC, RCC)
 
     # Create a simple model
     model = ConcreteModel()

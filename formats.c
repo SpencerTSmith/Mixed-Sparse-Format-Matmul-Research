@@ -279,3 +279,93 @@ Matrix_Union dense_to_format(Arena *arena, Dense_Matrix matrix, Matrix_Format fo
 
   return result;
 }
+
+static
+Dense_Matrix dense_from_coo(Arena *arena, COO_Matrix coo, usize row_count, usize col_count)
+{
+  Dense_Matrix result =
+  {
+    .row_count = row_count,
+    .col_count = col_count,
+    .values    = arena_calloc(arena, row_count * col_count, f64),
+  };
+  for (u32 i = 0; i < coo.non_zero_count; i += 1)
+  {
+    result.values[coo.row_indices[i] * col_count + coo.col_indices[i]] = coo.values[i];
+  }
+  return result;
+}
+
+static
+CSR_Matrix csr_from_coo(Arena *arena, COO_Matrix coo, usize row_count, usize col_count)
+{
+  CSR_Matrix result = {0};
+  result.non_zero_count = coo.non_zero_count;
+  result.row_count      = row_count;
+  result.values       = arena_calloc(arena, coo.non_zero_count, f64);
+  result.col_indices  = arena_calloc(arena, coo.non_zero_count, u16);
+  result.row_pointers = arena_calloc(arena, row_count + 1, u16);
+
+  // COO is row-sorted so we just compute row pointers
+  for (u32 i = 0; i < coo.non_zero_count; i += 1)
+  {
+    result.values[i]      = coo.values[i];
+    result.col_indices[i] = (u16)coo.col_indices[i];
+    result.row_pointers[coo.row_indices[i] + 1] += 1;
+  }
+  for (u32 r = 0; r < row_count; r += 1)
+  {
+    result.row_pointers[r + 1] += result.row_pointers[r];
+  }
+  return result;
+}
+
+static
+CSC_Matrix csc_from_coo(Arena *arena, COO_Matrix coo, usize row_count, usize col_count)
+{
+  CSC_Matrix result = {0};
+  result.non_zero_count = coo.non_zero_count;
+  result.col_count      = row_count;
+  result.values       = arena_calloc(arena, coo.non_zero_count, f64);
+  result.row_indices  = arena_calloc(arena, coo.non_zero_count, u16);
+  result.col_pointers = arena_calloc(arena, col_count + 1, u16);
+
+  // Count non_zero_count per column first
+  for (u32 i = 0; i < coo.non_zero_count; i += 1)
+  {
+    result.col_pointers[coo.col_indices[i] + 1] += 1;
+  }
+  for (u32 c = 0; c < col_count; c += 1)
+  {
+    result.col_pointers[c + 1] += result.col_pointers[c];
+  }
+  // Fill using col_pointers as cursors, then restore
+  u16 *cursor = arena_calloc(arena, col_count, u16);
+  for (u32 i = 0; i < coo.non_zero_count; i += 1)
+  {
+    u32 c   = coo.col_indices[i];
+    u32 dst = result.col_pointers[c] + cursor[c];
+    result.values[dst]      = coo.values[i];
+    result.row_indices[dst] = (u16)coo.row_indices[i];
+    cursor[c] += 1;
+  }
+  return result;
+}
+
+static
+Matrix_Union coo_to_format(Arena *arena, COO_Matrix coo, usize row_count, usize col_count, Matrix_Format format)
+{
+  Matrix_Union result =
+  {
+    .format = format,
+  };
+  switch (format)
+  {
+    case MAT_NONE: case MAT_COUNT: { ASSERT(false, "Idiot."); } break;
+    case MAT_DENSE: { result.dense = dense_from_coo(arena, coo, row_count, col_count); } break;
+    case MAT_CSR:   { result.csr   = csr_from_coo(arena, coo, row_count, col_count); } break;
+    case MAT_CSC:   { result.csc   = csc_from_coo(arena, coo, row_count, col_count); } break;
+    case MAT_COO:   { result.coo   = coo; } break;
+  }
+  return result;
+}
