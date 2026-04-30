@@ -3,4 +3,3 @@ out
 *.json
 .vscode/
 *.dump
-*.txt
