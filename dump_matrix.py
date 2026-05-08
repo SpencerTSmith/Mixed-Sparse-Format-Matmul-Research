@@ -29,19 +29,17 @@ def load_edge_list(path):
 
 def dump_matrix(f, matrix):
     size_r, size_c = matrix.shape
-    assert size_r <= 65535 and size_c <= 65535, f"Matrix dimensions {size_r}x{size_c} exceed u16 range"
+    # assert size_r <= 65535 and size_c <= 65535, f"Matrix dimensions {size_r}x{size_c} exceed u16 range"
 
 
     nnz = len(matrix.data)
     print(size_r, size_c, nnz)
     f.write(struct.pack('III', size_r, size_c, nnz))
-    # Planar arrays, indices downcast to u16
-    f.write(struct.pack(f'{nnz}H', *matrix.row))
-    f.write(struct.pack(f'{nnz}H', *matrix.col))
+    f.write(struct.pack(f'{nnz}I', *matrix.row))
+    f.write(struct.pack(f'{nnz}I', *matrix.col))
     f.write(struct.pack(f'{nnz}d', *matrix.data))
 
 matrix = sys.argv[1]
-
 
 LRC = 32
 LCC = 32

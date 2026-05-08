@@ -1,0 +1,10 @@
+--- Global CSR x CSR ---
+MIN: 95314516 (34.0017ms)
+MAX: 206904194 (73.8092ms), 13042 faults (0.0000 kb/fault)
+AVG: 102012029 (36.3909ms), 62 faults (0.0000 kb/fault)
+
+--- Constant Blocking MAT_CSC x MAT_CSR ---
+MIN: 311466621883 (111109.8554ms)
+MAX: 314952905757 (112353.5215ms), 7947 faults (0.0000 kb/fault)
+AVG: 313297500240 (111762.9868ms), 2649 faults (0.0000 kb/fault)
+[SPARSE_BLIS LOG_INFO]: Global CSR x CSR is 99.9694% better than Constant Blocking MAT_CSC x MAT_CSR

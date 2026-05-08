@@ -1,6 +1,8 @@
 #define LOG_TITLE "SPARSE_BLIS"
 #define COMMON_IMPLEMENTATION
 
+#define _GNU_SOURCE
+#include <sys/mman.h>
 #include <omp.h>
 
 #include "benchmark/benchmark_inc.h"
@@ -11,27 +13,27 @@
 #include "formats.c"
 
 #ifndef BLOCK_NC
-#define BLOCK_NC 128
+#define BLOCK_NC 8192
 #endif
 
 #ifndef BLOCK_KC
-#define BLOCK_KC 128
+#define BLOCK_KC 1024
 #endif
 
 #ifndef BLOCK_MC
-#define BLOCK_MC 128
+#define BLOCK_MC 1024
 #endif
 
 #ifndef BLOCK_NR
-#define BLOCK_NR 32
+#define BLOCK_NR 512
 #endif
 
 #ifndef BLOCK_MR
-#define BLOCK_MR 32
+#define BLOCK_MR 512
 #endif
 
 #ifndef BLOCK_KU
-#define BLOCK_KU 32
+#define BLOCK_KU 512
 #endif
 
 #if (BLOCK_NC) % (BLOCK_NR) != 0
@@ -73,6 +75,8 @@ struct Multisparse_Matrix
   usize blocks_row_count;
   usize blocks_col_count;
 };
+
+static Arena pack_arena;
 
 // Horribly inefficient.
 static
@@ -132,14 +136,15 @@ Multisparse_Matrix multi_sparsify(Arena *arena, COO_Matrix matrix,
           usize actual_row = block_row * blocking.row_count;
           usize actual_col = block_col * blocking.col_count;
 
-          // TODO: Consider allocating this on scratch arena first as not needed
-          // if we make it sparse.
-          Dense_Matrix dense_block = pack_matrix_block(arena, matrix, actual_row, actual_col,
+          // FIXME: Since moving to scratch arena for packing this will break if blocks ever need to be dense since dont' copy
+          Dense_Matrix dense_block = pack_matrix_block(&pack_arena, matrix, actual_row, actual_col,
                                                        blocking.row_count, blocking.col_count);
 
           Matrix_Union sub_matrix = dense_to_format(arena, dense_block, format);
 
           result.blocks[block_row * result.blocks_col_count + block_col] = sub_matrix;
+
+          arena_clear(&pack_arena);
         }
       }
     }
@@ -470,20 +475,20 @@ Matrix_Solution load_matrix_solution(Arena *arena, String filename, b32 is_dummy
     fread(&result.left_col_count, sizeof(u32), 1, file);
     fread(&result.left.non_zero_count,  sizeof(u32), 1, file);
     result.left.values      = arena_calloc(arena, result.left.non_zero_count, f64);
-    result.left.row_indices = arena_calloc(arena, result.left.non_zero_count, u16);
-    result.left.col_indices = arena_calloc(arena, result.left.non_zero_count, u16);
-    fread(result.left.row_indices, sizeof(u16), result.left.non_zero_count, file);
-    fread(result.left.col_indices, sizeof(u16), result.left.non_zero_count, file);
+    result.left.row_indices = arena_calloc(arena, result.left.non_zero_count, u32);
+    result.left.col_indices = arena_calloc(arena, result.left.non_zero_count, u32);
+    fread(result.left.row_indices, sizeof(u32), result.left.non_zero_count, file);
+    fread(result.left.col_indices, sizeof(u32), result.left.non_zero_count, file);
     fread(result.left.values, sizeof(f64), result.left.non_zero_count, file);
 
     fread(&result.right_row_count, sizeof(u32), 1, file);
     fread(&result.right_col_count, sizeof(u32), 1, file);
     fread(&result.right.non_zero_count,  sizeof(u32), 1, file);
     result.right.values      = arena_calloc(arena, result.right.non_zero_count, f64);
-    result.right.row_indices = arena_calloc(arena, result.right.non_zero_count, u16);
-    result.right.col_indices = arena_calloc(arena, result.right.non_zero_count, u16);
-    fread(result.right.row_indices, sizeof(u16), result.right.non_zero_count, file);
-    fread(result.right.col_indices, sizeof(u16), result.right.non_zero_count, file);
+    result.right.row_indices = arena_calloc(arena, result.right.non_zero_count, u32);
+    result.right.col_indices = arena_calloc(arena, result.right.non_zero_count, u32);
+    fread(result.right.row_indices, sizeof(u32), result.right.non_zero_count, file);
+    fread(result.right.col_indices, sizeof(u32), result.right.non_zero_count, file);
     fread(result.right.values, sizeof(f64), result.right.non_zero_count, file);
   }
 
@@ -561,6 +566,7 @@ Matrix_Format format_from_string(String string)
 
 int main(int argc, char **argv)
 {
+  pack_arena = arena_make(.reserve_size = GB(64));
   Arena arena = arena_make(.reserve_size = GB(64));
   Args args = parse_args(&arena, argc, argv);
 
@@ -616,7 +622,24 @@ int main(int argc, char **argv)
     constant_right_blocking.block_formats[i] = right_constant_blocking;
   }
 
-  Operation_Parameters params[] =
+  usize output_bytes = solution.left_row_count * solution.right_col_count * sizeof(f64);
+  usize backing_size = 512 * 1024 * 1024;
+
+  int fd = memfd_create("scratch_output", 0);
+  ftruncate(fd, backing_size);
+
+  f64 *output_values = mmap(NULL, output_bytes, PROT_NONE,
+                            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+  for (usize off = 0; off < output_bytes; off += backing_size)
+  {
+      usize map_size = (off + backing_size > output_bytes) ? (output_bytes - off) : backing_size;
+      mmap((char *)output_values + off, map_size,
+          PROT_READ | PROT_WRITE,
+          MAP_SHARED | MAP_FIXED, fd, 0);
+  }
+
+  Operation_Parameters params[2] =
   {
     // {
     //   .name  = STR("Solver"),
@@ -630,19 +653,6 @@ int main(int argc, char **argv)
     //   }
     // },
     {
-      .name = string_formatted(&arena, "Constant Blocking %.*s x %.*s",
-                               STRF(left_constant_blocking_string),
-                               STRF(right_constant_blocking_string)),
-      .left  = multi_sparsify(&arena, solution.left, solution.left_row_count, solution.left_col_count, constant_left_blocking),
-      .right = multi_sparsify(&arena, solution.right, solution.right_row_count, solution.right_col_count, constant_right_blocking),
-      .output =
-      {
-        .row_count = solution.left_row_count,
-        .col_count = solution.right_col_count,
-        .values = arena_calloc(&arena, solution.left_row_count * solution.right_col_count, f64),
-      }
-    },
-    {
       .name = string_formatted(&arena, "Global CSR x CSR"),
       .left_union  = coo_to_format(&arena, solution.left, solution.left_row_count, solution.left_col_count, left_global),
       .right_union = coo_to_format(&arena, solution.right, solution.right_row_count, solution.right_col_count, right_global),
@@ -650,19 +660,29 @@ int main(int argc, char **argv)
       {
         .row_count = solution.left_row_count,
         .col_count = solution.right_col_count,
-        .values = arena_calloc(&arena, solution.left_row_count * solution.right_col_count, f64),
+        .values = output_values
       }
-    }
+    },
+    {
+      .name = string_formatted(&arena, "Constant Blocking %.*s x %.*s",
+                               STRF(left_constant_blocking_string),
+                               STRF(right_constant_blocking_string)),
+        .left  = multi_sparsify(&arena, solution.left, solution.left_row_count, solution.left_col_count, constant_left_blocking),
+        .right = multi_sparsify(&arena, solution.right, solution.right_row_count, solution.right_col_count, constant_right_blocking),
+        .output =
+        {
+          .row_count = solution.left_row_count,
+          .col_count = solution.right_col_count,
+          .values = output_values
+        }
+    },
   };
-  LOG_INFO("left nnz: %zu, right nnz: %zu",
-          params[1].left_union.csr.non_zero_count,
-          params[1].right_union.csr.non_zero_count);
 
   Repetition_Tester testers[STATIC_COUNT(params)] = {0};
 
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
-  omp_set_num_threads(2);
+  omp_set_num_threads(8);
 
   u64 min_time = ~(u64)0;
   usize min_tester_index = 0;
@@ -707,7 +727,7 @@ int main(int argc, char **argv)
     {
       .row_count = solution.left_row_count,
       .col_count = solution.right_col_count,
-      .values = arena_calloc(&arena, solution.left_row_count * solution.right_col_count, f64),
+      .values = output_values,
     };
     sparse_blis(&output, params[0].left, params[0].right);
 

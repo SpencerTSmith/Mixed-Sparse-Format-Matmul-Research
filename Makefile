@@ -22,4 +22,6 @@ no_observe_run: no_observe
 
 sparse_blis:
 	gcc ${CFLAGS} -O3 -fopenmp sparse_blis.c -o sparse_blis.x
+
+sparse_blis_run: sparse_blis
 	./sparse_blis.x --verify --left_constant_blocking=MAT_CSC --right_constant_blocking=MAT_DENSE

@@ -1,0 +1,203 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{13}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Bernal et~al\mbox{.}(2018)]%
+        {mindtpy}
+\bibfield{author}{\bibinfo{person}{David~E. Bernal}, \bibinfo{person}{Qi Chen},
+  \bibinfo{person}{Fengqi Gong}, {and} \bibinfo{person}{Ignacio~E. Grossmann}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Mixed-Integer Nonlinear Decomposition Toolbox for
+  {Pyomo} ({MindtPy})}. In \bibinfo{booktitle}{\emph{Proceedings of the 13th
+  International Symposium on Process Systems Engineering}}
+  \emph{(\bibinfo{series}{Computer Aided Chemical Engineering},
+  Vol.~\bibinfo{volume}{44})}. \bibinfo{pages}{895--900}.
+\newblock
+\href{https://doi.org/10.1016/B978-0-444-64241-7.50144-0}{doi:\nolinkurl{10.1016/B978-0-444-64241-7.50144-0}}
+
+
+\bibitem[Bulu\c{c} and Gilbert(2012)]%
+        {buluc_gilbert}
+\bibfield{author}{\bibinfo{person}{Aydin Bulu\c{c}} {and}
+  \bibinfo{person}{John~R. Gilbert}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Parallel Sparse Matrix-Matrix Multiplication and
+  Indexing: Implementation and Experiments}.
+\newblock \bibinfo{journal}{\emph{SIAM Journal on Scientific Computing}}
+  \bibinfo{volume}{34}, \bibinfo{number}{4} (\bibinfo{year}{2012}),
+  \bibinfo{pages}{C170--C191}.
+\newblock
+\href{https://doi.org/10.1137/110848244}{doi:\nolinkurl{10.1137/110848244}}
+
+
+\bibitem[Chou et~al\mbox{.}(2018)]%
+        {taco_formats}
+\bibfield{author}{\bibinfo{person}{Stephen Chou}, \bibinfo{person}{Fredrik
+  Kjolstad}, {and} \bibinfo{person}{Saman Amarasinghe}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Format Abstraction for Sparse Tensor Algebra
+  Compilers}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM on
+  Programming Languages}}, Vol.~\bibinfo{volume}{2}.
+\newblock
+\href{https://doi.org/10.1145/3276493}{doi:\nolinkurl{10.1145/3276493}}
+
+
+\bibitem[{Free Software Foundation}(2023)]%
+        {glpk}
+\bibfield{author}{\bibinfo{person}{{Free Software Foundation}}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{{GNU} Linear Programming Kit ({GLPK})}.
+\newblock
+\urldef\tempurl%
+\url{https://www.gnu.org/software/glpk/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Gao et~al\mbox{.}(2023)]%
+        {spgemm_survey}
+\bibfield{author}{\bibinfo{person}{Jianhua Gao}, \bibinfo{person}{Zhaonian
+  Tan}, \bibinfo{person}{Weixing Ji}, {and} \bibinfo{person}{Yueyan Zhao}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{A Systematic Survey of General Sparse Matrix-Matrix
+  Multiplication}.
+\newblock \bibinfo{journal}{\emph{Comput. Surveys}} \bibinfo{volume}{55},
+  \bibinfo{number}{12} (\bibinfo{year}{2023}).
+\newblock
+\href{https://doi.org/10.1145/3571157}{doi:\nolinkurl{10.1145/3571157}}
+
+
+\bibitem[Hart et~al\mbox{.}(2017)]%
+        {pyomo}
+\bibfield{author}{\bibinfo{person}{William~E. Hart}, \bibinfo{person}{Carl~D.
+  Laird}, \bibinfo{person}{Jean-Paul Watson}, \bibinfo{person}{David~L.
+  Woodruff}, \bibinfo{person}{Gabriel~A. Hackebeil},
+  \bibinfo{person}{Bethany~L. Nicholson}, {and} \bibinfo{person}{John~D.
+  Siirola}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Pyomo --- Optimization Modeling in
+  {Python}} (\bibinfo{edition}{2nd} ed.)}.
+\newblock \bibinfo{publisher}{Springer}.
+\newblock
+\href{https://doi.org/10.1007/978-3-319-58821-6}{doi:\nolinkurl{10.1007/978-3-319-58821-6}}
+
+
+\bibitem[Hunter(2007)]%
+        {matplotlib}
+\bibfield{author}{\bibinfo{person}{John~D. Hunter}.}
+  \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Matplotlib: A {2D} Graphics Environment}.
+\newblock \bibinfo{journal}{\emph{Computing in Science \& Engineering}}
+  \bibinfo{volume}{9}, \bibinfo{number}{3} (\bibinfo{year}{2007}),
+  \bibinfo{pages}{90--95}.
+\newblock
+\href{https://doi.org/10.1109/MCSE.2007.55}{doi:\nolinkurl{10.1109/MCSE.2007.55}}
+
+
+\bibitem[Kjolstad et~al\mbox{.}(2017)]%
+        {taco}
+\bibfield{author}{\bibinfo{person}{Fredrik Kjolstad}, \bibinfo{person}{Shoaib
+  Kamil}, \bibinfo{person}{Stephen Chou}, \bibinfo{person}{David Lugato}, {and}
+  \bibinfo{person}{Saman Amarasinghe}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{The Tensor Algebra Compiler}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Programming
+  Languages}} \bibinfo{volume}{1}, \bibinfo{number}{OOPSLA}
+  (\bibinfo{year}{2017}).
+\newblock
+\href{https://doi.org/10.1145/3133901}{doi:\nolinkurl{10.1145/3133901}}
+
+
+\bibitem[Leskovec et~al\mbox{.}(2010)]%
+        {kronecker}
+\bibfield{author}{\bibinfo{person}{Jure Leskovec}, \bibinfo{person}{Deepayan
+  Chakrabarti}, \bibinfo{person}{Jon Kleinberg}, \bibinfo{person}{Christos
+  Faloutsos}, {and} \bibinfo{person}{Zoubin Ghahramani}.}
+  \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Kronecker Graphs: An Approach to Modeling
+  Networks}.
+\newblock \bibinfo{journal}{\emph{Journal of Machine Learning Research}}
+  \bibinfo{volume}{11} (\bibinfo{year}{2010}), \bibinfo{pages}{985--1042}.
+\newblock
+
+
+\bibitem[Muratori(2023)]%
+        {muratori}
+\bibfield{author}{\bibinfo{person}{Casey Muratori}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{Performance-Aware Programming}.
+\newblock \bibinfo{howpublished}{Computer, Enhance! (online course),
+  \url{https://www.computerenhance.com}}.
+\newblock
+
+
+\bibitem[Van~Zee and van~de Geijn(2015)]%
+        {blis}
+\bibfield{author}{\bibinfo{person}{Field~G. Van~Zee} {and}
+  \bibinfo{person}{Robert~A. van~de Geijn}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{{BLIS}: A Framework for Rapidly Instantiating
+  {BLAS} Functionality}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Math. Software}}
+  \bibinfo{volume}{41}, \bibinfo{number}{3} (\bibinfo{year}{2015}).
+\newblock
+\href{https://doi.org/10.1145/2764454}{doi:\nolinkurl{10.1145/2764454}}
+
+
+\bibitem[W\"{a}chter and Biegler(2006)]%
+        {ipopt}
+\bibfield{author}{\bibinfo{person}{Andreas W\"{a}chter} {and}
+  \bibinfo{person}{Lorenz~T. Biegler}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \showarticletitle{On the Implementation of an Interior-Point Filter
+  Line-Search Algorithm for Large-Scale Nonlinear Programming}.
+\newblock \bibinfo{journal}{\emph{Mathematical Programming}}
+  \bibinfo{volume}{106}, \bibinfo{number}{1} (\bibinfo{year}{2006}),
+  \bibinfo{pages}{25--57}.
+\newblock
+\href{https://doi.org/10.1007/s10107-004-0559-y}{doi:\nolinkurl{10.1007/s10107-004-0559-y}}
+
+
+\bibitem[Williams et~al\mbox{.}(2009)]%
+        {roofline}
+\bibfield{author}{\bibinfo{person}{Samuel Williams}, \bibinfo{person}{Andrew
+  Waterman}, {and} \bibinfo{person}{David Patterson}.}
+  \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Roofline: An Insightful Visual Performance Model
+  for Multicore Architectures}.
+\newblock \bibinfo{journal}{\emph{Commun. ACM}} \bibinfo{volume}{52},
+  \bibinfo{number}{4} (\bibinfo{year}{2009}), \bibinfo{pages}{65--76}.
+\newblock
+\href{https://doi.org/10.1145/1498765.1498785}{doi:\nolinkurl{10.1145/1498765.1498785}}
+
+
+\end{thebibliography}

@@ -26,8 +26,8 @@ CSR_Matrix csr_from_dense(Arena *arena, Dense_Matrix *dense)
   result.row_count = dense->row_count;
 
   result.values       = arena_calloc(arena, result.non_zero_count, f64);
-  result.col_indices  = arena_calloc(arena, result.non_zero_count, u16);
-  result.row_pointers = arena_calloc(arena, result.row_count + 1, u16);
+  result.col_indices  = arena_calloc(arena, result.non_zero_count, u32);
+  result.row_pointers = arena_calloc(arena, result.row_count + 1, u32);
 
   isize non_zero_index = 0;
   for (isize r = 0; r < dense->row_count; r++)
@@ -59,8 +59,8 @@ CSC_Matrix csc_from_dense(Arena *arena, Dense_Matrix *dense)
   result.col_count = dense->col_count;
 
   result.values       = arena_calloc(arena, result.non_zero_count, f64);
-  result.row_indices  = arena_calloc(arena, result.non_zero_count, u16);
-  result.col_pointers = arena_calloc(arena, result.col_count + 1, u16);
+  result.row_indices  = arena_calloc(arena, result.non_zero_count, u32);
+  result.col_pointers = arena_calloc(arena, result.col_count + 1, u32);
 
   isize non_zero_index = 0;
   for (isize c = 0; c < dense->col_count; c++)
@@ -89,8 +89,8 @@ COO_Matrix coo_from_dense(Arena *arena, Dense_Matrix *dense)
   COO_Matrix result = {0};
   result.non_zero_count = dense_non_zero_count(dense);
   result.values      = arena_calloc(arena, result.non_zero_count, f64);
-  result.row_indices = arena_calloc(arena, result.non_zero_count, u16);
-  result.col_indices = arena_calloc(arena, result.non_zero_count, u16);
+  result.row_indices = arena_calloc(arena, result.non_zero_count, u32);
+  result.col_indices = arena_calloc(arena, result.non_zero_count, u32);
 
   isize non_zero_index = 0;
   for (isize r = 0; r < dense->row_count; r++)
@@ -303,14 +303,14 @@ CSR_Matrix csr_from_coo(Arena *arena, COO_Matrix coo, usize row_count, usize col
   result.non_zero_count = coo.non_zero_count;
   result.row_count      = row_count;
   result.values       = arena_calloc(arena, coo.non_zero_count, f64);
-  result.col_indices  = arena_calloc(arena, coo.non_zero_count, u16);
-  result.row_pointers = arena_calloc(arena, row_count + 1, u16);
+  result.col_indices  = arena_calloc(arena, coo.non_zero_count, u32);
+  result.row_pointers = arena_calloc(arena, row_count + 1, u32);
 
   // COO is row-sorted so we just compute row pointers
   for (u32 i = 0; i < coo.non_zero_count; i += 1)
   {
     result.values[i]      = coo.values[i];
-    result.col_indices[i] = (u16)coo.col_indices[i];
+    result.col_indices[i] = coo.col_indices[i];
     result.row_pointers[coo.row_indices[i] + 1] += 1;
   }
   for (u32 r = 0; r < row_count; r += 1)
@@ -325,10 +325,10 @@ CSC_Matrix csc_from_coo(Arena *arena, COO_Matrix coo, usize row_count, usize col
 {
   CSC_Matrix result = {0};
   result.non_zero_count = coo.non_zero_count;
-  result.col_count      = row_count;
+  result.col_count      = col_count;
   result.values       = arena_calloc(arena, coo.non_zero_count, f64);
-  result.row_indices  = arena_calloc(arena, coo.non_zero_count, u16);
-  result.col_pointers = arena_calloc(arena, col_count + 1, u16);
+  result.row_indices  = arena_calloc(arena, coo.non_zero_count, u32);
+  result.col_pointers = arena_calloc(arena, col_count + 1, u32);
 
   // Count non_zero_count per column first
   for (u32 i = 0; i < coo.non_zero_count; i += 1)
@@ -340,13 +340,13 @@ CSC_Matrix csc_from_coo(Arena *arena, COO_Matrix coo, usize row_count, usize col
     result.col_pointers[c + 1] += result.col_pointers[c];
   }
   // Fill using col_pointers as cursors, then restore
-  u16 *cursor = arena_calloc(arena, col_count, u16);
+  u32 *cursor = arena_calloc(arena, col_count, u32);
   for (u32 i = 0; i < coo.non_zero_count; i += 1)
   {
     u32 c   = coo.col_indices[i];
     u32 dst = result.col_pointers[c] + cursor[c];
     result.values[dst]      = coo.values[i];
-    result.row_indices[dst] = (u16)coo.row_indices[i];
+    result.row_indices[dst] = coo.row_indices[i];
     cursor[c] += 1;
   }
   return result;
