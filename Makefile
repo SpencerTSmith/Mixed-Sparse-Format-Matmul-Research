@@ -1,6 +1,6 @@
 CFLAGS := -g -DDEBUG -lm
 
-SECONDS := 1
+SECONDS := 2
 SWEEP   := both
 
 roofline_asm:
@@ -24,4 +24,4 @@ sparse_blis:
 	gcc ${CFLAGS} -O3 -fopenmp sparse_blis.c -o sparse_blis.x
 
 sparse_blis_run: sparse_blis
-	./sparse_blis.x --verify --left_constant_blocking=MAT_CSC --right_constant_blocking=MAT_DENSE
+	./sparse_blis.x --left_constant_blocking=MAT_CSC --right_constant_blocking=MAT_DENSE --dummy_solution

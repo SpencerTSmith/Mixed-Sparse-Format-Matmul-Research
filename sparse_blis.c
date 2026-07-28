@@ -13,7 +13,7 @@
 #include "formats.c"
 
 #ifndef BLOCK_NC
-#define BLOCK_NC 8192
+#define BLOCK_NC 1024
 #endif
 
 #ifndef BLOCK_KC
@@ -549,7 +549,7 @@ Matrix_Format format_from_string(String string)
   }
   else if (string_match(STR("MAT_CSC"), string))
   {
-    format = MAT_CSR;
+    format = MAT_CSC;
   }
   else if (string_match(STR("MAT_COO"), string))
   {
@@ -581,7 +581,7 @@ int main(int argc, char **argv)
                                                                 STR("MAT_CSR"));
   String solution_filename = args_get_string_value(&args,
                                                    STR("solution"),
-                                                   STR("solution.bin"));
+                                                   STR("dumped.bin"));
 
   Matrix_Format left_constant_blocking = format_from_string(left_constant_blocking_string);
   Matrix_Format right_constant_blocking = format_from_string(right_constant_blocking_string);
@@ -589,6 +589,8 @@ int main(int argc, char **argv)
   Matrix_Format right_global = MAT_CSR;
 
   Matrix_Solution solution = load_matrix_solution(&arena, solution_filename, is_dummy_solution);
+  printf("%lu!!!!!!!!!!\n", solution.left_col_count);
+  printf("%lu!!!!!!!!!!\n", solution.left_row_count);
 
   usize left_block_count  = (solution.left_row_count / solution.left_blocking.row_count)
                           * (solution.left_col_count / solution.left_blocking.col_count);

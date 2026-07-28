@@ -289,7 +289,7 @@ void matmul_coo_coo(Repetition_Tester *tester, Operation_Parameters *params)
 
 Operation_Entry test_entries[] =
 {
-  {STR("dense_X_dense"), matmul_dense_dense},
+  // {STR("dense_X_dense"), matmul_dense_dense},
   {STR("dense_X_csr"),   matmul_dense_csr},
   {STR("dense_X_csc"),   matmul_dense_csc},
   {STR("dense_X_coo"),   matmul_dense_coo},
@@ -355,9 +355,9 @@ int main(int argc, char **argv)
 
   u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 1);
 
-  u32 row_count   = args_get_integer_value(&args, STR("row_count"), 64);
-  u32 col_count   = args_get_integer_value(&args, STR("col_count"), 64);
-  u32 inner_count = args_get_integer_value(&args, STR("inner_count"), 64);
+  u32 row_count   = args_get_integer_value(&args, STR("row_count"), 512);
+  u32 col_count   = args_get_integer_value(&args, STR("col_count"), 512);
+  u32 inner_count = args_get_integer_value(&args, STR("inner_count"), 512);
 
   f64 fixed_density = args_get_f64_value(&args, STR("fixed_density"), 1.0);
 
@@ -426,7 +426,7 @@ int main(int argc, char **argv)
 
   f64 densities[] =
   {
-    0.1, 0.7, 0.9
+    0.1, 0.3, 0.5, 0.7, 0.9
   };
 
   Repetition_Tester testers[STATIC_COUNT(test_entries)][STATIC_COUNT(densities)] = {0};
@@ -527,7 +527,7 @@ int main(int argc, char **argv)
     if (csv)
     {
       LOG_INFO("Dumping csv: %.*s", STRF(filename));
-      fprintf(csv, "row_count,col_count,inner_count,left_non_zero_count,right_non_zero_count,density,flops,memops,time,bytes\n");
+      fprintf(csv, "row_count,col_count,inner_count,left_non_zero_count,right_non_zero_count,density,flops,memops,time,bytes,cache\n");
 
       for (usize density_idx = 0; density_idx < STATIC_COUNT(densities); density_idx++)
       {
@@ -537,14 +537,15 @@ int main(int argc, char **argv)
         u64 memops  = v.v[REPTEST_VALUE_MEMOP_COUNT];
         u64 time    = v.v[REPTEST_VALUE_TIME];
         u64 bytes   = v.v[REPTEST_VALUE_BYTE_COUNT];
+        u64 cache   = v.v[REPTEST_VALUE_CACHE_COUNT];
         f64 density = densities[density_idx];
 
         u32 left_non_zero_count  = non_zero_counts[density_idx][0];
         u32 right_non_zero_count = non_zero_counts[density_idx][1];
 
-        fprintf(csv, "%u,%u,%u,%u,%u,%f,%lu,%lu,%lu,%lu\n",
+        fprintf(csv, "%u,%u,%u,%u,%u,%f,%lu,%lu,%lu,%lu,%lu\n",
                 row_count, col_count, inner_count, left_non_zero_count, right_non_zero_count,
-                density, flops, memops, time, bytes);
+                density, flops, memops, time, bytes, cache);
       }
     }
     else

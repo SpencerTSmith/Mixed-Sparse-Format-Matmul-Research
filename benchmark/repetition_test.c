@@ -101,7 +101,7 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
     u64 cache_misses = values.v[REPTEST_VALUE_CACHE_COUNT] / divisor;
     if (cache_misses)
     {
-      printf(", %lu cache misses", memops);
+      printf(", %lu cache misses", cache_misses);
     }
   }
 }

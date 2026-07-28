@@ -125,7 +125,8 @@ PLOT_TYPES = [
     'time',
     'flop_error',
     'memop_error',
-    'roofline'
+    'cache_miss',
+    'roofline',
 ]
 
 def load_data(csv_file, formula_map):
@@ -155,6 +156,7 @@ def load_data(csv_file, formula_map):
         observed_memops = data['memops'].values,
         time            = data['time'].values,
         byte            = data['bytes'].values,
+        cache           = data['cache'].values,
         formula_flops   = formula_flops,
         formula_memops  = formula_memops,
         has_formula     = formula_func is not None,
@@ -216,12 +218,20 @@ def plot_roofline(ax, d, color, peak_flops_per_cycle, peak_bytes_per_cycle):
     ax.set_title('Roofline')
     ax.grid(True)
 
+def plot_cache_miss(ax, d, color):
+    ax.plot(d['densities'], d['cache'], '-', label=d['basename'], color=color, markersize=4)
+    ax.set_xlabel('Density')
+    ax.set_ylabel('Cache Misses')
+    ax.set_title('Cache Misses')
+    ax.grid(True)
+
 PLOT_FUNCTION_MAP = {
     'flops':       plot_flops,
     'memops':      plot_memops,
     'time':        plot_time,
     'flop_error':  plot_flop_error,
     'memop_error': plot_memop_error,
+    'cache_miss':  plot_cache_miss,
 }
 
 if __name__ == "__main__":
