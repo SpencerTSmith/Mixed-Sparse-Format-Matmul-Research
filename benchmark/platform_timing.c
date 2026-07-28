@@ -1,8 +1,12 @@
 #include "platform_timing.h"
 
+// TODO: clean this up
 #include <x86intrin.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <linux/perf_event.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 
 // NOTE(ss): Will need to be defined per ISA
 static
@@ -95,14 +99,66 @@ u64 read_os_timer(void)
   return result;
 }
 
+static
+long perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
+                     int cpu, int group_fd, unsigned long flags)
+{
+  // NOTE: Sometimes a system's linux headers might not have '__NR_perf_event_open' ...
+  return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
+}
 
-// static inline
-// long perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
-//                      int cpu, int group_fd, unsigned long flags)
-// {
-//   // NOTE: Sometimes a system's linux headers might not have '__NR_perf_event_open' ...
-//   return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
-// }
+static
+u64 make_cpu_pmc_event(CPU_PMC_Event event)
+{
+  struct perf_event_attr pe;
+  memset(&pe, 0, sizeof(pe));
+  pe.type = PERF_TYPE_HARDWARE;
+  pe.size = sizeof(pe);
+  pe.disabled = 1;
+  pe.exclude_kernel = 1;
+  pe.exclude_hv = 1;
 
+  switch (event)
+  {
+    case CPU_PMC_CACHE:
+    {
+      pe.config = PERF_COUNT_HW_CACHE_MISSES;
+    } break;
+    case ETC:
+    {
+    } break;
+  }
+
+  u64 handle = 0;
+
+  int fd = perf_event_open(&pe, 0, -1, -1, 0);
+
+  if (fd != -1)
+  {
+    handle = (u64)fd;
+  }
+
+  return handle;
+}
+
+static
+void open_cpu_pmc_event_counting(u64 handle)
+{
+  int fd = (int)handle;
+  ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+  ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+}
+
+static
+u64 close_cpu_pmc_event_counting(u64 handle)
+{
+  int fd = (int)handle;
+  ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+
+  long long count = 0;
+  read(fd, &count, sizeof(count));
+
+  return (u64)count;
+}
 
 #endif

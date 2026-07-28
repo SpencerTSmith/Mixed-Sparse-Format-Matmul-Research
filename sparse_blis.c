@@ -625,7 +625,7 @@ int main(int argc, char **argv)
   usize output_bytes = solution.left_row_count * solution.right_col_count * sizeof(f64);
   usize backing_size = 512 * 1024 * 1024;
 
-  // HACK:
+  // HACK: Mapping same page.
   int fd = memfd_create("scratch_output", 0);
   ftruncate(fd, backing_size);
 

@@ -23,6 +23,7 @@ typedef enum Repetition_Test_Value
   REPTEST_VALUE_BYTE_COUNT,
   REPTEST_VALUE_FLOP_COUNT,
   REPTEST_VALUE_MEMOP_COUNT,
+  REPTEST_VALUE_CACHE_COUNT,
 
   REPTEST_VALUE_COUNT,
 } Repetition_Test_Value;
@@ -62,6 +63,8 @@ struct Repetition_Tester
 
   Repetition_Test current_test;
   Repetition_Tester_Results results;
+
+  u64 cache_events_handle;
 };
 
 static

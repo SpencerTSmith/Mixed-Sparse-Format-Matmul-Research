@@ -9,6 +9,11 @@ void repetition_tester_begin_time(Repetition_Tester *tester)
   curr->begin_block_count += 1;
   curr->accum.v[REPTEST_VALUE_TIME] -= read_cpu_timer();
   curr->accum.v[REPTEST_VALUE_PAGE_FAULTS]  -= read_os_page_faults();
+
+  if (tester->cache_events_handle)
+  {
+    open_cpu_pmc_event_counting(tester->cache_events_handle);
+  }
 }
 
 static
@@ -18,6 +23,11 @@ void repetition_tester_close_time(Repetition_Tester *tester)
   curr->accum.v[REPTEST_VALUE_TIME] += read_cpu_timer();
   curr->accum.v[REPTEST_VALUE_PAGE_FAULTS] += read_os_page_faults();
   curr->close_block_count += 1;
+
+  if (tester->cache_events_handle)
+  {
+    curr->accum.v[REPTEST_VALUE_CACHE_COUNT] += close_cpu_pmc_event_counting(tester->cache_events_handle);
+  }
 }
 
 static
@@ -87,6 +97,12 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
     {
       printf(", %lu memops", memops);
     }
+
+    u64 cache_misses = values.v[REPTEST_VALUE_CACHE_COUNT] / divisor;
+    if (cache_misses)
+    {
+      printf(", %lu cache misses", memops);
+    }
   }
 }
 
@@ -99,6 +115,13 @@ void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_
     tester->target_processed_byte_count = target_processed_byte_count;
     tester->cpu_timer_frequency = cpu_timer_frequency;
     tester->results.min.v[REPTEST_VALUE_TIME] = (u64)-1;
+
+    tester->cache_events_handle = make_cpu_pmc_event(CPU_PMC_CACHE);
+
+    if (tester->cache_events_handle == 0)
+    {
+      repetition_tester_error(tester, "Repetition Tester unable to open cache event tracing");
+    }
   }
   else if (tester->mode == REPTEST_MODE_COMPLETE)
   {
