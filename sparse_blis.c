@@ -625,6 +625,7 @@ int main(int argc, char **argv)
   usize output_bytes = solution.left_row_count * solution.right_col_count * sizeof(f64);
   usize backing_size = 512 * 1024 * 1024;
 
+  // HACK:
   int fd = memfd_create("scratch_output", 0);
   ftruncate(fd, backing_size);
 
@@ -634,9 +635,9 @@ int main(int argc, char **argv)
   for (usize off = 0; off < output_bytes; off += backing_size)
   {
       usize map_size = (off + backing_size > output_bytes) ? (output_bytes - off) : backing_size;
-      mmap((char *)output_values + off, map_size,
-          PROT_READ | PROT_WRITE,
-          MAP_SHARED | MAP_FIXED, fd, 0);
+      void *stop_complaining = mmap((char *)output_values + off, map_size,
+                                    PROT_READ | PROT_WRITE,
+                                    MAP_SHARED | MAP_FIXED, fd, 0);
   }
 
   Operation_Parameters params[2] =
@@ -667,14 +668,14 @@ int main(int argc, char **argv)
       .name = string_formatted(&arena, "Constant Blocking %.*s x %.*s",
                                STRF(left_constant_blocking_string),
                                STRF(right_constant_blocking_string)),
-        .left  = multi_sparsify(&arena, solution.left, solution.left_row_count, solution.left_col_count, constant_left_blocking),
-        .right = multi_sparsify(&arena, solution.right, solution.right_row_count, solution.right_col_count, constant_right_blocking),
-        .output =
-        {
-          .row_count = solution.left_row_count,
-          .col_count = solution.right_col_count,
-          .values = output_values
-        }
+      .left  = multi_sparsify(&arena, solution.left, solution.left_row_count, solution.left_col_count, constant_left_blocking),
+      .right = multi_sparsify(&arena, solution.right, solution.right_row_count, solution.right_col_count, constant_right_blocking),
+      .output =
+      {
+        .row_count = solution.left_row_count,
+        .col_count = solution.right_col_count,
+        .values = output_values
+      }
     },
   };
 
