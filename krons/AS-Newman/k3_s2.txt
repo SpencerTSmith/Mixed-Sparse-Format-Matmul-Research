@@ -1,14 +1,3 @@
-# Synthetic Kronecker Graph Using RMAT
-# K : 3, Sample: 2
-# Number of edges: 10
-# Graph generation time (s): 0.07
-0 0
-1 2
-0 4
-1 4
-2 1
-3 0
-0 6
-5 2
-0 1
-1 0
+version https://git-lfs.github.com/spec/v1
+oid sha256:2310f4a08d5f54080bfb7b1a6c9ae230dd731c17f897dfc89d41ea3085712f75
+size 154
