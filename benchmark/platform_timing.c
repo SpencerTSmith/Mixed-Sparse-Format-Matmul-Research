@@ -124,6 +124,10 @@ u64 make_cpu_pmc_event(CPU_PMC_Event event)
     {
       pe.config = PERF_COUNT_HW_CACHE_MISSES;
     } break;
+    case CPU_PMC_BRANCH:
+    {
+      pe.config = PERF_COUNT_HW_BRANCH_MISSES;
+    } break;
     case ETC:
     {
     } break;

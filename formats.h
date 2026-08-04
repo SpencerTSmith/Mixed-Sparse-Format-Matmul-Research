@@ -698,4 +698,22 @@ void csc_x_csr(Dense_Matrix output, CSC_Matrix left, CSR_Matrix right);
 static
 void csc_x_csc(Dense_Matrix output, CSC_Matrix left, CSC_Matrix right);
 
+static inline
+String matrix_format_string(Matrix_Format format)
+{
+  String result = STR("");
+
+  switch (format)
+  {
+  case MAT_NONE:  result = STR("none"); break;
+  case MAT_DENSE: result = STR("dense"); break;
+  case MAT_CSR:   result = STR("csr"); break;
+  case MAT_CSC:   result = STR("csc"); break;
+  case MAT_COO:   result = STR("coo"); break;
+  case MAT_COUNT: break;
+  }
+
+  return result;
+}
+
 #endif // FORMATS_H

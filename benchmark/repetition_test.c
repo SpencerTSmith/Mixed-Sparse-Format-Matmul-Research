@@ -14,6 +14,11 @@ void repetition_tester_begin_time(Repetition_Tester *tester)
   {
     open_cpu_pmc_event_counting(tester->cache_events_handle);
   }
+
+  if (tester->branch_events_handle)
+  {
+    open_cpu_pmc_event_counting(tester->branch_events_handle);
+  }
 }
 
 static
@@ -27,6 +32,11 @@ void repetition_tester_close_time(Repetition_Tester *tester)
   if (tester->cache_events_handle)
   {
     curr->accum.v[REPTEST_VALUE_CACHE_COUNT] += close_cpu_pmc_event_counting(tester->cache_events_handle);
+  }
+
+  if (tester->branch_events_handle)
+  {
+    curr->accum.v[REPTEST_VALUE_BRANCH_COUNT] += close_cpu_pmc_event_counting(tester->branch_events_handle);
   }
 }
 
@@ -83,7 +93,12 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
     {
       f64 kb_per_fault = ((f64)byte_count / KB(1)) / (f64)page_faults;
 
-      printf(", %lu faults (%.4f kb/fault)", page_faults, kb_per_fault);
+      printf(", %lu faults", page_faults);
+
+      if (byte_count)
+      {
+        printf("(%.4f kb/fault)", kb_per_fault);
+      }
     }
 
     u64 flops = values.v[REPTEST_VALUE_FLOP_COUNT] / divisor;
@@ -103,6 +118,12 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
     {
       printf(", %lu cache misses", cache_misses);
     }
+
+    u64 branch_misses = values.v[REPTEST_VALUE_BRANCH_COUNT] / divisor;
+    if (branch_misses)
+    {
+      printf(", %lu branch misses", branch_misses);
+    }
   }
 }
 
@@ -117,10 +138,16 @@ void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_
     tester->results.min.v[REPTEST_VALUE_TIME] = (u64)-1;
 
     tester->cache_events_handle = make_cpu_pmc_event(CPU_PMC_CACHE);
+    tester->branch_events_handle = make_cpu_pmc_event(CPU_PMC_BRANCH);
 
     if (tester->cache_events_handle == 0)
     {
       repetition_tester_error(tester, "Repetition Tester unable to open cache event tracing");
+    }
+
+    if (tester->branch_events_handle == 0)
+    {
+      repetition_tester_error(tester, "Repetition Tester unable to open branch event tracing");
     }
   }
   else if (tester->mode == REPTEST_MODE_COMPLETE)
@@ -187,9 +214,9 @@ b32 repetition_tester_is_testing(Repetition_Tester *tester)
           // Restart time to find new min
           tester->tests_start_time = current_time;
 
-          printf("                                                                                        \r");
+          printf("                                                                                                                     \r");
           print_repetition_test_values("MIN", results->min, tester->cpu_timer_frequency, 1);
-          printf("\r");
+          printf("                                                                                                                     \r");
           fflush(stdout);
         }
 

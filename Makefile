@@ -25,3 +25,9 @@ sparse_blis:
 
 sparse_blis_run: sparse_blis
 	./sparse_blis.x --left_constant_blocking=MAT_CSC --right_constant_blocking=MAT_DENSE --dummy_solution
+
+taco_bullshit:
+	gcc ${CFLAGS} -O3 -fopenmp taco_bench.c -o taco_bench.x
+
+taco_bullshit_run: taco_bullshit
+	./taco_bench.x

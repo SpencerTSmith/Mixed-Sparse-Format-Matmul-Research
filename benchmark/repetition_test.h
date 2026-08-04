@@ -24,6 +24,7 @@ typedef enum Repetition_Test_Value
   REPTEST_VALUE_FLOP_COUNT,
   REPTEST_VALUE_MEMOP_COUNT,
   REPTEST_VALUE_CACHE_COUNT,
+  REPTEST_VALUE_BRANCH_COUNT,
 
   REPTEST_VALUE_COUNT,
 } Repetition_Test_Value;
@@ -65,6 +66,7 @@ struct Repetition_Tester
   Repetition_Tester_Results results;
 
   u64 cache_events_handle;
+  u64 branch_events_handle;
 };
 
 static
@@ -94,16 +96,5 @@ void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_
 
 static
 b32 repetition_tester_is_testing(Repetition_Tester *tester);
-
-// You provide the definitions for these
-typedef struct Operation_Parameters Operation_Parameters;
-typedef void Operation_Function(Repetition_Tester *tester, Operation_Parameters *params);
-
-typedef struct Operation_Entry Operation_Entry;
-struct Operation_Entry
-{
-  String name;
-  Operation_Function *function;
-};
 
 #endif // REPETITION_TEST_H

@@ -24,9 +24,11 @@ u64 estimate_cpu_timer_freq(void);
 static
 f64 cpu_time_in_seconds(u64 cpu_time, u64 cpu_timer_frequency);
 
+// TODO: For perf backend we can merge events to cut down on read syscalls.
 typedef enum
 {
   CPU_PMC_CACHE,
+  CPU_PMC_BRANCH,
   ETC,
 } CPU_PMC_Event;
 

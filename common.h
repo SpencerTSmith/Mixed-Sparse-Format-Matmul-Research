@@ -467,6 +467,13 @@ void scratch_close(Scratch *scratch);
 // STRINGS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+typedef struct Stream Stream;
+struct Stream
+{
+  String buffer;
+  usize  cursor;
+};
+
 #define String(s) (String){(u8 *)(s), STATIC_COUNT(s) - 1}
 #define String_Format(s) (int)(s).count, (s).v
 #define STR(s) String((s))
@@ -516,6 +523,8 @@ usize file_size(const char *name);
 
 // Reads the entire thing and returns a String (just a byte slice)
 String read_file_to_arena(Arena *arena, String name);
+
+String stream_get_next_line(Stream *stream);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -786,9 +795,12 @@ String string_from_c_string(char *pointer)
     .count = 0,
   };
 
-  for (char *cursor = pointer; *cursor; cursor++)
+  if (pointer)
   {
-    result.count += 1;
+    for (char *cursor = pointer; *cursor; cursor++)
+    {
+      result.count += 1;
+    }
   }
 
   return result;
@@ -1185,6 +1197,79 @@ String string_timestamp(Arena *arena)
 
   String result = string_formatted(arena, "%d-%d-%d_%d:%d:%d",
                                    year, month, day, hour, min, sec);
+
+  return result;
+}
+
+// TODO: Non linux.
+String file_basename(String filename)
+{
+  usize start = 0;
+  usize stop = 0;
+  for (usize i = 0; i < filename.count; i++)
+  {
+    if (filename.v[i] == '/')
+    {
+      start = i + 1;
+    }
+
+    if (filename.v[i] == '.')
+    {
+      stop = i;
+      break;
+    }
+  }
+
+  return string_substring(filename, start, stop);
+}
+
+#include <dirent.h>
+String_List folder_children(Arena *arena, String folder)
+{
+  String_List list = {0};
+  char *c_folder = string_to_c_string(arena, folder);
+  DIR *dir = opendir(c_folder);
+
+  if (dir)
+  {
+    for (struct dirent *entry = readdir(dir); entry; entry = readdir(dir))
+    {
+      String name = string_from_c_string(entry->d_name);
+
+      if (string_match(name, STR(".")) || string_match(name, STR("..")))
+      {
+        continue;
+      }
+
+      String_Node *item = arena_new(arena, String_Node);
+      item->value = string_formatted(arena, "%.*s/%.*s", STRF(folder), STRF(name));
+      list_push_last(&list, item);
+    }
+
+    closedir(dir);
+  }
+
+  return list;
+}
+
+b32 string_valid(String string)
+{
+  return string.v != 0 && string.count != 0;
+}
+
+String stream_get_next_line(Stream *stream)
+{
+  usize index = stream->cursor;
+  for (; index < stream->buffer.count; index++)
+  {
+    if (stream->buffer.v[index] == '\n')
+    {
+      break;
+    }
+  }
+
+  String result = string_substring(stream->buffer, stream->cursor, index + 1);
+  stream->cursor = index + 1;
 
   return result;
 }
