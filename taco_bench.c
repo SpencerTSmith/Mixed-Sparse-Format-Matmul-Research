@@ -320,7 +320,7 @@ int main(int argc, char **argv)
   u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 1);
 
   String out_dir = args_get_string_value(&args, STR("out_dir"), STR("taco_kron_results"));
-  String kron_dir = args_get_string_value(&args, STR("kron_folder"), STR("krons/Bio-Proteins"));
+  String kron_dir = args_get_string_value(&args, STR("kron_folder"), STR("krons/Web-Notredame"));
 
   String_List krons = folder_children(&arena, kron_dir);
 

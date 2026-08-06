@@ -1,7 +1,0 @@
-
-Container param: el9hw
-Using container image: none
-
-cat: /proc/sys/kernel/perf_event_paranoid: Cannot allocate memory
-[REPETITION_TESTER LOG_ASSERT]: (taco_bench.c:119) Assertion: (result.crd1 && result.crd2 && result.vals) :: Kron file did not contain nnz info before declaring edges.
-/var/slurm/spool/slurmd/job33013600/slurm_script: line 20: 2366049 Segmentation fault      (core dumped) ./taco_bench.x --out_dir=taco_kron_results --kron_folder=krons/AS-Newman
