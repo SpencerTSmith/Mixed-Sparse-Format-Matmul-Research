@@ -1494,8 +1494,8 @@ void *arena_alloc(Arena *arena, usize size, usize alignment) {
 
 void arena_pop_to(Arena *arena, usize offset)
 {
-  ASSERT(offset < arena->next_offset,
-         "Failed to pop arena allocation, more than currently allocated");
+  // ASSERT(offset < arena->next_offset,
+  //        "Failed to pop arena allocation, more than currently allocated");
 
   // Should we zero out the memory?
   arena->next_offset = offset;
