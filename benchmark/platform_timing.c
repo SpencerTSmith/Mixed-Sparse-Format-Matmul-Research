@@ -148,19 +148,26 @@ u64 make_cpu_pmc_event(CPU_PMC_Event event)
 static
 void open_cpu_pmc_event_counting(u64 handle)
 {
-  int fd = (int)handle;
-  ioctl(fd, PERF_EVENT_IOC_RESET, 0);
-  ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+  if (handle)
+  {
+    int fd = (int)handle;
+    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+    ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+  }
 }
 
 static
 u64 close_cpu_pmc_event_counting(u64 handle)
 {
-  int fd = (int)handle;
-  ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
-
   long long count = 0;
-  read(fd, &count, sizeof(count));
+
+  if (handle)
+  {
+    int fd = (int)handle;
+    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+
+    read(fd, &count, sizeof(count));
+  }
 
   return (u64)count;
 }

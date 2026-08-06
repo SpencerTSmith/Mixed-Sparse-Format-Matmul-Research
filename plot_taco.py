@@ -7,9 +7,9 @@ import re
 from collections import defaultdict
 
 import matplotlib
-matplotlib.use('Agg')  # non-interactive backend -- avoids loading a GUI
-                        # toolkit (GTK/Qt/etc) entirely, which is what was
-                        # segfaulting on exit. We only ever call savefig().
+matplotlib.use('Agg')
+
+
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
@@ -57,9 +57,6 @@ def plot_metric(data, metric_idx, title, ylabel, ax, log_scale=True):
         all_vals.extend(vals)
         all_ks.update(ks)
 
-        # Treat 0 as "no measurement" rather than a real data point: replace
-        # with NaN so matplotlib breaks the line (leaves a gap) instead of
-        # drawing a segment through it, and skip it entirely for markers.
         line_vals = [v if v > 0 else float('nan') for v in vals]
         line, = ax.plot(ks, line_vals, label=combo)
 
@@ -72,23 +69,50 @@ def plot_metric(data, metric_idx, title, ylabel, ax, log_scale=True):
     ax.set_title(title)
 
     if log_scale:
-        # symlog instead of log: handles 0 (and negatives) gracefully by
-        # using a linear region near zero, then switching to log spacing
-        # beyond it. Zero sits flat in that region instead of shooting to
-        # -inf like it does with a pure log axis.
         positive_vals = [v for v in all_vals if v > 0]
         linthresh = min(positive_vals) if positive_vals else 1
         ax.set_yscale('symlog', linthresh=max(linthresh, 1e-9), linscale=0.3)
         ax.set_ylim(bottom=0)
 
-    # k is discrete (2, 4, 8, ... via 2^k) -- only tick the actual measured
-    # values so the axis never shows fractional k's.
     if all_ks:
         ax.set_xticks(sorted(all_ks))
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize='small')
+
+
+def plot_rate_metric(data, numerator_idx, denominator_idx, title, ylabel, ax):
+    """Plots a derived per-point ratio (e.g. cache misses / cycle) vs k.
+
+    Floor is fixed at 0 (0 misses/cycle is a real, meaningful minimum);
+    ceiling is left to auto-scale based on whatever the data actually
+    shows, since that's effectively bounded by DRAM bandwidth rather than
+    anything we'd want to clip or log-scale.
+    """
+    all_ks = set()
+
+    for combo, rows in sorted(data.items()):
+        ks, rates = [], []
+        for r in rows:
+            k, denom = r[0], r[denominator_idx]
+            if denom > 0:  # skip points with 0 cycles measured -- undefined rate
+                ks.append(k)
+                rates.append(r[numerator_idx] / denom)
+
+        all_ks.update(r[0] for r in rows)
+
+        line, = ax.plot(ks, rates, label=combo)
+        ax.scatter(ks, rates, s=10, color=line.get_color(), zorder=3)
+
+    ax.set_xlabel('k  (matrix dim = 2^k)')
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.set_ylim(bottom=0)
+
+    if all_ks:
+        ax.set_xticks(sorted(all_ks))
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize='small')
@@ -105,11 +129,12 @@ def main():
     if not data:
         raise SystemExit(f'No matching CSVs found in {args.run_dir}')
 
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    fig, axes = plt.subplots(1, 4, figsize=(24, 5))
 
-    plot_metric(data, 1, 'Time', 'cycles (check your timer units)', axes[0], log_scale=not args.linear)
+    plot_metric(data, 1, 'Time', 'timestamp cycles', axes[0], log_scale=not args.linear)
     plot_metric(data, 2, 'Cache misses', 'count', axes[1], log_scale=not args.linear)
     plot_metric(data, 3, 'Branch mispredicts', 'count', axes[2], log_scale=not args.linear)
+    plot_rate_metric(data, 2, 1, 'LLC misses / cycle', 'misses per cycle', axes[3])
 
     fig.suptitle(f'TACO format benchmark: {os.path.basename(os.path.normpath(args.run_dir))}')
     fig.tight_layout()

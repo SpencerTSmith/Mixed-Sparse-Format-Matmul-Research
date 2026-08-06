@@ -328,16 +328,29 @@ int main(int argc, char **argv)
   Repetition_Tester testers[30][STATIC_COUNT(test_entries)] = {0};
   u64 k_for_test[30] = {0};
 
-  ASSERT(STATIC_COUNT(testers) > krons.count, "Too many kroneckers to test in one run.");
+  // ASSERT(STATIC_COUNT(testers) > krons.count, "Too many kroneckers to test in one run.");
 
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
   usize kron_index = 0;
   for (String_Node *kron_file = krons.first; kron_file; kron_file = kron_file->link_next)
   {
+    // TODO: Make which s we look at configurable.
+    if (!string_contains_substring(kron_file->value, STR("s2")))
+    {
+      continue;
+    }
+
     Scratch scratch = scratch_begin(&arena);
 
     Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value);
+
+    if (kron_coo.k > 20)
+    {
+      scratch_close(&scratch);
+      continue;
+    }
+
     k_for_test[kron_index] = kron_coo.k;
 
     for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
@@ -345,6 +358,14 @@ int main(int argc, char **argv)
       Repetition_Tester *tester = &testers[kron_index][func_idx];
 
       Operation_Entry *entry = test_entries + func_idx;
+
+      printf("\n--- %.*s, %.*s x %.*s ---\n", STRF(kron_coo.name),
+             STRF(matrix_format_string(entry->a_format)),
+             STRF(matrix_format_string(entry->b_format)));
+
+      printf("                                                          \r");
+      repetition_tester_new_wave(tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
+
 
       Taco_Mode_Info a_info = taco_mode_info_from_format(entry->a_format);
       taco_tensor_t *A = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, a_info.ordering,
@@ -429,12 +450,6 @@ int main(int argc, char **argv)
         COO_x_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         COO_x_COO_assemble(C, A, B);
       }
-
-      printf("\n--- %.*s, %.*s x %.*s ---\n", STRF(kron_coo.name),
-             STRF(matrix_format_string(entry->a_format)),
-             STRF(matrix_format_string(entry->b_format)));
-      printf("                                                          \r");
-      repetition_tester_new_wave(tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
 
       while (repetition_tester_is_testing(tester))
       {
