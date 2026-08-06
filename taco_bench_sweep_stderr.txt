@@ -1,0 +1,6 @@
+
+Container param: el9hw
+Using container image: none
+
+cat: /proc/sys/kernel/perf_event_paranoid: Cannot allocate memory
+/var/slurm/spool/slurmd/job32984918/slurm_script: line 24: 3206446 Segmentation fault      (core dumped) ./taco_bench.x --out_dir=taco_kron_results --kron_folder=krons/AS-Newman
