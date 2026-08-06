@@ -327,8 +327,7 @@ int main(int argc, char **argv)
   // Max 30.
   Repetition_Tester testers[30][STATIC_COUNT(test_entries)] = {0};
   u64 k_for_test[30] = {0};
-
-  // ASSERT(STATIC_COUNT(testers) > krons.count, "Too many kroneckers to test in one run.");
+  u64 nnz_for_test[30] = {0};
 
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
