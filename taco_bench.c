@@ -14,6 +14,7 @@ struct Taco_COO
   // For me.
   String name;
   u64    k;
+  u64    s;
 
   // For the taco bullshit.
   int    pos[2]; // {0, nnz}
@@ -85,6 +86,7 @@ Taco_COO load_kron(Arena *arena, String filename)
     if (line.v[0] == '#')
     {
       String k_line = STR("# K : ");
+      String s_line = STR("Sample: ");
       String nnz_line = STR("# Number of edges: ");
 
       // Get a k line potentially.
@@ -96,6 +98,13 @@ Taco_COO load_kron(Arena *arena, String filename)
 
         result.dimensions[0] = pow(2, result.k);
         result.dimensions[1] = result.dimensions[0];
+      }
+
+      usize potential_s_line_index = string_find_substring(line, 0, s_line);
+      if (potential_s_line_index != line.count)
+      {
+        String substring = string_substring(line, potential_s_line_index + s_line.count, line.count);
+        result.s = string_to_u64(substring);
       }
 
       usize potential_nnz_line_index = string_find_substring(line, 0, nnz_line);
@@ -320,8 +329,8 @@ int main(int argc, char **argv)
   u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 1);
 
   String out_dir = args_get_string_value(&args, STR("out_dir"), STR("taco_kron_results"));
-  String kron_dir = args_get_string_value(&args, STR("kron_folder"), STR("krons/Web-Notredame"));
-  String sample = args_get_string_value(&args, STR("sample"), STR("s2"));
+  String kron_dir = args_get_string_value(&args, STR("kron_folder"), STR("krons/AS-Newman"));
+  u64 sample = args_get_integer_value(&args, STR("sample"), 2);
   u64 k_limit = args_get_integer_value(&args, STR("k_limit"), 20);
 
   String_List krons = folder_children(&arena, kron_dir);
@@ -336,16 +345,12 @@ int main(int argc, char **argv)
   usize kron_index = 0;
   for (String_Node *kron_file = krons.first; kron_file; kron_file = kron_file->link_next)
   {
-    if (!string_contains_substring(kron_file->value, sample))
-    {
-      continue;
-    }
-
     Scratch scratch = scratch_begin(&arena);
 
     Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value);
 
-    if (kron_coo.k > k_limit)
+    // TODO: check this before parsing and laoding.
+    if (kron_coo.k > k_limit || kron_coo.s != sample)
     {
       scratch_close(&scratch);
       continue;
@@ -480,7 +485,7 @@ int main(int argc, char **argv)
       Operation_Entry *entry = test_entries + func_idx;
 
       u64 k = k_for_test[kron_index];
-      String filename = string_formatted(&arena, "%.*s/k%lu_%.*s_%.*s.csv", STRF(test_run_dir), k, STRF(matrix_format_string(entry->a_format)),
+      String filename = string_formatted(&arena, "%.*s/k%lu_s%lu_%.*s_%.*s.csv", STRF(test_run_dir), k, sample, STRF(matrix_format_string(entry->a_format)),
                                          STRF(matrix_format_string(entry->b_format)));
 
       FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
