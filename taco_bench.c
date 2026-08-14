@@ -471,6 +471,8 @@ int main(int argc, char **argv)
     scratch_close(&scratch);
   }
 
+  u64 actual_kron_count = kron_index;
+
   String timestamp = string_timestamp(&arena);
   String test_run_info = string_formatted(&arena, "%.*s_%.*s", STRF(file_basename(kron_dir)), STRF(timestamp));
   String test_run_dir = string_formatted(&arena, "%.*s/%.*s", STRF(out_dir), STRF(test_run_info));
@@ -480,7 +482,7 @@ int main(int argc, char **argv)
 
   for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
   {
-    for (usize kron_index = 0; kron_index < krons.count; kron_index++)
+    for (usize kron_index = 0; kron_index < actual_kron_count; kron_index++)
     {
       Operation_Entry *entry = test_entries + func_idx;
 
