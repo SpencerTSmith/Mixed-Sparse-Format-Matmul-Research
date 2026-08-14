@@ -321,6 +321,8 @@ int main(int argc, char **argv)
 
   String out_dir = args_get_string_value(&args, STR("out_dir"), STR("taco_kron_results"));
   String kron_dir = args_get_string_value(&args, STR("kron_folder"), STR("krons/Web-Notredame"));
+  String sample = args_get_string_value(&args, STR("sample"), STR("s2"));
+  u64 k_limit = args_get_integer_value(&args, STR("k_limit"), 20);
 
   String_List krons = folder_children(&arena, kron_dir);
 
@@ -334,8 +336,7 @@ int main(int argc, char **argv)
   usize kron_index = 0;
   for (String_Node *kron_file = krons.first; kron_file; kron_file = kron_file->link_next)
   {
-    // TODO: Make which s we look at configurable.
-    if (!string_contains_substring(kron_file->value, STR("s2")))
+    if (!string_contains_substring(kron_file->value, sample))
     {
       continue;
     }
@@ -344,7 +345,7 @@ int main(int argc, char **argv)
 
     Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value);
 
-    if (kron_coo.k > 20)
+    if (kron_coo.k > k_limit)
     {
       scratch_close(&scratch);
       continue;
