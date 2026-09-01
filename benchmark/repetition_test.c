@@ -248,3 +248,48 @@ b32 repetition_tester_is_testing(Repetition_Tester *tester)
 
   return tester->mode == REPTEST_MODE_TESTING;
 }
+
+static
+void repetition_tester_csv_header(Repetition_Tester *tester,
+                                  Repetition_Test_Value dump_value_flags, FILE *out,
+                                  String_Array extra_columns)
+{
+  for (u64 i = 0; i < extra_columns.count; i++)
+  {
+    fprintf(out, "%.*s,", STRF(extra_columns.v[i]));
+  }
+
+  const char *value_names[REPTEST_VALUE_COUNT] =
+  {
+    "none",
+    "time",
+    "faults",
+    "bytes",
+    "flops",
+    "memops",
+    "cache",
+    "branch",
+  };
+
+  for (Repetition_Test_Value value = REPTEST_VALUE_NONE + 1; value < REPTEST_VALUE_COUNT; value++)
+  {
+    if (dump_value_flags & (1 << value))
+    {
+      fprintf(out, "%s,", value_names[value]);
+    }
+  }
+  fprintf(out, "\n");
+}
+
+static
+void repetition_tester_csv_row(Repetition_Tester *tester,
+                               Repetition_Test_Value dump_value_flags, FILE *out)
+{
+  for (Repetition_Test_Value value = REPTEST_VALUE_NONE + 1; value < REPTEST_VALUE_COUNT; value++)
+  {
+    if (dump_value_flags & (1 << value))
+    {
+      fprintf(out, "%lu,", tester->results.min.v[value]);
+    }
+  }
+}

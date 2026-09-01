@@ -482,33 +482,36 @@ int main(int argc, char **argv)
 
   for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
   {
-    for (usize kron_index = 0; kron_index < actual_kron_count; kron_index++)
+    Operation_Entry *entry = test_entries + func_idx;
+
+    String filename = string_formatted(&arena, "%.*s/s%lu_%.*s_%.*s.csv", STRF(test_run_dir),
+                                       sample, STRF(matrix_format_string(entry->a_format)),
+                                       STRF(matrix_format_string(entry->b_format)));
+
+    FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
+    LOG_INFO("Dumping csv: %.*s", STRF(filename));
+
+    // TODO: Macro for converting between flags and normal enum values.
+    Repetition_Test_Value value_flags = (Repetition_Test_Value)((u64) -1);
+
+    if (csv)
     {
-      Operation_Entry *entry = test_entries + func_idx;
+      String extra[] = {STR("k")};
+      repetition_tester_csv_header(0, value_flags, csv, (String_Array){extra, 1});
 
-      u64 k = k_for_test[kron_index];
-      String filename = string_formatted(&arena, "%.*s/k%lu_s%lu_%.*s_%.*s.csv", STRF(test_run_dir), k, sample, STRF(matrix_format_string(entry->a_format)),
-                                         STRF(matrix_format_string(entry->b_format)));
-
-      FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
-
-      if (csv)
+      for (usize kron_index = 0; kron_index < actual_kron_count; kron_index++)
       {
-        LOG_INFO("Dumping csv: %.*s", STRF(filename));
 
         Repetition_Tester *tester = &testers[kron_index][func_idx];
-        Repetition_Test_Values v = tester->results.min;
-        u64 time  = v.v[REPTEST_VALUE_TIME];
-        u64 cache = v.v[REPTEST_VALUE_CACHE_COUNT];
-        u64 branch = v.v[REPTEST_VALUE_BRANCH_COUNT];
+        u64 k = k_for_test[kron_index];
 
-        fprintf(csv, "k,time,cache,branch\n");
-        fprintf(csv, "%lu,%lu,%lu,%lu\n", k, time, cache, branch);
+        fprintf(csv, "%lu,", k);
+        repetition_tester_csv_row(tester, value_flags, csv);
       }
-      else
-      {
-        LOG_ERROR("Unable to open csv file: %.*s", STRF(filename));
-      }
+    }
+    else
+    {
+      LOG_ERROR("Unable to open csv file: %.*s", STRF(filename));
     }
   }
 }

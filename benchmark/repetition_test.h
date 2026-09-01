@@ -14,6 +14,7 @@ typedef enum Repetition_Tester_Mode
   REPTEST_MODE_COUNT,
 } Repetition_Tester_Mode;
 
+// TODO: Macro this so its not manual
 typedef enum Repetition_Test_Value
 {
   REPTEST_VALUE_NONE,
@@ -28,6 +29,17 @@ typedef enum Repetition_Test_Value
 
   REPTEST_VALUE_COUNT,
 } Repetition_Test_Value;
+
+typedef enum Repetition_Test_Value_Flags
+{
+  REPTEST_VALUE_FLAG_TIME         = 1 << 0,
+  REPTEST_VALUE_FLAG_PAGE_FAULTS  = 1 << 1,
+  REPTEST_VALUE_FLAG_BYTE_COUNT   = 1 << 2,
+  REPTEST_VALUE_FLAG_FLOP_COUNT   = 1 << 3,
+  REPTEST_VALUE_FLAG_MEMOP_COUNT  = 1 << 4,
+  REPTEST_VALUE_FLAG_CACHE_COUNT  = 1 << 5,
+  REPTEST_VALUE_FLAG_BRANCH_COUNT = 1 << 6,
+} Repetition_Test_Value_Flags;
 
 typedef struct Repetition_Test_Values Repetition_Test_Values;
 struct Repetition_Test_Values
@@ -96,5 +108,14 @@ void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_
 
 static
 b32 repetition_tester_is_testing(Repetition_Tester *tester);
+
+// TODO: Custom columns
+static
+void repetition_tester_csv_header(Repetition_Tester *tester,
+                                  Repetition_Test_Value dump_value_flags, FILE *out,
+                                  String_Array extra_columns);
+static
+void repetition_tester_csv_row(Repetition_Tester *tester,
+                               Repetition_Test_Value dump_value_flags, FILE *out);
 
 #endif // REPETITION_TEST_H
