@@ -81,6 +81,24 @@ struct Repetition_Tester
   u64 branch_events_handle;
 };
 
+typedef struct Repetition_Test_Series Repetition_Test_Series;
+struct Repetition_Test_Series
+{
+  Repetition_Tester_Results *results; // Matrix
+
+  String_List row_labels;
+  String_List col_labels;
+
+  usize max_row;
+  usize max_col;
+  usize current_row;
+  usize current_col;
+};
+
+static
+Repetition_Test_Series repetition_test_series_make(Arena *arena,
+                                                   usize row_count, usize col_count);
+
 static
 void repetition_tester_begin_time(Repetition_Tester *tester);
 

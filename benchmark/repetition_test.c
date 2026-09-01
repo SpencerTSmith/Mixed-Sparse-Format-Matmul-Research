@@ -3,6 +3,17 @@
 #include "platform_timing.h"
 
 static
+Repetition_Test_Series repetition_test_series_make(Arena *arena,
+                                                   usize row_count, usize col_count)
+{
+  Repetition_Test_Series result = {0};
+
+  result.results = arena_calloc(arena, row_count * col_count, Repetition_Tester_Results);
+
+  return result;
+}
+
+static
 void repetition_tester_begin_time(Repetition_Tester *tester)
 {
   Repetition_Test *curr = &tester->current_test;

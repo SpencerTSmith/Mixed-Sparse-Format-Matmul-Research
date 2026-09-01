@@ -276,6 +276,12 @@ def aggregate_rate_for_violin(all_datasets, numerator_idx, denominator_idx):
     return agg
 
 
+# How far apart adjacent k groups are placed on the x-axis, in "k units".
+# 1.0 reproduces the old behavior (groups exactly 1 apart); raise it to give
+# wide violins more breathing room between k values.
+K_SPACING = 2.5
+
+
 def _draw_violins(ax, combo_to_k_vals, color_map, all_vals_out):
     """Shared drawing logic: one violin per (combo, k), combos side-by-side
     at each k position so they don't overlap."""
@@ -285,7 +291,10 @@ def _draw_violins(ax, combo_to_k_vals, color_map, all_vals_out):
     if not all_ks:
         return combos
 
-    width = 0.8 / max(n_combos, 1)
+    # Violin widths scale with K_SPACING too, so they still comfortably fill
+    # the (now-wider) gap between k groups instead of staying pinned to the
+    # old 1-unit-wide spacing.
+    width = 0.8 * K_SPACING / max(n_combos, 1)
 
     for i, combo in enumerate(combos):
         k_to_vals = combo_to_k_vals[combo]
@@ -293,7 +302,7 @@ def _draw_violins(ax, combo_to_k_vals, color_map, all_vals_out):
         if not ks:
             continue
         offset = (i - (n_combos - 1) / 2) * width
-        positions = [k + offset for k in ks]
+        positions = [k * K_SPACING + offset for k in ks]
         datasets = [k_to_vals[k] for k in ks]
         all_vals_out.extend(v for vals in datasets for v in vals)
 
@@ -307,7 +316,7 @@ def _draw_violins(ax, combo_to_k_vals, color_map, all_vals_out):
         color = color_map[combo]
 
         if multi_data:
-            parts = ax.violinplot(multi_data, positions=multi_pos, widths=width * 0.9,
+            parts = ax.violinplot(multi_data, positions=multi_pos, widths=width * 3.0,
                                    showmeans=True, showextrema=True)
             for pc in parts['bodies']:
                 pc.set_facecolor(color)
@@ -321,8 +330,10 @@ def _draw_violins(ax, combo_to_k_vals, color_map, all_vals_out):
             ax.scatter(single_pos, single_vals, s=14, color=color, zorder=3)
 
     if all_ks:
-        ax.set_xticks(all_ks)
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        # Ticks sit at the scaled positions, but labels still show the real
+        # k values -- so the axis reads normally despite the wider spacing.
+        ax.set_xticks([k * K_SPACING for k in all_ks])
+        ax.set_xticklabels([str(k) for k in all_ks])
     return combos
 
 
@@ -438,7 +449,7 @@ def main():
         fig.suptitle(f'TACO format benchmark: {title_dirs}')
     else:
         fig = plot_violin(all_datasets, color_map, log_scale)
-        fig.suptitle(f'TACO format benchmark: {len(args.run_dirs)} samples, pooled')
+        fig.suptitle(f'TACO format benchmark: {len(args.run_dirs)} samples')
 
     fig.savefig(args.out, dpi=150, bbox_inches='tight')
     print(f'Saved plot to {args.out}')
