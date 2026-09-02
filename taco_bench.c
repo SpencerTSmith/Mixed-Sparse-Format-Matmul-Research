@@ -173,7 +173,7 @@ Taco_COO load_kron(Arena *arena, String filename)
   return result;
 }
 
-typedef void Operation_Function(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B);
+typedef int Operation_Function(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B);
 
 typedef struct Operation_Entry Operation_Entry;
 struct Operation_Entry
@@ -183,72 +183,16 @@ struct Operation_Entry
   Operation_Function *function;
 };
 
-void CSR_x_CSR(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
-{
-  repetition_tester_begin_time(tester);
-  CSR_x_CSR_compute(C, A, B);
-  repetition_tester_close_time(tester);
-}
-
-void CSR_x_CSC(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
-{
-  repetition_tester_begin_time(tester);
-  CSR_x_CSC_compute(C, A, B);
-  repetition_tester_close_time(tester);
-}
-
-void CSR_x_COO(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
-{
-  repetition_tester_begin_time(tester);
-  CSR_x_COO_compute(C, A, B);
-  repetition_tester_close_time(tester);
-}
-
-void CSC_x_CSR(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
-{
-  repetition_tester_begin_time(tester);
-  CSC_x_CSR_compute(C, A, B);
-  repetition_tester_close_time(tester);
-}
-
-void CSC_x_COO(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
-{
-  repetition_tester_begin_time(tester);
-  CSC_x_COO_compute(C, A, B);
-  repetition_tester_close_time(tester);
-}
-
-void COO_x_CSR(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
-{
-  repetition_tester_begin_time(tester);
-  COO_x_CSR_compute(C, A, B);
-  repetition_tester_close_time(tester);
-}
-
-void COO_x_CSC(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
-{
-  repetition_tester_begin_time(tester);
-  COO_x_CSC_compute(C, A, B);
-  repetition_tester_close_time(tester);
-}
-
-void COO_x_COO(Repetition_Tester *tester, taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
-{
-  repetition_tester_begin_time(tester);
-  COO_x_COO_compute(C, A, B);
-  repetition_tester_close_time(tester);
-}
-
 Operation_Entry test_entries[] =
 {
-  {MAT_CSR, MAT_CSR, CSR_x_CSR},
-  {MAT_CSR, MAT_CSC, CSR_x_CSC},
-  {MAT_CSR, MAT_COO, CSR_x_COO},
-  {MAT_CSC, MAT_CSR, CSC_x_CSR},
-  {MAT_CSC, MAT_COO, CSC_x_COO},
-  {MAT_COO, MAT_CSR, COO_x_CSR},
-  {MAT_COO, MAT_CSC, COO_x_CSC},
-  {MAT_COO, MAT_COO, COO_x_COO},
+  {MAT_CSR, MAT_CSR, CSR_x_CSR_compute},
+  {MAT_CSR, MAT_CSC, CSR_x_CSC_compute},
+  {MAT_CSR, MAT_COO, CSR_x_COO_compute},
+  {MAT_CSC, MAT_CSR, CSC_x_CSR_compute},
+  {MAT_CSC, MAT_COO, CSC_x_COO_compute},
+  {MAT_COO, MAT_CSR, COO_x_CSR_compute},
+  {MAT_COO, MAT_CSC, COO_x_CSC_compute},
+  {MAT_COO, MAT_COO, COO_x_COO_compute},
 };
 
 typedef struct Taco_Mode_Info Taco_Mode_Info;
@@ -458,7 +402,9 @@ int main(int argc, char **argv)
 
       while (repetition_tester_is_testing(tester))
       {
-        entry->function(tester, C, A, B);
+        repetition_tester_begin_time(tester);
+        entry->function(C, A, B);
+        repetition_tester_close_time(tester);
       }
 
       free_taco_tensor(C);

@@ -17,7 +17,6 @@ static
 void repetition_tester_begin_time(Repetition_Tester *tester)
 {
   Repetition_Test *curr = &tester->current_test;
-  curr->begin_block_count += 1;
   curr->accum.v[REPTEST_VALUE_TIME] -= read_cpu_timer();
   curr->accum.v[REPTEST_VALUE_PAGE_FAULTS]  -= read_os_page_faults();
 
@@ -30,6 +29,8 @@ void repetition_tester_begin_time(Repetition_Tester *tester)
   {
     open_cpu_pmc_event_counting(tester->branch_events_handle);
   }
+
+  curr->begin_block_count += 1;
 }
 
 static
@@ -38,7 +39,6 @@ void repetition_tester_close_time(Repetition_Tester *tester)
   Repetition_Test *curr = &tester->current_test;
   curr->accum.v[REPTEST_VALUE_TIME] += read_cpu_timer();
   curr->accum.v[REPTEST_VALUE_PAGE_FAULTS] += read_os_page_faults();
-  curr->close_block_count += 1;
 
   if (tester->cache_events_handle)
   {
@@ -49,6 +49,8 @@ void repetition_tester_close_time(Repetition_Tester *tester)
   {
     curr->accum.v[REPTEST_VALUE_BRANCH_COUNT] += close_cpu_pmc_event_counting(tester->branch_events_handle);
   }
+
+  curr->close_block_count += 1;
 }
 
 static
@@ -75,7 +77,7 @@ void repetition_tester_count_memops(Repetition_Tester *tester, u64 count)
 static
 void repetition_tester_error(Repetition_Tester *tester, const char *message)
 {
-  LOG_ERROR("%s", message);
+  printf("REPTEST_ERROR: %s", message);
   tester->mode = REPTEST_MODE_ERROR;
 }
 
@@ -86,60 +88,63 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
 
   u64 time = values.v[REPTEST_VALUE_TIME] / divisor;
   printf("%s: %lu", label, time);
+
+  f64 seconds = 0.0;
   if (cpu_timer_frequency)
   {
-    f64 seconds = cpu_time_in_seconds(time, cpu_timer_frequency);
+    seconds = cpu_time_in_seconds(time, cpu_timer_frequency);
     printf(" (%.4fms)", 1000.0 * seconds);
+  }
 
-    u64 byte_count = values.v[REPTEST_VALUE_BYTE_COUNT] / divisor;
+  u64 byte_count = values.v[REPTEST_VALUE_BYTE_COUNT] / divisor;
+  if (byte_count && seconds)
+  {
+    f64 gb_per_s = (f64)byte_count / (f64)GB(1) / seconds;
+
+    printf(" %.4f GB/s", gb_per_s);
+  }
+
+  u64 page_faults = values.v[REPTEST_VALUE_PAGE_FAULTS] / divisor;
+  if (page_faults)
+  {
+    f64 kb_per_fault = ((f64)byte_count / KB(1)) / (f64)page_faults;
+
+    printf(", %lu faults", page_faults);
+
     if (byte_count)
     {
-      f64 gb_per_s = (f64)byte_count / (f64)GB(1) / seconds;
-
-      printf(" %.4f GB/s", gb_per_s);
+      printf("(%.4f kb/fault)", kb_per_fault);
     }
+  }
 
-    u64 page_faults = values.v[REPTEST_VALUE_PAGE_FAULTS] / divisor;
-    if (page_faults)
-    {
-      f64 kb_per_fault = ((f64)byte_count / KB(1)) / (f64)page_faults;
+  u64 flops = values.v[REPTEST_VALUE_FLOP_COUNT] / divisor;
+  if (flops)
+  {
+    printf(", %lu flops", flops);
+  }
 
-      printf(", %lu faults", page_faults);
+  u64 memops = values.v[REPTEST_VALUE_MEMOP_COUNT] / divisor;
+  if (memops)
+  {
+    printf(", %lu memops", memops);
+  }
 
-      if (byte_count)
-      {
-        printf("(%.4f kb/fault)", kb_per_fault);
-      }
-    }
+  u64 cache_misses = values.v[REPTEST_VALUE_CACHE_COUNT] / divisor;
+  if (cache_misses)
+  {
+    printf(", %lu cache misses", cache_misses);
+  }
 
-    u64 flops = values.v[REPTEST_VALUE_FLOP_COUNT] / divisor;
-    if (flops)
-    {
-      printf(", %lu flops", flops);
-    }
-
-    u64 memops = values.v[REPTEST_VALUE_MEMOP_COUNT] / divisor;
-    if (memops)
-    {
-      printf(", %lu memops", memops);
-    }
-
-    u64 cache_misses = values.v[REPTEST_VALUE_CACHE_COUNT] / divisor;
-    if (cache_misses)
-    {
-      printf(", %lu cache misses", cache_misses);
-    }
-
-    u64 branch_misses = values.v[REPTEST_VALUE_BRANCH_COUNT] / divisor;
-    if (branch_misses)
-    {
-      printf(", %lu branch misses", branch_misses);
-    }
+  u64 branch_misses = values.v[REPTEST_VALUE_BRANCH_COUNT] / divisor;
+  if (branch_misses)
+  {
+    printf(", %lu branch misses", branch_misses);
   }
 }
 
 static
-void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_byte_count, u64 cpu_timer_frequency, u32 seconds_to_try_for_min)
+void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_byte_count,
+                                u64 cpu_timer_frequency, u32 seconds_to_try_for_min)
 {
   if (tester->mode == REPTEST_MODE_UNINITIALIZED)
   {
@@ -225,9 +230,9 @@ b32 repetition_tester_is_testing(Repetition_Tester *tester)
           // Restart time to find new min
           tester->tests_start_time = current_time;
 
-          printf("                                                                                                                     \r");
+
+          printf("                                                                                                                        \r");
           print_repetition_test_values("MIN", results->min, tester->cpu_timer_frequency, 1);
-          printf("                                                                                                                     \r");
           fflush(stdout);
         }
 
@@ -239,6 +244,8 @@ b32 repetition_tester_is_testing(Repetition_Tester *tester)
         {
           tester->mode = REPTEST_MODE_COMPLETE;
 
+          printf("                                                                                                                     \r");
+          fflush(stdout);
           print_repetition_test_values("MIN", results->min, tester->cpu_timer_frequency, 1);
           printf("\n");
 
