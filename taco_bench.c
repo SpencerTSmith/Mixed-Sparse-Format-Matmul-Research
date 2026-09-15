@@ -279,7 +279,7 @@ int main(int argc, char **argv)
 
   String_List krons = folder_children(&arena, kron_dir);
 
-  // Max 30.
+  // Max 30 k.
   Repetition_Tester testers[30][STATIC_COUNT(test_entries)] = {0};
   u64 k_for_test[30] = {0};
   u64 nnz_for_test[30] = {0};
@@ -420,8 +420,11 @@ int main(int argc, char **argv)
   u64 actual_kron_count = kron_index;
 
   String timestamp = string_timestamp(&arena);
-  String test_run_info = string_formatted(&arena, "%.*s_%.*s", STRF(file_basename(kron_dir)), STRF(timestamp));
-  String test_run_dir = string_formatted(&arena, "%.*s/%.*s", STRF(out_dir), STRF(test_run_info));
+  String test_run_info = string_formatted(&arena, "%.*s_s%lu_%.*s",
+                                          STRF(file_basename(kron_dir)), sample,
+                                          STRF(timestamp));
+  String test_run_dir = string_formatted(&arena, "%.*s/%.*s", STRF(out_dir),
+                                         STRF(test_run_info));
 
   mkdir(string_to_c_string(&arena, out_dir), 0755);
   mkdir(string_to_c_string(&arena, test_run_dir), 0755);
@@ -430,15 +433,16 @@ int main(int argc, char **argv)
   {
     Operation_Entry *entry = test_entries + func_idx;
 
-    String filename = string_formatted(&arena, "%.*s/s%lu_%.*s_%.*s.csv", STRF(test_run_dir),
-                                       sample, STRF(matrix_format_string(entry->a_format)),
+    String filename = string_formatted(&arena, "%.*s/%.*s_%.*s.csv", STRF(test_run_dir),
+                                       STRF(matrix_format_string(entry->a_format)),
                                        STRF(matrix_format_string(entry->b_format)));
 
     FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
     LOG_INFO("Dumping csv: %.*s", STRF(filename));
 
-    // TODO: Macro for converting between flags and normal enum values.
-    Repetition_Test_Value value_flags = (Repetition_Test_Value)((u64) -1);
+    Repetition_Test_Value value_flags = ENUM_BIT(REPTEST_VALUE_CACHE_COUNT)
+                                      | ENUM_BIT(REPTEST_VALUE_BRANCH_COUNT)
+                                      | ENUM_BIT(REPTEST_VALUE_TIME);
 
     if (csv)
     {

@@ -72,6 +72,8 @@ typedef ptrdiff_t isize;
 #define _STRINGIFY(a) #a
 #define STRINGIFY(a) _STRINGIFY(a)
 
+#define ENUM_BIT(enum_value) (1 << (enum_value))
+
 #define STATEMENT(s) do { s } while (0)
 
 #define CLAMP(value, min, max) (((value) < (min)) ? (min) : ((value) > (max)) ? (max) : (value))

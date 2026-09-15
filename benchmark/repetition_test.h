@@ -30,17 +30,6 @@ typedef enum Repetition_Test_Value
   REPTEST_VALUE_COUNT,
 } Repetition_Test_Value;
 
-typedef enum Repetition_Test_Value_Flags
-{
-  REPTEST_VALUE_FLAG_TIME         = 1 << 0,
-  REPTEST_VALUE_FLAG_PAGE_FAULTS  = 1 << 1,
-  REPTEST_VALUE_FLAG_BYTE_COUNT   = 1 << 2,
-  REPTEST_VALUE_FLAG_FLOP_COUNT   = 1 << 3,
-  REPTEST_VALUE_FLAG_MEMOP_COUNT  = 1 << 4,
-  REPTEST_VALUE_FLAG_CACHE_COUNT  = 1 << 5,
-  REPTEST_VALUE_FLAG_BRANCH_COUNT = 1 << 6,
-} Repetition_Test_Value_Flags;
-
 typedef struct Repetition_Test_Values Repetition_Test_Values;
 struct Repetition_Test_Values
 {
@@ -81,13 +70,15 @@ struct Repetition_Tester
   u64 branch_events_handle;
 };
 
-typedef struct Repetition_Test_Series Repetition_Test_Series;
-struct Repetition_Test_Series
+typedef struct Repetition_Series Repetition_Series;
+struct Repetition_Series
 {
-  Repetition_Tester_Results *results; // Matrix
+  // A matrix, usually the rows are the independent variable you are sweeping over,
+  // and the columns are the functions you are testing
+  Repetition_Tester_Results *results;
 
-  String_List row_labels;
-  String_List col_labels;
+  String_Array row_labels;
+  String_Array col_labels;
 
   usize max_row;
   usize max_col;
@@ -96,7 +87,7 @@ struct Repetition_Test_Series
 };
 
 static
-Repetition_Test_Series repetition_test_series_make(Arena *arena,
+Repetition_Series *repetition_series_make(Arena *arena,
                                                    usize row_count, usize col_count);
 
 static
@@ -126,6 +117,20 @@ void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_
 
 static
 b32 repetition_tester_is_testing(Repetition_Tester *tester);
+
+static
+void repetition_series_set_row_label(Repetition_Series *series,
+                                     const char *label, ...);
+
+static
+void repetition_series_set_col_label(Repetition_Series *series,
+                                     const char *label, ...);
+
+static
+Repetition_Tester repetition_series_new_tester(Repetition_Series *series,
+                                               u64 target_processed_byte_count,
+                                               u64 cpu_timer_frequency,
+                                               u32 seconds_to_try_for_min);
 
 // TODO: Custom columns
 static

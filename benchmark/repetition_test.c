@@ -3,12 +3,15 @@
 #include "platform_timing.h"
 
 static
-Repetition_Test_Series repetition_test_series_make(Arena *arena,
-                                                   usize row_count, usize col_count)
+Repetition_Series *repetition_test_series_make(Arena *arena,
+                                               usize row_count, usize col_count)
 {
-  Repetition_Test_Series result = {0};
+  Repetition_Series *result = arena_new(arena, Repetition_Series);
 
-  result.results = arena_calloc(arena, row_count * col_count, Repetition_Tester_Results);
+  result->results = arena_calloc(arena, row_count * col_count, Repetition_Tester_Results);
+
+  result->row_labels.v = arena_calloc(arena, row_count, String);
+  result->col_labels.v = arena_calloc(arena, col_count, String);
 
   return result;
 }
@@ -113,7 +116,7 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
 
     if (byte_count)
     {
-      printf("(%.4f kb/fault)", kb_per_fault);
+      printf("(%.2f kb/fault)", kb_per_fault);
     }
   }
 
@@ -183,6 +186,33 @@ void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_
 
   tester->try_for_min_time = seconds_to_try_for_min * cpu_timer_frequency;
   tester->tests_start_time = read_cpu_timer();
+}
+
+static
+Repetition_Tester repetition_series_new_tester(Repetition_Series *series,
+                                               u64 target_processed_byte_count,
+                                               u64 cpu_timer_frequency,
+                                               u32 seconds_to_try_for_min)
+{
+
+  series->current_col += 1;
+
+  if (series->current_col >= series->max_col)
+  {
+    series->current_col = 0;
+    series->current_row += 1;
+  }
+
+  String row_label = series->row_labels.v[series->current_row];
+  String col_label = series->col_labels.v[series->current_col];
+
+  printf("\n--- %.*s, %.*s ---\n", STRF(col_label), STRF(row_label));
+
+  Repetition_Tester result = {0};
+  repetition_tester_new_wave(&result, target_processed_byte_count,
+                             cpu_timer_frequency, seconds_to_try_for_min);
+
+  return result;
 }
 
 static
@@ -310,4 +340,18 @@ void repetition_tester_csv_row(Repetition_Tester *tester,
       fprintf(out, "%lu,", tester->results.min.v[value]);
     }
   }
+}
+
+static
+void repetition_series_set_row_label(Repetition_Series *series,
+                                     const char *label, ...)
+{
+}
+
+static
+void repetition_series_set_col_label(Repetition_Series *series,
+                                     const char *label, ...)
+{
+  // TODO: Affirm that the column label matches what it was previously... i.e. if row count > 0
+  // the col label should match what it was.
 }
