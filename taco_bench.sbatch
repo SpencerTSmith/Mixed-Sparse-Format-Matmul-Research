@@ -6,8 +6,8 @@
 #SBATCH --mem=128G
 #SBATCH --time=01:00:00
 #SBATCH --job-name=taco_bench_sweep
-#SBATCH --output=taco_bench_sweep_stdout.txt
-#SBATCH --error=taco_bench_sweep_stderr.txt
+#SBATCH --output=oscer/taco_bench_sweep_%J_stdout.txt
+#SBATCH --error=oscer/taco_bench_sweep_%J_stderr.txt
 #SBATCH --mail-user=spencer.smith-1@ou.edu
 #SBATCH --mail-type=ALL
 #SBATCH --chdir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research

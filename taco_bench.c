@@ -266,6 +266,7 @@ void free_taco_tensor(taco_tensor_t *tensor)
 
 int main(int argc, char **argv)
 {
+  printf("HERE!");
   Arena arena = arena_make(.reserve_size = GB(64));
 
   Args args = parse_args(&arena, argc, argv);
