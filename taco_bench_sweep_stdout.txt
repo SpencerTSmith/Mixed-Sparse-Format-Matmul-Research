@@ -1,0 +1,6 @@
+core_pattern: |/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %d %F
+ulimit -c: unlimited
+core_pattern: |/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %d %F
+ulimit -c: unlimited
+core_pattern: |/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %d %F
+ulimit -c: unlimited

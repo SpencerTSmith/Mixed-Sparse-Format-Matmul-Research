@@ -1,0 +1,10 @@
+core_pattern: |/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %d %F
+ulimit -c: unlimited
+HERE![REPETITION_TESTER LOG_INFO]: Dumping csv: /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results/AS-Newman_s2_2026-9-15_13:2:55/csr_csr.csv
+[REPETITION_TESTER LOG_INFO]: Dumping csv: /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results/AS-Newman_s2_2026-9-15_13:2:55/csr_csc.csv
+[REPETITION_TESTER LOG_INFO]: Dumping csv: /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results/AS-Newman_s2_2026-9-15_13:2:55/csr_coo.csv
+[REPETITION_TESTER LOG_INFO]: Dumping csv: /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results/AS-Newman_s2_2026-9-15_13:2:55/csc_csr.csv
+[REPETITION_TESTER LOG_INFO]: Dumping csv: /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results/AS-Newman_s2_2026-9-15_13:2:55/csc_coo.csv
+[REPETITION_TESTER LOG_INFO]: Dumping csv: /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results/AS-Newman_s2_2026-9-15_13:2:55/coo_csr.csv
+[REPETITION_TESTER LOG_INFO]: Dumping csv: /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results/AS-Newman_s2_2026-9-15_13:2:55/coo_csc.csv
+[REPETITION_TESTER LOG_INFO]: Dumping csv: /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results/AS-Newman_s2_2026-9-15_13:2:55/coo_coo.csv
