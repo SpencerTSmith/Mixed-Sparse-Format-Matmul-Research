@@ -1,17 +1,21 @@
-// NOTE(spencer): This is all my common stuff
+// NOTE: This is all my common stuff
 #define LOG_TITLE "REPETITION_TESTER"
 #define COMMON_IMPLEMENTATION
 #include "common.h"
 
-// NOTE(spencer): I like to do 'unity' builds, so I just include all c files
-// into one translation unit, so only this file gets passed to compiler.
+// NOTE: This whole interface borrows heavily from Casey Muratori's computer enhance stuff,
+// so if you want to see a slightly different (perhaps better?) spin on this type of interface,
+// check his out.
+
 #include "benchmark/benchmark_inc.h"
+// NOTE: I like to do 'unity' builds, so I just #include all c files
+// into one translation unit, so only this file gets passed to compiler, not every c file.
 #include "benchmark/benchmark_inc.c"
 
-// NOTE(spencer): Define the interface that all the functions we want to test conform to.
+// NOTE: Define the interface that all the functions we want to test conform to.
 typedef void (*Test_Function)(u8 *buffer, usize buffer_size);
 
-// NOTE(spencer): As we can see this function follows the
+// NOTE: As we can see this function follows the
 // interface of the 'Test_Function' type before.
 static
 void read_buffer_linearly(u8 *buffer, usize buffer_size)
@@ -41,7 +45,7 @@ void read_buffer_randomly(u8 *buffer, usize buffer_size)
   }
 }
 
-// NOTE(spencer): Each entry is just going to be the function and
+// NOTE: Each entry is just going to be the function and
 // then a little string to name it.
 typedef struct Function_Entry Function_Entry;
 struct Function_Entry
@@ -49,7 +53,7 @@ struct Function_Entry
   const char    *name;
   Test_Function function;
 };
-// NOTE(spencer): Ok now we can just make an array of all the functions we want to test.
+// NOTE: Ok now we can just make an array of all the functions we want to test.
 Function_Entry entries[] =
 {
   {"linearly", read_buffer_linearly},
@@ -58,35 +62,45 @@ Function_Entry entries[] =
 
 int main(int argc, char **argv)
 {
-  Arena arena = arena_make({.reserve_size = GB(64)});
+  Arena arena = arena_make(.reserve_size = GB(64));
 
-  // NOTE(spencer): Max 60 on row axis, and a column for every function.
-  Repetition_Series *series = repetition_series_make(&arena, 60, STATIC_COUNT(entries));
-
-  // NOTE(spencer): Call this to get an estimate of actual current rdtsc timer freq.
+  // NOTE: Call this to get an estimate of actual current rdtsc timer freq.
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
-  // NOTE(spencer): How many seconds to keep trying for a new min, will reset once
+  // NOTE: How many seconds to keep trying for a new min, will reset once
   // we find a new minimum.
-  u32 seconds_to_try_for_min = 5;
+  u32 seconds_to_try_for_min = 1;
 
-  for (usize test_func_idx = 0; test_func_idx < STATIC_COUNT(entries); test_func_idx++)
+  const char *test[] = {"buffer_size", "function"};
+
+  Repetition_Series *series = __repetition_series_make(60 * STATIC_COUNT(entries), (const char *[]){"buffer_size", "function"}, 2);
+
+  // NOTE: The repetition series API assumes you iterate colum by column, that is,
+  // it assumes you test all functions at a given size/input/etc before moving on to the
+  // next size/input/etc. I've found this is usually what I want to do anyways,
+  // if I'm loading a big matrix from disk. In that case I also usually prefault
+  // (OS_ALLOCATION_PREFAULT flag passed to os_allocate, if using my COMMON lib)
+  // any memory needed by the input so that it's fair.
+  for (usize buffer_size = MB(1); buffer_size <= MB(4); buffer_size *= 4)
   {
-    Function_Entry *entry = &entries[test_func_idx];
-
-    repetition_series_set_col_label(series, entry->name);
-
-    for (usize buffer_size = MB(1), tester_index = 0;
-         buffer_size <= GB(1) && tester_index < series->max_row;
-         buffer_size *= 4, tester_index += 1)
+    for (usize test_func_idx = 0; test_func_idx < STATIC_COUNT(entries); test_func_idx++)
     {
-      Repetition_Tester tester = repetition_series_new_tester(series, buffer_size, cpu_timer_frequency, seconds_to_try_for_min);
-
-      printf("\n--- %s (%lu MB) ---\n", entry->name, buffer_size / MB(1));
-
+      // NOTE: Allocating and deallocating every time to make it fair page-fault wise.
       u8 *buffer = os_allocate(buffer_size, OS_ALLOCATION_COMMIT);
 
-      while (repetition_tester_is_testing(&tester))
+      Function_Entry *entry = &entries[test_func_idx];
+
+      Repetition_Tester tester = repetition_series_new_tester(series, buffer_size,
+                                                              cpu_timer_frequency,
+                                                              seconds_to_try_for_min,
+                                                              "--- %s @ %lu MB ---", entry->name,
+                                                              buffer_size / MB(1));
+
+      // Possible api:
+      repetition_series_set_field(series, "buffer_size", "%lu", buffer_size);
+      repetition_series_set_field(series, "function", entry->name);
+
+      while (repetition_series_is_testing(series, &tester))
       {
         repetition_tester_begin_time(&tester);
         entry->function(buffer, buffer_size);
@@ -97,6 +111,7 @@ int main(int argc, char **argv)
 
       os_deallocate(buffer, buffer_size);
     }
-
   }
+
+  repetition_series_save_csv(series, "out.csv");
 }

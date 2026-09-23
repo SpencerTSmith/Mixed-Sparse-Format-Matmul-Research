@@ -3,20 +3,6 @@
 #include "platform_timing.h"
 
 static
-Repetition_Series *repetition_test_series_make(Arena *arena,
-                                               usize row_count, usize col_count)
-{
-  Repetition_Series *result = arena_new(arena, Repetition_Series);
-
-  result->results = arena_calloc(arena, row_count * col_count, Repetition_Tester_Results);
-
-  result->row_labels.v = arena_calloc(arena, row_count, String);
-  result->col_labels.v = arena_calloc(arena, col_count, String);
-
-  return result;
-}
-
-static
 void repetition_tester_begin_time(Repetition_Tester *tester)
 {
   Repetition_Test *curr = &tester->current_test;
@@ -169,6 +155,8 @@ void repetition_tester_new_wave(Repetition_Tester *tester, u64 target_processed_
       repetition_tester_error(tester, "Repetition Tester unable to open branch event tracing");
     }
   }
+
+  // TODO: Perhaps remove this, I've never really wanted to re-use a tester after completion.
   else if (tester->mode == REPTEST_MODE_COMPLETE)
   {
     tester->mode = REPTEST_MODE_TESTING;
@@ -192,21 +180,14 @@ static
 Repetition_Tester repetition_series_new_tester(Repetition_Series *series,
                                                u64 target_processed_byte_count,
                                                u64 cpu_timer_frequency,
-                                               u32 seconds_to_try_for_min)
+                                               u32 seconds_to_try_for_min,
+                                               const char *stdout_title, ...)
 {
-
-  series->current_col += 1;
-
-  if (series->current_col >= series->max_col)
-  {
-    series->current_col = 0;
-    series->current_row += 1;
-  }
-
-  String row_label = series->row_labels.v[series->current_row];
-  String col_label = series->col_labels.v[series->current_col];
-
-  printf("\n--- %.*s, %.*s ---\n", STRF(col_label), STRF(row_label));
+  va_list list;
+  va_start(list, stdout_title);
+  vprintf(stdout_title, list);
+  printf("\n");
+  va_end(list);
 
   Repetition_Tester result = {0};
   repetition_tester_new_wave(&result, target_processed_byte_count,
@@ -298,6 +279,32 @@ b32 repetition_tester_is_testing(Repetition_Tester *tester)
 }
 
 static
+Repetition_Series_Entry *repetition_series_current_entry(Repetition_Series *series)
+{
+  return &series->entries[series->current_entry];
+}
+
+static
+b32 repetition_series_is_testing(Repetition_Series *series, Repetition_Tester *tester)
+{
+  b32 testing = repetition_tester_is_testing(tester);
+
+  // We either had and error or completed testing, so save what we have and advance to next spot
+  // in series matrix.
+  if (!testing)
+  {
+    // Save.
+    Repetition_Series_Entry *entry = repetition_series_current_entry(series);
+    entry->results = tester->results;
+
+    // Advance.
+    series->current_entry += 1;
+  }
+
+  return testing;
+}
+
+static
 void repetition_tester_csv_header(Repetition_Tester *tester,
                                   Repetition_Test_Value dump_value_flags, FILE *out,
                                   String_Array extra_columns)
@@ -343,15 +350,138 @@ void repetition_tester_csv_row(Repetition_Tester *tester,
 }
 
 static
-void repetition_series_set_row_label(Repetition_Series *series,
-                                     const char *label, ...)
+Repetition_Series *__repetition_series_make(usize max_entry_count,
+                                            const char *user_fields[], usize user_field_count)
 {
+  Arena arena = arena_make(.reserve_size=GB(1));
+
+  Repetition_Series *result = arena_new(&arena, Repetition_Series);
+  result->arena = arena;
+
+  result->entries_count = max_entry_count;
+  result->entries = arena_calloc(&result->arena, result->entries_count, Repetition_Series_Entry);
+
+  result->user_field_labels = arena_array(&result->arena, user_field_count, String);
+
+  for (usize field_label_idx = 0; field_label_idx < user_field_count; field_label_idx++)
+  {
+    result->user_field_labels.v[field_label_idx] =
+      string_from_c_string((char *)user_fields[field_label_idx]);
+
+    for (usize entry_index = 0; entry_index < result->entries_count; entry_index++)
+    {
+      result->entries[entry_index].user_field_values = arena_array(&result->arena, user_field_count, String);
+    }
+  }
+
+  return result;
 }
 
 static
-void repetition_series_set_col_label(Repetition_Series *series,
-                                     const char *label, ...)
+void repetition_series_set_field(Repetition_Series *series, const char *field,
+                                 const char *format, ...)
 {
-  // TODO: Affirm that the column label matches what it was previously... i.e. if row count > 0
-  // the col label should match what it was.
+  va_list list;
+  va_start(list, format);
+  String field_value = string_formatted_list(&series->arena, format, list);
+  va_end(list);
+
+  Scratch scratch = scratch_begin(&series->arena);
+  String field_string = string_from_c_string((char *)field);
+
+  b32 found = false;
+
+  // TODO: This may be better served with a hash... but I don't expect having many extra fields,
+  // at least for my use cases... so a loop is probably fine, faster even, at low number of extra
+  // fields
+  for (usize field_idx = 0; field_idx < series->user_field_labels.count; field_idx++)
+  {
+    if (string_match(field_string, series->user_field_labels.v[field_idx]))
+    {
+      repetition_series_current_entry(series)->user_field_values.v[field_idx] =
+        field_value;
+      found = true;
+
+      break;
+    }
+  }
+
+  if (!found)
+  {
+    printf("REPTEST_ERROR: tried to set field: %s for entry %lu that doesn't exist",
+           field, series->current_entry);
+  }
+
+  scratch_close(&scratch);
+}
+
+static
+void repetition_series_save_csv(Repetition_Series *series, const char *filename, ...)
+{
+  Scratch scratch = scratch_begin(&series->arena);
+
+    // Excuse the terrible round tripping for formatted strings.
+    va_list list;
+    va_start(list, filename);
+    String filename_string = string_formatted_list(scratch.arena, filename, list);
+    va_end(list);
+    FILE *file = fopen(string_to_c_string(scratch.arena, filename_string), "w");
+    if (file)
+    {
+      // User fields
+      for (usize field_idx = 0; field_idx < series->user_field_labels.count; field_idx++)
+      {
+        fprintf(file, "%.*s,", STRF(series->user_field_labels.v[field_idx]));
+      }
+      // Reptest fields
+      const char *value_names[REPTEST_VALUE_COUNT] =
+      {
+        "none",
+        "time",
+        "faults",
+        "bytes",
+        "flops",
+        "memops",
+        "cache",
+        "branch",
+      };
+      for (Repetition_Test_Value value = REPTEST_VALUE_NONE + 1;
+           value < REPTEST_VALUE_COUNT;
+           value++)
+      {
+        fprintf(file, "%s", value_names[value]);
+        if (value != REPTEST_VALUE_COUNT - 1)
+        {
+          fprintf(file, ",");
+        }
+      }
+
+      fprintf(file, "\n");
+
+      for (usize entry_idx = 0; entry_idx < series->current_entry; entry_idx++)
+      {
+        Repetition_Series_Entry *entry = series->entries + entry_idx;
+
+        for (usize field_idx = 0; field_idx < entry->user_field_values.count; field_idx++)
+        {
+          fprintf(file, "%.*s,", STRF(entry->user_field_values.v[field_idx]));
+        }
+
+        for (Repetition_Test_Value value = REPTEST_VALUE_NONE + 1;
+            value < REPTEST_VALUE_COUNT;
+            value++)
+        {
+          fprintf(file, "%lu", entry->results.min.v[value]);
+          if (value != REPTEST_VALUE_COUNT - 1)
+          {
+            fprintf(file, ",");
+          }
+        }
+
+        fprintf(file, "\n");
+      }
+
+
+      fclose(file);
+    }
 }

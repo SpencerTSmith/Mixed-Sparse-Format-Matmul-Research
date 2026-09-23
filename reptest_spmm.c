@@ -287,6 +287,14 @@ void matmul_coo_coo(Repetition_Tester *tester, Operation_Parameters *params)
   repetition_tester_close_time(tester);
 }
 
+typedef void (*Operation)(Repetition_Tester *tester, Operation_Parameters *params);
+typedef struct Operation_Entry Operation_Entry;
+struct Operation_Entry
+{
+  String    name;
+  Operation function;
+};
+
 Operation_Entry test_entries[] =
 {
   // {STR("dense_X_dense"), matmul_dense_dense},

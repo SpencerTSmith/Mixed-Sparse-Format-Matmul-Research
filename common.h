@@ -88,7 +88,7 @@ typedef ptrdiff_t isize;
 #define PI 3.14159265358979323846
 #define RADIANS(degrees) ((degrees) * (PI / 180.0))
 
-#define STATIC_ARRAY_COUNT(arr) (sizeof(arr) / sizeof(arr[0]))
+#define STATIC_ARRAY_COUNT(arr) (sizeof(arr) / sizeof((arr)[0]))
  // Slowly replacing the above with this, shorthand
 #define STATIC_COUNT(arr) STATIC_ARRAY_COUNT(arr)
 
@@ -1157,29 +1157,37 @@ String string_join_list(Arena *arena, String_List list, String separator)
   return result;
 }
 
-String string_formatted(Arena *arena, const char* format, ...)
+String string_formatted_list(Arena *arena, const char* format, va_list list)
 {
   // Need 2 copies since using a var args will empty it out?!
-  va_list var_args0;
-  va_start(var_args0, format);
+  va_list list2;
+  va_copy(list2, list);
 
   // It returns the # of characters minus the null terminator it wants to stomp down.
   // Add 1, so that it won't stomp the null terminator over the last actually desired character.
-  usize wish_size = vsnprintf(0, 0, format, var_args0) + 1;
-
-  va_end(var_args0);
-
-  va_list var_args1;
-  va_start(var_args1, format);
+  usize wish_size = vsnprintf(0, 0, format, list) + 1;
 
   String result =
   {
     .v = arena_calloc(arena, wish_size, u8),
   };
 
-  result.count = vsnprintf((char *)result.v, wish_size, format, var_args1);
+  result.count = vsnprintf((char *)result.v, wish_size, format, list2);
 
-  va_end(var_args1);
+  va_end(list2);
+
+  return result;
+}
+
+String string_formatted(Arena *arena, const char* format, ...)
+{
+  // C sucks.
+  va_list list;
+  va_start(list, format);
+
+  String result = string_formatted_list(arena, format, list);
+
+  va_end(list);
 
   return result;
 }

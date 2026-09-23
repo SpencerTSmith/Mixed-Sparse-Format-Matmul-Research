@@ -266,7 +266,6 @@ void free_taco_tensor(taco_tensor_t *tensor)
 
 int main(int argc, char **argv)
 {
-  printf("HERE!");
   Arena arena = arena_make(.reserve_size = GB(64));
 
   Args args = parse_args(&arena, argc, argv);
@@ -452,12 +451,12 @@ int main(int argc, char **argv)
 
       for (usize kron_index = 0; kron_index < actual_kron_count; kron_index++)
       {
-
         Repetition_Tester *tester = &testers[kron_index][func_idx];
         u64 k = k_for_test[kron_index];
 
         fprintf(csv, "%lu,", k);
         repetition_tester_csv_row(tester, value_flags, csv);
+        fprintf(csv, "\n");
       }
     }
     else
