@@ -1,5 +1,0 @@
-buffer_size,function,time,faults,bytes,flops,memops,cache,branch
-1048576,linearly,2700250,0,1048576,0,0,0,3
-1048576,randomly,19374648,0,1048576,0,0,20,33839
-4194304,linearly,11210565,0,4194304,0,0,7,4
-4194304,randomly,86147188,0,4194304,0,0,20,136781
