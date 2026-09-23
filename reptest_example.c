@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 
   const char *test[] = {"buffer_size", "function"};
 
-  Repetition_Series *series = __repetition_series_make(60 * STATIC_COUNT(entries), (const char *[]){"buffer_size", "function"}, 2);
+  Repetition_Series *series = repetition_series_make(60 * STATIC_COUNT(entries), ((const char *[]){"buffer_size", "function"}));
 
   // NOTE: The repetition series API assumes you iterate colum by column, that is,
   // it assumes you test all functions at a given size/input/etc before moving on to the
@@ -113,5 +113,10 @@ int main(int argc, char **argv)
     }
   }
 
+  // NOTE: Right now just saves the min run of each entry.
   repetition_series_save_csv(series, "out.csv");
+
+  // NOTE: Really not necessary since program ends, but you might find a use for this
+  // function if maybe wanting to do multiple series in one program?
+  repetition_series_free(series);
 }

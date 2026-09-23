@@ -66,7 +66,7 @@ void repetition_tester_count_memops(Repetition_Tester *tester, u64 count)
 static
 void repetition_tester_error(Repetition_Tester *tester, const char *message)
 {
-  printf("REPTEST_ERROR: %s", message);
+  printf("REPTEST_ERROR: %s\n", message);
   tester->mode = REPTEST_MODE_ERROR;
 }
 
@@ -408,7 +408,8 @@ void repetition_series_set_field(Repetition_Series *series, const char *field,
 
   if (!found)
   {
-    printf("REPTEST_ERROR: tried to set field: %s for entry %lu that doesn't exist",
+    // TODO: Unify error message handling for series.
+    printf("REPTEST_ERROR: tried to set field: %s for entry %lu that doesn't exist\n",
            field, series->current_entry);
   }
 
@@ -420,36 +421,59 @@ void repetition_series_save_csv(Repetition_Series *series, const char *filename,
 {
   Scratch scratch = scratch_begin(&series->arena);
 
-    // Excuse the terrible round tripping for formatted strings.
-    va_list list;
-    va_start(list, filename);
-    String filename_string = string_formatted_list(scratch.arena, filename, list);
-    va_end(list);
-    FILE *file = fopen(string_to_c_string(scratch.arena, filename_string), "w");
-    if (file)
+  // Excuse the terrible round tripping for formatted strings.
+  va_list list;
+  va_start(list, filename);
+  String filename_string = string_formatted_list(scratch.arena, filename, list);
+  va_end(list);
+  FILE *file = fopen(string_to_c_string(scratch.arena, filename_string), "w");
+
+  if (file)
+  {
+    // User fields
+    for (usize field_idx = 0; field_idx < series->user_field_labels.count; field_idx++)
     {
-      // User fields
-      for (usize field_idx = 0; field_idx < series->user_field_labels.count; field_idx++)
+      fprintf(file, "%.*s,", STRF(series->user_field_labels.v[field_idx]));
+    }
+    // Reptest fields
+    const char *value_names[REPTEST_VALUE_COUNT] =
+    {
+      "none",
+      "time",
+      "faults",
+      "bytes",
+      "flops",
+      "memops",
+      "cache",
+      "branch",
+    };
+    for (Repetition_Test_Value value = REPTEST_VALUE_NONE + 1;
+         value < REPTEST_VALUE_COUNT;
+         value++)
+    {
+      fprintf(file, "%s", value_names[value]);
+      if (value != REPTEST_VALUE_COUNT - 1)
       {
-        fprintf(file, "%.*s,", STRF(series->user_field_labels.v[field_idx]));
+        fprintf(file, ",");
       }
-      // Reptest fields
-      const char *value_names[REPTEST_VALUE_COUNT] =
+    }
+
+    fprintf(file, "\n");
+
+    for (usize entry_idx = 0; entry_idx < series->current_entry; entry_idx++)
+    {
+      Repetition_Series_Entry *entry = series->entries + entry_idx;
+
+      for (usize field_idx = 0; field_idx < entry->user_field_values.count; field_idx++)
       {
-        "none",
-        "time",
-        "faults",
-        "bytes",
-        "flops",
-        "memops",
-        "cache",
-        "branch",
-      };
+        fprintf(file, "%.*s,", STRF(entry->user_field_values.v[field_idx]));
+      }
+
       for (Repetition_Test_Value value = REPTEST_VALUE_NONE + 1;
            value < REPTEST_VALUE_COUNT;
            value++)
       {
-        fprintf(file, "%s", value_names[value]);
+        fprintf(file, "%lu", entry->results.min.v[value]);
         if (value != REPTEST_VALUE_COUNT - 1)
         {
           fprintf(file, ",");
@@ -457,31 +481,25 @@ void repetition_series_save_csv(Repetition_Series *series, const char *filename,
       }
 
       fprintf(file, "\n");
-
-      for (usize entry_idx = 0; entry_idx < series->current_entry; entry_idx++)
-      {
-        Repetition_Series_Entry *entry = series->entries + entry_idx;
-
-        for (usize field_idx = 0; field_idx < entry->user_field_values.count; field_idx++)
-        {
-          fprintf(file, "%.*s,", STRF(entry->user_field_values.v[field_idx]));
-        }
-
-        for (Repetition_Test_Value value = REPTEST_VALUE_NONE + 1;
-            value < REPTEST_VALUE_COUNT;
-            value++)
-        {
-          fprintf(file, "%lu", entry->results.min.v[value]);
-          if (value != REPTEST_VALUE_COUNT - 1)
-          {
-            fprintf(file, ",");
-          }
-        }
-
-        fprintf(file, "\n");
-      }
-
-
-      fclose(file);
     }
+
+    printf("REPTEST_INFO: Saved series to: %.*s\n", STRF(filename_string));
+
+    fclose(file);
+  }
+  else
+  {
+    // TODO: Unify error message handling for series.
+    printf("REPTEST_ERROR: Unable to open CSV file: %.*s for writing.\n",
+           STRF(filename_string));
+  }
+
+  scratch_close(&scratch);
+}
+
+static
+void repetition_series_free(Repetition_Series *series)
+{
+  arena_free(&series->arena);
+  ZERO_STRUCT(&series);
 }

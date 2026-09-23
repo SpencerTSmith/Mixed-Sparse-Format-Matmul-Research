@@ -121,13 +121,24 @@ static
 Repetition_Series *__repetition_series_make(usize max_entry_count,
                                             const char *user_fields[], usize field_count);
 
-// FIXME:
-// NOTE: This may evaluate the fields expression twice...
-#define repetition_series_make(series, fields) __repetition_series_add_fields(series, (fields), STATIC_COUNT(fields))
+// NOTE: Important! Found this out the hard way... need to use parentheses around the fields arg
+// macros do not parse out brackets! e.g.
+//
+// Repetition_Series *series = repetition_series_make(60 * STATIC_COUNT(entries), ((const char *[]){"buffer_size", "function"}));
+//
+// See the parentheses around the array argument!
+#define repetition_series_make(max_entry_count, fields) \
+  __repetition_series_make(max_entry_count, (fields), STATIC_COUNT(fields))
+
+static
+void repetition_series_free(Repetition_Series *series);
 
 static
 void repetition_series_set_field(Repetition_Series *series, const char *field,
                                  const char *format, ...);
+
+static
+void repetition_series_save_csv(Repetition_Series *series, const char *filename, ...);
 
 static
 Repetition_Tester repetition_series_new_tester(Repetition_Series *series,
@@ -135,14 +146,5 @@ Repetition_Tester repetition_series_new_tester(Repetition_Series *series,
                                                u64 cpu_timer_frequency,
                                                u32 seconds_to_try_for_min,
                                                const char *stdout_title, ...);
-
-// TODO: Custom columns
-static
-void repetition_tester_csv_header(Repetition_Tester *tester,
-                                  Repetition_Test_Value dump_value_flags, FILE *out,
-                                  String_Array extra_columns);
-static
-void repetition_tester_csv_row(Repetition_Tester *tester,
-                               Repetition_Test_Value dump_value_flags, FILE *out);
 
 #endif // REPETITION_TEST_H

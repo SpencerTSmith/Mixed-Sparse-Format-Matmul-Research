@@ -68,7 +68,7 @@ int kron_compare(const void *a, const void *b)
 }
 
 static
-Taco_COO load_kron(Arena *arena, String filename)
+Taco_COO load_kron(Arena *arena, String filename, u64 k_min, u64 k_max, u64 sample)
 {
   Taco_COO result = {0};
 
@@ -80,7 +80,14 @@ Taco_COO load_kron(Arena *arena, String filename)
 
   usize element_cursor = 0;
 
-  for (String line = stream_get_next_line(&parser); string_valid(line); line = stream_get_next_line(&parser))
+  // NOTE: Just leaking loading the file right now if we don't meet this...
+  // need to get my thread scratch arena set up asap!
+  b32 is_wish_sample = true;
+  b32 is_wish_k      = true;
+
+  for (String line = stream_get_next_line(&parser);
+       string_valid(line) && is_wish_sample && is_wish_k;
+       line = stream_get_next_line(&parser))
   {
     // Info lines.
     if (line.v[0] == '#')
@@ -98,6 +105,11 @@ Taco_COO load_kron(Arena *arena, String filename)
 
         result.dimensions[0] = pow(2, result.k);
         result.dimensions[1] = result.dimensions[0];
+
+        if (result.k < k_min || result.k > k_max)
+        {
+          is_wish_k = false;
+        }
       }
 
       usize potential_s_line_index = string_find_substring(line, 0, s_line);
@@ -105,6 +117,11 @@ Taco_COO load_kron(Arena *arena, String filename)
       {
         String substring = string_substring(line, potential_s_line_index + s_line.count, line.count);
         result.s = string_to_u64(substring);
+
+        if (result.s != sample)
+        {
+          is_wish_sample = false;
+        }
       }
 
       usize potential_nnz_line_index = string_find_substring(line, 0, nnz_line);
@@ -178,6 +195,7 @@ typedef int Operation_Function(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t
 typedef struct Operation_Entry Operation_Entry;
 struct Operation_Entry
 {
+  const char    *name;
   Matrix_Format a_format;
   Matrix_Format b_format;
   Operation_Function *function;
@@ -185,14 +203,14 @@ struct Operation_Entry
 
 Operation_Entry test_entries[] =
 {
-  {MAT_CSR, MAT_CSR, CSR_x_CSR_compute},
-  {MAT_CSR, MAT_CSC, CSR_x_CSC_compute},
-  {MAT_CSR, MAT_COO, CSR_x_COO_compute},
-  {MAT_CSC, MAT_CSR, CSC_x_CSR_compute},
-  {MAT_CSC, MAT_COO, CSC_x_COO_compute},
-  {MAT_COO, MAT_CSR, COO_x_CSR_compute},
-  {MAT_COO, MAT_CSC, COO_x_CSC_compute},
-  {MAT_COO, MAT_COO, COO_x_COO_compute},
+  {"CSR_x_CSR", MAT_CSR, MAT_CSR, CSR_x_CSR_compute},
+  {"CSR_x_CSC", MAT_CSR, MAT_CSC, CSR_x_CSC_compute},
+  {"CSR_x_COO", MAT_CSR, MAT_COO, CSR_x_COO_compute},
+  {"CSC_x_CSR", MAT_CSC, MAT_CSR, CSC_x_CSR_compute},
+  {"CSC_x_COO", MAT_CSC, MAT_COO, CSC_x_COO_compute},
+  {"COO_x_CSR", MAT_COO, MAT_CSR, COO_x_CSR_compute},
+  {"COO_x_CSC", MAT_COO, MAT_CSC, COO_x_CSC_compute},
+  {"COO_x_COO", MAT_COO, MAT_COO, COO_x_COO_compute},
 };
 
 typedef struct Taco_Mode_Info Taco_Mode_Info;
@@ -275,46 +293,48 @@ int main(int argc, char **argv)
   String out_dir = args_get_string_value(&args, STR("out_dir"), STR("taco_kron_results"));
   String kron_dir = args_get_string_value(&args, STR("kron_dir"), STR("krons/AS-Newman"));
   u64 sample = args_get_integer_value(&args, STR("sample"), 2);
-  u64 k_limit = args_get_integer_value(&args, STR("k_limit"), 20);
+  u64 k_max = args_get_integer_value(&args, STR("k_max"), 20);
+  u64 k_min = args_get_integer_value(&args, STR("k_min"), 0);
 
   String_List krons = folder_children(&arena, kron_dir);
 
   // Max 30 k.
-  Repetition_Tester testers[30][STATIC_COUNT(test_entries)] = {0};
-  u64 k_for_test[30] = {0};
-  u64 nnz_for_test[30] = {0};
+  Repetition_Series *series = repetition_series_make(30 * STATIC_COUNT(test_entries),
+                                                     ((const char *[]){"k", "function"}));
 
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
-  usize kron_index = 0;
+  u64 actual_kron_count = 0;
   for (String_Node *kron_file = krons.first; kron_file; kron_file = kron_file->link_next)
   {
     Scratch scratch = scratch_begin(&arena);
 
-    Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value);
+    Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value, k_min, k_max, sample);
+
+    u64 k = kron_coo.k;
 
     // TODO: check this before parsing and laoding.
-    if (kron_coo.k > k_limit || kron_coo.s != sample)
+    if (k > k_max || k < k_min || kron_coo.s != sample)
     {
       scratch_close(&scratch);
       continue;
     }
 
-    k_for_test[kron_index] = kron_coo.k;
-
     for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
     {
-      Repetition_Tester *tester = &testers[kron_index][func_idx];
-
       Operation_Entry *entry = test_entries + func_idx;
 
-      printf("\n--- %.*s, %.*s x %.*s ---\n", STRF(kron_coo.name),
-             STRF(matrix_format_string(entry->a_format)),
-             STRF(matrix_format_string(entry->b_format)));
-
-      printf("                                                          \r");
-      repetition_tester_new_wave(tester, 0, cpu_timer_frequency, seconds_to_try_for_min);
-
+      // Simply too large for the assembling step as done by taco for these functions.
+      if (k > 15)
+      {
+        if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC ||
+            entry->a_format == MAT_CSR && entry->b_format == MAT_COO ||
+            entry->a_format == MAT_COO && entry->b_format == MAT_CSC ||
+            entry->a_format == MAT_COO && entry->b_format == MAT_COO)
+        {
+          continue;
+        }
+      }
 
       Taco_Mode_Info a_info = taco_mode_info_from_format(entry->a_format);
       taco_tensor_t *A = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, a_info.ordering,
@@ -329,6 +349,16 @@ int main(int argc, char **argv)
       taco_tensor_t *C = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, c_info.ordering,
                                             c_info.types);
 
+      Repetition_Tester tester =
+        repetition_series_new_tester(series, 0,
+                                     cpu_timer_frequency,
+                                     seconds_to_try_for_min,
+                                     "--- %.*s, %s ---",
+                                     STRF(kron_coo.name),
+                                     entry->name);
+      repetition_series_set_field(series, "k", "%lu", k);
+      repetition_series_set_field(series, "function", entry->name);
+
       if (0) {}
       else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSR)
       {
@@ -338,23 +368,12 @@ int main(int argc, char **argv)
       }
       else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC)
       {
-        // Simply too large for the assembling step as done by taco.
-        if (k_for_test[kron_index] > 15)
-        {
-          continue;
-        }
-
         CSR_x_CSC_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         CSR_x_CSC_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         CSR_x_CSC_assemble(C, A, B);
       }
       else if (entry->a_format == MAT_CSR && entry->b_format == MAT_COO)
       {
-        if (k_for_test[kron_index] > 15)
-        {
-          continue;
-        }
-
         CSR_x_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         CSR_x_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         CSR_x_COO_assemble(C, A, B);
@@ -379,32 +398,22 @@ int main(int argc, char **argv)
       }
       else if (entry->a_format == MAT_COO && entry->b_format == MAT_CSC)
       {
-        if (k_for_test[kron_index] > 15)
-        {
-          continue;
-        }
-
         COO_x_CSC_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         COO_x_CSC_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         COO_x_CSC_assemble(C, A, B);
       }
       else if (entry->a_format == MAT_COO && entry->b_format == MAT_COO)
       {
-        if (k_for_test[kron_index] > 15)
-        {
-          continue;
-        }
-
         COO_x_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         COO_x_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         COO_x_COO_assemble(C, A, B);
       }
 
-      while (repetition_tester_is_testing(tester))
+      while (repetition_series_is_testing(series, &tester))
       {
-        repetition_tester_begin_time(tester);
+        repetition_tester_begin_time(&tester);
         entry->function(C, A, B);
-        repetition_tester_close_time(tester);
+        repetition_tester_close_time(&tester);
       }
 
       free_taco_tensor(C);
@@ -412,56 +421,18 @@ int main(int argc, char **argv)
       free_taco_tensor(B);
     }
 
-    kron_index += 1;
+    actual_kron_count += 1;
 
     scratch_close(&scratch);
   }
 
-  u64 actual_kron_count = kron_index;
-
   String timestamp = string_timestamp(&arena);
-  String test_run_info = string_formatted(&arena, "%.*s_s%lu_%.*s",
+  String filename  = string_formatted(&arena, "%.*s/%.*s_s%lu_%.*s.csv",
+                                          STRF(out_dir),
                                           STRF(file_basename(kron_dir)), sample,
                                           STRF(timestamp));
-  String test_run_dir = string_formatted(&arena, "%.*s/%.*s", STRF(out_dir),
-                                         STRF(test_run_info));
 
   mkdir(string_to_c_string(&arena, out_dir), 0755);
-  mkdir(string_to_c_string(&arena, test_run_dir), 0755);
 
-  for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
-  {
-    Operation_Entry *entry = test_entries + func_idx;
-
-    String filename = string_formatted(&arena, "%.*s/%.*s_%.*s.csv", STRF(test_run_dir),
-                                       STRF(matrix_format_string(entry->a_format)),
-                                       STRF(matrix_format_string(entry->b_format)));
-
-    FILE *csv = fopen(string_to_c_string(&arena, filename), "w");
-    LOG_INFO("Dumping csv: %.*s", STRF(filename));
-
-    Repetition_Test_Value value_flags = ENUM_BIT(REPTEST_VALUE_CACHE_COUNT)
-                                      | ENUM_BIT(REPTEST_VALUE_BRANCH_COUNT)
-                                      | ENUM_BIT(REPTEST_VALUE_TIME);
-
-    if (csv)
-    {
-      String extra[] = {STR("k")};
-      repetition_tester_csv_header(0, value_flags, csv, (String_Array){extra, 1});
-
-      for (usize kron_index = 0; kron_index < actual_kron_count; kron_index++)
-      {
-        Repetition_Tester *tester = &testers[kron_index][func_idx];
-        u64 k = k_for_test[kron_index];
-
-        fprintf(csv, "%lu,", k);
-        repetition_tester_csv_row(tester, value_flags, csv);
-        fprintf(csv, "\n");
-      }
-    }
-    else
-    {
-      LOG_ERROR("Unable to open csv file: %.*s", STRF(filename));
-    }
-  }
+  repetition_series_save_csv(series, "%.*s", STRF(filename));
 }

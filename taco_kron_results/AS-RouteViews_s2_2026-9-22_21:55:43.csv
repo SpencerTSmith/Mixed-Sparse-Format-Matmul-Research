@@ -1,0 +1,9 @@
+k,function,time,faults,bytes,flops,memops,cache,branch
+8,CSR_x_CSR,17463,0,0,0,0,0,1
+8,CSR_x_CSC,1874831,0,0,0,0,0,19949
+8,CSR_x_COO,175675,0,0,0,0,0,241
+8,CSC_x_CSR,17334,0,0,0,0,0,4
+8,CSC_x_COO,17779,0,0,0,0,0,3
+8,COO_x_CSR,18309,0,0,0,0,0,1
+8,COO_x_CSC,1754193,0,0,0,0,0,19459
+8,COO_x_COO,179848,0,0,0,0,0,236
