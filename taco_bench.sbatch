@@ -3,7 +3,7 @@
 #SBATCH --partition=normal,sooner_test
 #SBATCH --container=el9hw
 #SBATCH --ntasks=1
-#SBATCH --mem=128G
+#SBATCH --mem=64G
 #SBATCH --time=01:00:00
 #SBATCH --job-name=taco_bench_sweep
 #SBATCH --output=oscer/taco_bench_sweep_%J_stdout.txt
@@ -27,7 +27,8 @@ cd "$COREDIR"
 
 /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/krons/AS-Newman
+    --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/AS-Newman \
+    --k_min=20 --k_max=22
 
 EXIT_CODE=$?
 
