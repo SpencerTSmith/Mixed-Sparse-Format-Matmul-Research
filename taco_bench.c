@@ -312,7 +312,9 @@ int main(int argc, char **argv)
   {
     Scratch scratch = scratch_begin(&arena);
 
+    LOG_DEBUG("Loading kron: %.*s.", STRF(kron_file->value));
     Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value, k_min, k_max, sample);
+    LOG_DEBUG("Loaded k=%lu s=%lu nnz=%d.", kron_coo.k, kron_coo.s, kron_coo.pos[1]);
 
     u64 k = kron_coo.k;
 
