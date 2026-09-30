@@ -167,7 +167,7 @@ Taco_COO load_kron(Arena *arena, String filename, u64 k_min, u64 k_max, u64 samp
   Scratch scratch = scratch_begin(arena);
 
     // Stupid round tripping just to use c std qsort.
-    COO_Element *temps = arena_calloc(arena, result.pos[1], COO_Element);
+    COO_Element *temps = arena_calloc(scratch.arena, result.pos[1], COO_Element);
     for (usize i = 0; i < result.pos[1]; i++)
     {
       temps[i] = (COO_Element)
