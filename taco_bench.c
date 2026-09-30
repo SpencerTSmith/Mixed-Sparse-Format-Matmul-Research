@@ -422,8 +422,11 @@ int main(int argc, char **argv)
       }
 
       free_taco_tensor(C);
+      LOG_DEBUG("Freed C.");
       free_taco_tensor(A);
+      LOG_DEBUG("Freed A.");
       free_taco_tensor(B);
+      LOG_DEBUG("Freed B.");
     }
 
     actual_kron_count += 1;
