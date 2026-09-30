@@ -75,9 +75,13 @@ Taco_COO load_kron(Arena *arena, String filename, u64 k_min, u64 k_max, u64 samp
 
   result.name = file_basename(filename);
 
-  // NOTE: Assumption!
-  u64 k = string_to_u64(string_substring(result.name, 1, result.name.count));
-  if (k >= k_min && k < k_max)
+  // NOTE: Assumption about file naming!
+  usize k_index = string_find_substring(result.name, 0, STR("k"));
+  u64 k = string_to_u64(string_substring(result.name, k_index + 1, result.name.count));
+  usize s_index = string_find_substring(result.name, 0, STR("s"));
+  u64 s = string_to_u64(string_substring(result.name, s_index + 1, result.name.count));
+
+  if (k >= k_min && k < k_max && s == sample)
   {
     String data = read_file_to_arena(arena, filename);
 
@@ -166,8 +170,6 @@ Taco_COO load_kron(Arena *arena, String filename, u64 k_min, u64 k_max, u64 samp
 
         scratch_close(&scratch);
       }
-
-      result.valid = true;
     }
 
     // Sort, since these were not generated in correct order.
@@ -193,6 +195,8 @@ Taco_COO load_kron(Arena *arena, String filename, u64 k_min, u64 k_max, u64 samp
       }
 
     scratch_close(&scratch);
+
+    result.valid = is_wish_k && is_wish_sample;
   }
 
   return result;
