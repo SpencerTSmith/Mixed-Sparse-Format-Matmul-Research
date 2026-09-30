@@ -3,20 +3,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void *__realloc_print(void *ptr, size_t size, const char *function_name)
+void *__realloc_print(void *ptr, size_t size, const char *function_name, size_t line)
 {
-  printf("Realloc in %s: %lu\n", function_name, size);
+  printf("Realloc in %s(%lu): %lu\n", function_name, line, size);
   return realloc(ptr, size);
 }
 
-void *__malloc_print(size_t size, const char *function_name)
+void *__malloc_print(size_t size, const char *function_name, size_t line)
 {
-  printf("Malloc in %s: %lu\n", function_name, size);
+  printf("Malloc in %s(%lu): %lu\n", function_name, line, size);
   return malloc(size);
 }
 
-#define realloc_print(ptr, size) __realloc_print(ptr, size, __func__)
-#define malloc_print(size)       __malloc_print(size, __func__)
+#define realloc_print(ptr, size) __realloc_print(ptr, size, __func__, __LINE__)
+#define malloc_print(size)       __malloc_print(size, __func__, __LINE__)
 
 #ifndef TACO_C_HEADERS
 #define TACO_C_HEADERS
