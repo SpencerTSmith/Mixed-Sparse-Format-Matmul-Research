@@ -15,6 +15,7 @@ struct Taco_COO
   String name;
   u64    k;
   u64    s;
+  b32    valid;
 
   // For the taco bullshit.
   int    pos[2]; // {0, nnz}
@@ -74,118 +75,125 @@ Taco_COO load_kron(Arena *arena, String filename, u64 k_min, u64 k_max, u64 samp
 
   result.name = file_basename(filename);
 
-  String data = read_file_to_arena(arena, filename);
-
-  Stream parser = { data, 0 };
-
-  usize element_cursor = 0;
-
-  // NOTE: Just leaking loading the file right now if we don't meet this...
-  // need to get my thread scratch arena set up asap!
-  b32 is_wish_sample = true;
-  b32 is_wish_k      = true;
-
-  for (String line = stream_get_next_line(&parser);
-       string_valid(line) && is_wish_sample && is_wish_k;
-       line = stream_get_next_line(&parser))
+  // NOTE: Assumption!
+  u64 k = string_to_u64(string_substring(result.name, 1, result.name.count));
+  if (k >= k_min && k < k_max)
   {
-    // Info lines.
-    if (line.v[0] == '#')
+    String data = read_file_to_arena(arena, filename);
+
+    Stream parser = { data, 0 };
+
+    usize element_cursor = 0;
+
+    // NOTE: Just leaking loading the file right now if we don't meet this...
+    // need to get my thread scratch arena set up asap!
+    b32 is_wish_sample = true;
+    b32 is_wish_k      = true;
+
+    for (String line = stream_get_next_line(&parser);
+        string_valid(line) && is_wish_sample && is_wish_k;
+        line = stream_get_next_line(&parser))
     {
-      String k_line = STR("# K : ");
-      String s_line = STR("Sample: ");
-      String nnz_line = STR("# Number of edges: ");
-
-      // Get a k line potentially.
-      usize potential_k_line_index = string_find_substring(line, 0, k_line);
-      if (potential_k_line_index != line.count)
+      // Info lines.
+      if (line.v[0] == '#')
       {
-        String substring = string_substring(line, potential_k_line_index + k_line.count, line.count - k_line.count);
-        result.k = string_to_u64(substring);
+        String k_line = STR("# K : ");
+        String s_line = STR("Sample: ");
+        String nnz_line = STR("# Number of edges: ");
 
-        result.dimensions[0] = pow(2, result.k);
-        result.dimensions[1] = result.dimensions[0];
-
-        if (result.k < k_min || result.k > k_max)
+        // Get a k line potentially.
+        usize potential_k_line_index = string_find_substring(line, 0, k_line);
+        if (potential_k_line_index != line.count)
         {
-          is_wish_k = false;
+          String substring = string_substring(line, potential_k_line_index + k_line.count, line.count - k_line.count);
+          result.k = string_to_u64(substring);
+
+          result.dimensions[0] = pow(2, result.k);
+          result.dimensions[1] = result.dimensions[0];
+
+          if (result.k < k_min || result.k >= k_max)
+          {
+            is_wish_k = false;
+          }
+        }
+
+        usize potential_s_line_index = string_find_substring(line, 0, s_line);
+        if (potential_s_line_index != line.count)
+        {
+          String substring = string_substring(line, potential_s_line_index + s_line.count, line.count);
+          result.s = string_to_u64(substring);
+
+          if (result.s != sample)
+          {
+            is_wish_sample = false;
+          }
+        }
+
+        usize potential_nnz_line_index = string_find_substring(line, 0, nnz_line);
+        if (potential_nnz_line_index != line.count)
+        {
+          String substring = string_substring(line, potential_nnz_line_index + nnz_line.count, line.count - nnz_line.count);
+          u64 nnz = string_to_u64(substring);
+
+          result.pos[1] = nnz;
+
+          // Allocate space for elements. Should only happen once.
+          result.crd1 = arena_calloc(arena, nnz, int);
+          result.crd2 = arena_calloc(arena, nnz, int);
+          result.vals = arena_calloc(arena, nnz, double);
         }
       }
 
-      usize potential_s_line_index = string_find_substring(line, 0, s_line);
-      if (potential_s_line_index != line.count)
+      // Non-info lines
+      else
       {
-        String substring = string_substring(line, potential_s_line_index + s_line.count, line.count);
-        result.s = string_to_u64(substring);
+        ASSERT(result.crd1 && result.crd2 && result.vals, "Kron file did not contain nnz info before declaring edges.");
 
-        if (result.s != sample)
+        Scratch scratch = scratch_begin(arena);
+
+          String_Array split = string_split(scratch.arena, line, STR(" "));
+          ASSERT(split.count == 2, "Kron file edge does not contain 2 numbers.");
+          u64 row = string_to_u64(split.v[0]);
+          u64 col = string_to_u64(split.v[1]);
+
+          ASSERT(element_cursor < result.pos[1], "More edges in file than declared nnz.");
+
+          result.crd1[element_cursor] = row;
+          result.crd2[element_cursor] = col;
+          result.vals[element_cursor] = 1.0; // For now.
+
+          element_cursor += 1;
+
+        scratch_close(&scratch);
+      }
+
+      result.valid = true;
+    }
+
+    // Sort, since these were not generated in correct order.
+    Scratch scratch = scratch_begin(arena);
+
+      // Stupid round tripping just to use c std qsort.
+      COO_Element *temps = arena_calloc(scratch.arena, result.pos[1], COO_Element);
+      for (usize i = 0; i < result.pos[1]; i++)
+      {
+        temps[i] = (COO_Element)
         {
-          is_wish_sample = false;
-        }
+          .row = result.crd1[i],
+          .col = result.crd2[i],
+          .val = result.vals[i],
+        };
       }
-
-      usize potential_nnz_line_index = string_find_substring(line, 0, nnz_line);
-      if (potential_nnz_line_index != line.count)
+      qsort(temps, result.pos[1], sizeof(temps[0]), kron_compare);
+      for (usize i = 0; i < result.pos[1]; i++)
       {
-        String substring = string_substring(line, potential_nnz_line_index + nnz_line.count, line.count - nnz_line.count);
-        u64 nnz = string_to_u64(substring);
-
-        result.pos[1] = nnz;
-
-        // Allocate space for elements. Should only happen once.
-        result.crd1 = arena_calloc(arena, nnz, int);
-        result.crd2 = arena_calloc(arena, nnz, int);
-        result.vals = arena_calloc(arena, nnz, double);
+        result.crd1[i] = temps[i].row;
+        result.crd2[i] = temps[i].col;
+        result.vals[i] = temps[i].val;
       }
-    }
 
-    // Non-info lines
-    else
-    {
-      ASSERT(result.crd1 && result.crd2 && result.vals, "Kron file did not contain nnz info before declaring edges.");
-
-      Scratch scratch = scratch_begin(arena);
-
-        String_Array split = string_split(scratch.arena, line, STR(" "));
-        ASSERT(split.count == 2, "Kron file edge does not contain 2 numbers.");
-        u64 row = string_to_u64(split.v[0]);
-        u64 col = string_to_u64(split.v[1]);
-
-        ASSERT(element_cursor < result.pos[1], "More edges in file than declared nnz.");
-
-        result.crd1[element_cursor] = row;
-        result.crd2[element_cursor] = col;
-        result.vals[element_cursor] = 1.0; // For now.
-
-        element_cursor += 1;
-
-      scratch_close(&scratch);
-    }
+    scratch_close(&scratch);
   }
-
-  // Sort, since these were not generated in correct order.
-  Scratch scratch = scratch_begin(arena);
-
-    // Stupid round tripping just to use c std qsort.
-    COO_Element *temps = arena_calloc(scratch.arena, result.pos[1], COO_Element);
-    for (usize i = 0; i < result.pos[1]; i++)
-    {
-      temps[i] = (COO_Element)
-      {
-        .row = result.crd1[i],
-        .col = result.crd2[i],
-        .val = result.vals[i],
-      };
-    }
-    qsort(temps, result.pos[1], sizeof(temps[0]), kron_compare);
-    for (usize i = 0; i < result.pos[1]; i++)
-    {
-      result.crd1[i] = temps[i].row;
-      result.crd2[i] = temps[i].col;
-      result.vals[i] = temps[i].val;
-    }
-
-  scratch_close(&scratch);
 
   return result;
 }
@@ -314,6 +322,11 @@ int main(int argc, char **argv)
 
     LOG_INFO("Loading kron: %.*s.", STRF(kron_file->value));
     Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value, k_min, k_max, sample);
+    if (!kron_coo.valid)
+    {
+      LOG_INFO("Kron determined invalid: %.*s.", STRF(kron_file->value));
+      continue;
+    }
     LOG_INFO("Loaded k=%lu s=%lu nnz=%d.", kron_coo.k, kron_coo.s, kron_coo.pos[1]);
 
     u64 k = kron_coo.k;
