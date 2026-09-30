@@ -71,6 +71,12 @@ void repetition_tester_error(Repetition_Tester *tester, const char *message)
 }
 
 static
+const char *plural(u64 value, const char *plural_string)
+{
+  return value > 1 ? plural_string : "";
+}
+
+static
 void print_repetition_test_values(const char *label, Repetition_Test_Values values, u64 cpu_timer_frequency, u64 test_count)
 {
   u64 divisor = test_count ? test_count : 1;
@@ -98,7 +104,7 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
   {
     f64 kb_per_fault = ((f64)byte_count / KB(1)) / (f64)page_faults;
 
-    printf(", %lu faults", page_faults);
+    printf(", %lu fault%s", page_faults, plural(page_faults, "s"));
 
     if (byte_count)
     {
@@ -109,25 +115,25 @@ void print_repetition_test_values(const char *label, Repetition_Test_Values valu
   u64 flops = values.v[REPTEST_VALUE_FLOP_COUNT] / divisor;
   if (flops)
   {
-    printf(", %lu flops", flops);
+    printf(", %lu flop%s", flops, plural(flops, "s"));
   }
 
   u64 memops = values.v[REPTEST_VALUE_MEMOP_COUNT] / divisor;
   if (memops)
   {
-    printf(", %lu memops", memops);
+    printf(", %lu memop%s", memops, plural(memops, "s"));
   }
 
   u64 cache_misses = values.v[REPTEST_VALUE_CACHE_COUNT] / divisor;
   if (cache_misses)
   {
-    printf(", %lu cache misses", cache_misses);
+    printf(", %lu cache miss%s", cache_misses, plural(cache_misses, "es"));
   }
 
   u64 branch_misses = values.v[REPTEST_VALUE_BRANCH_COUNT] / divisor;
   if (branch_misses)
   {
-    printf(", %lu branch misses", branch_misses);
+    printf(", %lu branch miss%s", branch_misses, plural(branch_misses, "es"));
   }
 }
 

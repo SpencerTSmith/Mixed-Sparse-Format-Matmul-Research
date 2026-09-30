@@ -14,7 +14,6 @@ typedef enum Repetition_Tester_Mode
   REPTEST_MODE_COUNT,
 } Repetition_Tester_Mode;
 
-// TODO: Macro this so its not manual
 typedef enum Repetition_Test_Value
 {
   REPTEST_VALUE_NONE,

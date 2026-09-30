@@ -1,3 +1,16 @@
+
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+void *__realloc_print(void *ptr, size_t size, const char *function_name)
+{
+  printf("Realloc in %s: %lu\n", function_name, size);
+  return realloc(ptr, size);
+}
+
+#define realloc_print(ptr, size) __realloc_print(ptr, size, __func__)
+
 #ifndef TACO_C_HEADERS
 #define TACO_C_HEADERS
 #include <stdio.h>
@@ -188,12 +201,12 @@ int CSR_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
         int32_t j = B2_crd[jB];
         if (C2_crd_size <= jC) {
           int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
-          C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * C2_crd_new_size);
+          C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
           C2_crd_size = C2_crd_new_size;
         }
         C2_crd[jC] = j;
         if (C1_crd_size <= jC) {
-          C1_crd = (int32_t*)realloc(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
+          C1_crd = (int32_t*)realloc_print(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
           C1_crd_size *= 2;
         }
         C1_crd[jC] = i;
@@ -252,12 +265,12 @@ int CSR_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
         kA_COO++;
       }
       if (A_capacity <= kA) {
-        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_vals = (double*)realloc_print(A_vals, sizeof(double) * (A_capacity * 2));
         A_capacity *= 2;
       }
       A_vals[kA] = A_COO_val;
       if (A2_crd_size <= kA) {
-        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
+        A2_crd = (int32_t*)realloc_print(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
         A2_crd_size *= 2;
       }
       A2_crd[kA] = k;
@@ -319,12 +332,12 @@ int CSR_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
         jB_COO++;
       }
       if (B_capacity <= jB) {
-        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_vals = (double*)realloc_print(B_vals, sizeof(double) * (B_capacity * 2));
         B_capacity *= 2;
       }
       B_vals[jB] = B_COO_val;
       if (B2_crd_size <= jB) {
-        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
+        B2_crd = (int32_t*)realloc_print(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
         B2_crd_size *= 2;
       }
       B2_crd[jB] = j;
@@ -406,12 +419,12 @@ int CSR_x_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
     for (int32_t j = 0; j < B2_dimension; j++) {
       if (C2_crd_size <= jC) {
         int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
-        C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * C2_crd_new_size);
+        C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
         C2_crd_size = C2_crd_new_size;
       }
       C2_crd[jC] = j;
       if (C1_crd_size <= jC) {
-        C1_crd = (int32_t*)realloc(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
+        C1_crd = (int32_t*)realloc_print(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
         C1_crd_size *= 2;
       }
       C1_crd[jC] = i;
@@ -469,12 +482,12 @@ int CSR_x_CSC_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
         kA_COO++;
       }
       if (A_capacity <= kA) {
-        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_vals = (double*)realloc_print(A_vals, sizeof(double) * (A_capacity * 2));
         A_capacity *= 2;
       }
       A_vals[kA] = A_COO_val;
       if (A2_crd_size <= kA) {
-        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
+        A2_crd = (int32_t*)realloc_print(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
         A2_crd_size *= 2;
       }
       A2_crd[kA] = k;
@@ -536,12 +549,12 @@ int CSR_x_CSC_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
         kB_COO++;
       }
       if (B_capacity <= kB) {
-        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_vals = (double*)realloc_print(B_vals, sizeof(double) * (B_capacity * 2));
         B_capacity *= 2;
       }
       B_vals[kB] = B_COO_val;
       if (B2_crd_size <= kB) {
-        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
+        B2_crd = (int32_t*)realloc_print(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
         B2_crd_size *= 2;
       }
       B2_crd[kB] = k;
@@ -645,12 +658,12 @@ int CSR_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
           int32_t j = B2_crd[jB];
           if (C2_crd_size <= jC) {
             int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
-            C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * C2_crd_new_size);
+            C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
             C2_crd_size = C2_crd_new_size;
           }
           C2_crd[jC] = j;
           if (C1_crd_size <= jC) {
-            C1_crd = (int32_t*)realloc(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
+            C1_crd = (int32_t*)realloc_print(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
             C1_crd_size *= 2;
           }
           C1_crd[jC] = i;
@@ -712,12 +725,12 @@ int CSR_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
         kA_COO++;
       }
       if (A_capacity <= kA) {
-        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_vals = (double*)realloc_print(A_vals, sizeof(double) * (A_capacity * 2));
         A_capacity *= 2;
       }
       A_vals[kA] = A_COO_val;
       if (A2_crd_size <= kA) {
-        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
+        A2_crd = (int32_t*)realloc_print(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
         A2_crd_size *= 2;
       }
       A2_crd[kA] = k;
@@ -777,18 +790,18 @@ int CSR_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
         jB_COO++;
       }
       if (B_capacity <= jB) {
-        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_vals = (double*)realloc_print(B_vals, sizeof(double) * (B_capacity * 2));
         B_capacity *= 2;
       }
       B_vals[jB] = B_COO_val;
       if (B2_crd_size <= jB) {
         int32_t B2_crd_new_size = TACO_MAX(B2_crd_size * 2,(jB + 1));
-        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * B2_crd_new_size);
+        B2_crd = (int32_t*)realloc_print(B2_crd, sizeof(int32_t) * B2_crd_new_size);
         B2_crd_size = B2_crd_new_size;
       }
       B2_crd[jB] = j;
       if (B1_crd_size <= jB) {
-        B1_crd = (int32_t*)realloc(B1_crd, sizeof(int32_t) * (B1_crd_size * 2));
+        B1_crd = (int32_t*)realloc_print(B1_crd, sizeof(int32_t) * (B1_crd_size * 2));
         B1_crd_size *= 2;
       }
       B1_crd[jB] = k;
@@ -859,12 +872,12 @@ int CSC_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
         int32_t j = B2_crd[jB];
         if (C2_crd_size <= jC) {
           int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
-          C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * C2_crd_new_size);
+          C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
           C2_crd_size = C2_crd_new_size;
         }
         C2_crd[jC] = j;
         if (C1_crd_size <= jC) {
-          C1_crd = (int32_t*)realloc(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
+          C1_crd = (int32_t*)realloc_print(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
           C1_crd_size *= 2;
         }
         C1_crd[jC] = i;
@@ -923,12 +936,12 @@ int CSC_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
         iA_COO++;
       }
       if (A_capacity <= iA) {
-        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_vals = (double*)realloc_print(A_vals, sizeof(double) * (A_capacity * 2));
         A_capacity *= 2;
       }
       A_vals[iA] = A_COO_val;
       if (A2_crd_size <= iA) {
-        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
+        A2_crd = (int32_t*)realloc_print(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
         A2_crd_size *= 2;
       }
       A2_crd[iA] = i;
@@ -990,12 +1003,12 @@ int CSC_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
         jB_COO++;
       }
       if (B_capacity <= jB) {
-        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_vals = (double*)realloc_print(B_vals, sizeof(double) * (B_capacity * 2));
         B_capacity *= 2;
       }
       B_vals[jB] = B_COO_val;
       if (B2_crd_size <= jB) {
-        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
+        B2_crd = (int32_t*)realloc_print(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
         B2_crd_size *= 2;
       }
       B2_crd[jB] = j;
@@ -1088,12 +1101,12 @@ int CSC_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
         int32_t j = B2_crd[jB];
         if (C2_crd_size <= jC) {
           int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
-          C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * C2_crd_new_size);
+          C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
           C2_crd_size = C2_crd_new_size;
         }
         C2_crd[jC] = j;
         if (C1_crd_size <= jC) {
-          C1_crd = (int32_t*)realloc(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
+          C1_crd = (int32_t*)realloc_print(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
           C1_crd_size *= 2;
         }
         C1_crd[jC] = i;
@@ -1153,12 +1166,12 @@ int CSC_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
         iA_COO++;
       }
       if (A_capacity <= iA) {
-        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_vals = (double*)realloc_print(A_vals, sizeof(double) * (A_capacity * 2));
         A_capacity *= 2;
       }
       A_vals[iA] = A_COO_val;
       if (A2_crd_size <= iA) {
-        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
+        A2_crd = (int32_t*)realloc_print(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
         A2_crd_size *= 2;
       }
       A2_crd[iA] = i;
@@ -1218,18 +1231,18 @@ int CSC_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
         jB_COO++;
       }
       if (B_capacity <= jB) {
-        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_vals = (double*)realloc_print(B_vals, sizeof(double) * (B_capacity * 2));
         B_capacity *= 2;
       }
       B_vals[jB] = B_COO_val;
       if (B2_crd_size <= jB) {
         int32_t B2_crd_new_size = TACO_MAX(B2_crd_size * 2,(jB + 1));
-        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * B2_crd_new_size);
+        B2_crd = (int32_t*)realloc_print(B2_crd, sizeof(int32_t) * B2_crd_new_size);
         B2_crd_size = B2_crd_new_size;
       }
       B2_crd[jB] = j;
       if (B1_crd_size <= jB) {
-        B1_crd = (int32_t*)realloc(B1_crd, sizeof(int32_t) * (B1_crd_size * 2));
+        B1_crd = (int32_t*)realloc_print(B1_crd, sizeof(int32_t) * (B1_crd_size * 2));
         B1_crd_size *= 2;
       }
       B1_crd[jB] = k;
@@ -1318,12 +1331,12 @@ int COO_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
         int32_t j = B2_crd[jB];
         if (C2_crd_size <= jC) {
           int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
-          C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * C2_crd_new_size);
+          C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
           C2_crd_size = C2_crd_new_size;
         }
         C2_crd[jC] = j;
         if (C1_crd_size <= jC) {
-          C1_crd = (int32_t*)realloc(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
+          C1_crd = (int32_t*)realloc_print(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
           C1_crd_size *= 2;
         }
         C1_crd[jC] = i;
@@ -1381,18 +1394,18 @@ int COO_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
         kA_COO++;
       }
       if (A_capacity <= kA) {
-        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_vals = (double*)realloc_print(A_vals, sizeof(double) * (A_capacity * 2));
         A_capacity *= 2;
       }
       A_vals[kA] = A_COO_val;
       if (A2_crd_size <= kA) {
         int32_t A2_crd_new_size = TACO_MAX(A2_crd_size * 2,(kA + 1));
-        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * A2_crd_new_size);
+        A2_crd = (int32_t*)realloc_print(A2_crd, sizeof(int32_t) * A2_crd_new_size);
         A2_crd_size = A2_crd_new_size;
       }
       A2_crd[kA] = k;
       if (A1_crd_size <= kA) {
-        A1_crd = (int32_t*)realloc(A1_crd, sizeof(int32_t) * (A1_crd_size * 2));
+        A1_crd = (int32_t*)realloc_print(A1_crd, sizeof(int32_t) * (A1_crd_size * 2));
         A1_crd_size *= 2;
       }
       A1_crd[kA] = i;
@@ -1449,12 +1462,12 @@ int COO_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
         jB_COO++;
       }
       if (B_capacity <= jB) {
-        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_vals = (double*)realloc_print(B_vals, sizeof(double) * (B_capacity * 2));
         B_capacity *= 2;
       }
       B_vals[jB] = B_COO_val;
       if (B2_crd_size <= jB) {
-        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
+        B2_crd = (int32_t*)realloc_print(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
         B2_crd_size *= 2;
       }
       B2_crd[jB] = j;
@@ -1553,12 +1566,12 @@ int COO_x_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
     for (int32_t j = 0; j < B2_dimension; j++) {
       if (C2_crd_size <= jC) {
         int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
-        C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * C2_crd_new_size);
+        C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
         C2_crd_size = C2_crd_new_size;
       }
       C2_crd[jC] = j;
       if (C1_crd_size <= jC) {
-        C1_crd = (int32_t*)realloc(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
+        C1_crd = (int32_t*)realloc_print(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
         C1_crd_size *= 2;
       }
       C1_crd[jC] = i;
@@ -1615,18 +1628,18 @@ int COO_x_CSC_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
         kA_COO++;
       }
       if (A_capacity <= kA) {
-        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_vals = (double*)realloc_print(A_vals, sizeof(double) * (A_capacity * 2));
         A_capacity *= 2;
       }
       A_vals[kA] = A_COO_val;
       if (A2_crd_size <= kA) {
         int32_t A2_crd_new_size = TACO_MAX(A2_crd_size * 2,(kA + 1));
-        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * A2_crd_new_size);
+        A2_crd = (int32_t*)realloc_print(A2_crd, sizeof(int32_t) * A2_crd_new_size);
         A2_crd_size = A2_crd_new_size;
       }
       A2_crd[kA] = k;
       if (A1_crd_size <= kA) {
-        A1_crd = (int32_t*)realloc(A1_crd, sizeof(int32_t) * (A1_crd_size * 2));
+        A1_crd = (int32_t*)realloc_print(A1_crd, sizeof(int32_t) * (A1_crd_size * 2));
         A1_crd_size *= 2;
       }
       A1_crd[kA] = i;
@@ -1683,12 +1696,12 @@ int COO_x_CSC_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
         kB_COO++;
       }
       if (B_capacity <= kB) {
-        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_vals = (double*)realloc_print(B_vals, sizeof(double) * (B_capacity * 2));
         B_capacity *= 2;
       }
       B_vals[kB] = B_COO_val;
       if (B2_crd_size <= kB) {
-        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
+        B2_crd = (int32_t*)realloc_print(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
         B2_crd_size *= 2;
       }
       B2_crd[kB] = k;
@@ -1807,12 +1820,12 @@ int COO_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
           int32_t j = B2_crd[jB];
           if (C2_crd_size <= jC) {
             int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
-            C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * C2_crd_new_size);
+            C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
             C2_crd_size = C2_crd_new_size;
           }
           C2_crd[jC] = j;
           if (C1_crd_size <= jC) {
-            C1_crd = (int32_t*)realloc(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
+            C1_crd = (int32_t*)realloc_print(C1_crd, sizeof(int32_t) * (C1_crd_size * 2));
             C1_crd_size *= 2;
           }
           C1_crd[jC] = i;
@@ -1873,18 +1886,18 @@ int COO_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
         kA_COO++;
       }
       if (A_capacity <= kA) {
-        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_vals = (double*)realloc_print(A_vals, sizeof(double) * (A_capacity * 2));
         A_capacity *= 2;
       }
       A_vals[kA] = A_COO_val;
       if (A2_crd_size <= kA) {
         int32_t A2_crd_new_size = TACO_MAX(A2_crd_size * 2,(kA + 1));
-        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * A2_crd_new_size);
+        A2_crd = (int32_t*)realloc_print(A2_crd, sizeof(int32_t) * A2_crd_new_size);
         A2_crd_size = A2_crd_new_size;
       }
       A2_crd[kA] = k;
       if (A1_crd_size <= kA) {
-        A1_crd = (int32_t*)realloc(A1_crd, sizeof(int32_t) * (A1_crd_size * 2));
+        A1_crd = (int32_t*)realloc_print(A1_crd, sizeof(int32_t) * (A1_crd_size * 2));
         A1_crd_size *= 2;
       }
       A1_crd[kA] = i;
@@ -1939,18 +1952,18 @@ int COO_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
         jB_COO++;
       }
       if (B_capacity <= jB) {
-        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_vals = (double*)realloc_print(B_vals, sizeof(double) * (B_capacity * 2));
         B_capacity *= 2;
       }
       B_vals[jB] = B_COO_val;
       if (B2_crd_size <= jB) {
         int32_t B2_crd_new_size = TACO_MAX(B2_crd_size * 2,(jB + 1));
-        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * B2_crd_new_size);
+        B2_crd = (int32_t*)realloc_print(B2_crd, sizeof(int32_t) * B2_crd_new_size);
         B2_crd_size = B2_crd_new_size;
       }
       B2_crd[jB] = j;
       if (B1_crd_size <= jB) {
-        B1_crd = (int32_t*)realloc(B1_crd, sizeof(int32_t) * (B1_crd_size * 2));
+        B1_crd = (int32_t*)realloc_print(B1_crd, sizeof(int32_t) * (B1_crd_size * 2));
         B1_crd_size *= 2;
       }
       B1_crd[jB] = k;
