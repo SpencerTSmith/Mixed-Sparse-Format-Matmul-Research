@@ -331,7 +331,7 @@ int main(int argc, char **argv)
       LOG_INFO("Kron determined invalid: %.*s.", STRF(kron_file->value));
       continue;
     }
-    LOG_INFO("Loaded k=%lu s=%lu nnz=%d.", kron_coo.k, kron_coo.s, kron_coo.pos[1]);
+    LOG_INFO("Loaded, k=%lu s=%lu nnz=%d.", kron_coo.k, kron_coo.s, kron_coo.pos[1]);
 
     u64 k = kron_coo.k;
 
@@ -370,16 +370,6 @@ int main(int argc, char **argv)
       Taco_Mode_Info c_info = taco_mode_info_from_format(MAT_COO);
       taco_tensor_t *C = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, c_info.ordering,
                                             c_info.types);
-
-      Repetition_Tester tester =
-        repetition_series_new_tester(series, 0,
-                                     cpu_timer_frequency,
-                                     seconds_to_try_for_min,
-                                     "--- %.*s, %s ---",
-                                     STRF(kron_coo.name),
-                                     entry->name);
-      repetition_series_set_field(series, "k", "%lu", k);
-      repetition_series_set_field(series, "function", entry->name);
 
       if (0) {}
       else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSR)
@@ -430,6 +420,16 @@ int main(int argc, char **argv)
         COO_x_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
         COO_x_COO_assemble(C, A, B);
       }
+
+      Repetition_Tester tester =
+        repetition_series_new_tester(series, 0,
+                                     cpu_timer_frequency,
+                                     seconds_to_try_for_min,
+                                     "--- %.*s, %s (%d C nnz) ---",
+                                     STRF(kron_coo.name),
+                                     entry->name, C->vals_size);
+      repetition_series_set_field(series, "k", "%lu", k);
+      repetition_series_set_field(series, "function", entry->name);
 
       while (repetition_series_is_testing(series, &tester))
       {
