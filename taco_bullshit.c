@@ -207,7 +207,7 @@ int CSR_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
       for (int32_t jB = B2_pos[k]; jB < B2_pos[(k + 1)]; jB++) {
         int32_t j = B2_crd[jB];
         if (C2_crd_size <= jC) {
-          int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
+          size_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
           C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
           C2_crd_size = C2_crd_new_size;
         }
@@ -425,7 +425,7 @@ int CSR_x_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   for (int32_t i = 0; i < A1_dimension; i++) {
     for (int32_t j = 0; j < B2_dimension; j++) {
       if (C2_crd_size <= jC) {
-        int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
+        size_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
         C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
         C2_crd_size = C2_crd_new_size;
       }
@@ -664,7 +664,7 @@ int CSR_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
         for (int32_t jB = kB; jB < B1_segend; jB++) {
           int32_t j = B2_crd[jB];
           if (C2_crd_size <= jC) {
-            int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
+            size_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
             C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
             C2_crd_size = C2_crd_new_size;
           }
@@ -878,7 +878,7 @@ int CSC_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
       for (int32_t jB = B2_pos[k]; jB < B2_pos[(k + 1)]; jB++) {
         int32_t j = B2_crd[jB];
         if (C2_crd_size <= jC) {
-          int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
+          size_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
           C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
           C2_crd_size = C2_crd_new_size;
         }
@@ -1107,7 +1107,7 @@ int CSC_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
       for (int32_t jB = kB; jB < B1_segend; jB++) {
         int32_t j = B2_crd[jB];
         if (C2_crd_size <= jC) {
-          int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
+          size_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
           C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
           C2_crd_size = C2_crd_new_size;
         }
@@ -1337,7 +1337,7 @@ int COO_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
       for (int32_t jB = B2_pos[k]; jB < B2_pos[(k + 1)]; jB++) {
         int32_t j = B2_crd[jB];
         if (C2_crd_size <= jC) {
-          int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
+          size_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
           C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
           C2_crd_size = C2_crd_new_size;
         }
@@ -1572,7 +1572,7 @@ int COO_x_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
     }
     for (int32_t j = 0; j < B2_dimension; j++) {
       if (C2_crd_size <= jC) {
-        int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
+        size_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
         C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
         C2_crd_size = C2_crd_new_size;
       }
@@ -1826,7 +1826,7 @@ int COO_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
         for (int32_t jB = kB; jB < B1_segend; jB++) {
           int32_t j = B2_crd[jB];
           if (C2_crd_size <= jC) {
-            int32_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
+            size_t C2_crd_new_size = TACO_MAX(C2_crd_size * 2,(jC + 1));
             C2_crd = (int32_t*)realloc_print(C2_crd, sizeof(int32_t) * C2_crd_new_size);
             C2_crd_size = C2_crd_new_size;
           }
