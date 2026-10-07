@@ -6,7 +6,7 @@ REMOTE_DIR=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-
 git push
 
 # make output goes to stderr so only the job id is captured
-JOBID=$(ssh hpc "cd $REMOTE_DIR && git pull -q && make clean >&2 && make taco_bullshit >&2 && sbatch --parsable taco_bench.sbatch")
+JOBID=$(ssh oscer "cd $REMOTE_DIR && git pull -q && make clean >&2 && make taco_bullshit >&2 && sbatch --parsable taco_bench.sbatch")
 JOBID=${JOBID%%;*}
 echo "Submitted job $JOBID"
 
@@ -17,7 +17,7 @@ ssh -t oscer "cd $REMOTE_DIR && while [ ! -f $OUT ]; do sleep 2; done; tail -n +
 TAIL_PID=$!
 
 # poll until the job leaves the queue
-while [ -n "$(ssh hpc "squeue -h -j $JOBID")" ]; do
+while [ -n "$(ssh oscer "squeue -h -j $JOBID")" ]; do
   sleep 10
 done
 
