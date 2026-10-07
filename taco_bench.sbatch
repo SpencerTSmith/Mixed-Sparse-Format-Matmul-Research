@@ -3,7 +3,7 @@
 #SBATCH --partition=normal,sooner_test
 #SBATCH --container=el9hw
 #SBATCH --ntasks=1
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH --time=01:00:00
 #SBATCH --job-name=taco_bench_sweep
 #SBATCH --output=oscer/taco_bench_sweep_%J_stdout.txt
