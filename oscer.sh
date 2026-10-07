@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REMOTE_DIR=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research
+
 git push
-ssh hpc 'cd /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research && git pull && make clean && make && sbatch --wait job.sh'
+
+# make output goes to stderr so only the job id is captured
+JOBID=$(ssh hpc "cd $REMOTE_DIR && git pull -q && make clean >&2 && make taco_bullshit >&2 && sbatch --parsable taco_bench.sbatch")
+JOBID=${JOBID%%;*}
+echo "Submitted job $JOBID"
+
+OUT=taco_kron_results/taco_bench_sweep_${JOBID}_stdout.txt
+
+# stream the log in the background (waits for the file to appear first)
+ssh -t hpc "cd $REMOTE_DIR && while [ ! -f $OUT ]; do sleep 2; done; tail -n +1 -f $OUT" &
+TAIL_PID=$!
+
+# poll until the job leaves the queue
+while [ -n "$(ssh hpc "squeue -h -j $JOBID")" ]; do
+  sleep 10
+done
+
+sleep 3   # let the last output flush
+kill $TAIL_PID 2>/dev/null || true
+
+rsync -av hpc:$REMOTE_DIR/taco_kron_results/ ./taco_kron_results/
+
+#!/usr/bin/env bash
+set -euo pipefail
+
+git push
+ssh hpc 'cd /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research && git pull && make clean && make taco_bullshit && sbatch --wait taco_bench.sbatch'
 rsync -av hpc:~/myproject/results/ ./results/
