@@ -17,25 +17,22 @@ mkdir -p taco_kron_results/
 
 ulimit -c unlimited
 
+echo "ulimit -c: $(ulimit -c)"
+
 COREDIR=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/core_dumps
 mkdir -p "$COREDIR"
-
-echo "core_pattern: $(cat /proc/sys/kernel/core_pattern)"
-echo "ulimit -c: $(ulimit -c)"
 
 cd "$COREDIR"
 
 /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/AS-Newman \
-    --k_min=23 --k_max=24
+    --k_min=1 --k_max=23
 
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
     echo "taco_bench.x exited with code $EXIT_CODE"
-
-    ls -la "$COREDIR"
 
     if command -v coredumpctl >/dev/null 2>&1; then
         coredumpctl dump taco_bench.x -o "$COREDIR/core.taco_bench.$SLURM_JOB_ID" 2>/dev/null \

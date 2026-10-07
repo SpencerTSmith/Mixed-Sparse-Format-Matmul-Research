@@ -24,11 +24,4 @@ done
 sleep 3   # let the last output flush
 kill $TAIL_PID 2>/dev/null || true
 
-rsync -av hpc:$REMOTE_DIR/taco_kron_results/ ./taco_kron_results/
-
-#!/usr/bin/env bash
-set -euo pipefail
-
-git push
-ssh hpc 'cd /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research && git pull && make clean && make taco_bullshit && sbatch --wait taco_bench.sbatch'
-rsync -av hpc:~/myproject/results/ ./results/
+rsync -av oscer:$REMOTE_DIR/taco_kron_results/ ./taco_kron_results/
