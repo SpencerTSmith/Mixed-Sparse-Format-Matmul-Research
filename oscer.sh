@@ -4,6 +4,17 @@ set -euo pipefail
 
 REMOTE_DIR=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research
 
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Uncommitted changes:" >&2
+  git status --short >&2
+  echo >&2
+  read -r -p "Proceed? [y/N] " reply
+  case "$reply" in
+    [yY]|[yY][eE][sS]) ;;
+    *) echo "Aborted." >&2; exit 1 ;;
+  esac
+fi
+
 git push
 
 ssh -O check oscer 2>/dev/null || ssh -fN oscer
