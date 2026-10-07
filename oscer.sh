@@ -13,7 +13,7 @@ echo "Submitted job $JOBID"
 OUT=taco_kron_results/taco_bench_sweep_${JOBID}_stdout.txt
 
 # stream the log in the background (waits for the file to appear first)
-ssh -t hpc "cd $REMOTE_DIR && while [ ! -f $OUT ]; do sleep 2; done; tail -n +1 -f $OUT" &
+ssh -t oscer "cd $REMOTE_DIR && while [ ! -f $OUT ]; do sleep 2; done; tail -n +1 -f $OUT" &
 TAIL_PID=$!
 
 # poll until the job leaves the queue
