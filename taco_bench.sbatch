@@ -27,7 +27,7 @@ cd "$COREDIR"
 /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/AS-Newman \
-    --k_min=2 --k_max=20
+    --k_min=2 --k_max=20 --oscer
 
 EXIT_CODE=$?
 
