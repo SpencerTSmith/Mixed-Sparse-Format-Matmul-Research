@@ -3,6 +3,7 @@
 set -euo pipefail
 
 REMOTE_DIR=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research
+MODULES="git-lfs GCC"
 
 if [ -n "$(git status --porcelain)" ]; then
   echo "Uncommitted changes:" >&2
@@ -23,9 +24,7 @@ JOBID=$(ssh oscer "bash -l -s" <<EOF
 set -euo pipefail
 module load $MODULES >&2
 cd $REMOTE_DIR
-git lfs install --local >&2
 git pull -q
-git lfs pull >&2
 make clean >&2
 make taco_bullshit >&2
 sbatch --parsable taco_bench.sbatch
