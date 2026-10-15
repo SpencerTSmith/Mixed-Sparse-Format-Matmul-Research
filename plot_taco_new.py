@@ -2,9 +2,9 @@
 """Plot TACO sparse-format benchmark results.
 
 Expected input: one CSV file per run, with columns
-    k,function,time,faults,bytes,flops,memops,cache,branch
+    k,function,time,faults,bytes,flops,memops,cache,branch,alloc
 where `function` is already the format combo (e.g. 'CSR_x_CSC') and `k` is
-the matrix-size exponent (dim = 2^k). Only time/cache/branch are plotted;
+the matrix-size exponent (dim = 2^k). Only time/cache/branch/alloc are plotted;
 faults/bytes/flops/memops are read but currently unused -- ignored rather
 than errored on, so files can carry extra columns freely.
 """
@@ -26,12 +26,15 @@ from matplotlib.patches import Patch
 # Only used in 'overlay' mode.
 LINESTYLES = ['-', '--', ':', '-.']
 
-# Tuple layout used everywhere below: (k, time, cache, branch).
-K, TIME, CACHE, BRANCH = range(4)
+# Tuple layout used everywhere below: (k, time, cache, branch, alloc).
+K, TIME, CACHE, BRANCH, ALLOC = range(5)
+
+# Number of panels per row (time, cache, branch, alloc, LLC misses/cycle).
+N_PANELS = 5
 
 
 def load_results(csv_path):
-    """Returns { 'CSR_x_CSC': [(k, time, cache, branch), ...], ... }, sorted by k.
+    """Returns { 'CSR_x_CSC': [(k, time, cache, branch, alloc), ...], ... }, sorted by k.
 
     Reads csv_path and groups its rows by the `function` column.
     """
@@ -45,6 +48,7 @@ def load_results(csv_path):
                 int(row['time']),
                 int(row['cache']),
                 int(row['branch']),
+                int(row['alloc']),
             ))
 
     for combo in data:
@@ -175,10 +179,10 @@ def build_shared_legend(fig, color_map, labels):
 
 
 def plot_overlay(all_datasets, labels, color_map, log_scale):
-    """One row of 4 panels; each dataset overlaid with a distinct linestyle,
+    """One row of 5 panels; each dataset overlaid with a distinct linestyle,
     color shared per combo across datasets. Best for a small number of
     files where you want direct point-by-point comparison."""
-    fig, axes = plt.subplots(1, 4, figsize=(24, 5))
+    fig, axes = plt.subplots(1, N_PANELS, figsize=(6 * N_PANELS, 5))
     linestyles = LINESTYLES[:len(all_datasets)]
 
     plot_metric(all_datasets, labels, color_map, TIME, 'Time', 'timestamp cycles',
@@ -187,8 +191,10 @@ def plot_overlay(all_datasets, labels, color_map, log_scale):
                 axes[1], log_scale=log_scale, linestyles=linestyles, show_legend=False)
     plot_metric(all_datasets, labels, color_map, BRANCH, 'Branch mispredicts', 'count',
                 axes[2], log_scale=log_scale, linestyles=linestyles, show_legend=False)
+    plot_metric(all_datasets, labels, color_map, ALLOC, 'Total Requested Allocations', 'bytes',
+                axes[3], log_scale=log_scale, linestyles=linestyles, show_legend=False)
     plot_rate_metric(all_datasets, labels, color_map, CACHE, TIME, 'LLC misses / cycle',
-                      'misses per cycle', axes[3], linestyles=linestyles, show_legend=False)
+                      'misses per cycle', axes[4], linestyles=linestyles, show_legend=False)
 
     build_shared_legend(fig, color_map, labels)
     fig.tight_layout(rect=[0, 0.06, 1, 1])
@@ -196,11 +202,11 @@ def plot_overlay(all_datasets, labels, color_map, log_scale):
 
 
 def plot_grid(all_datasets, labels, color_map, log_scale):
-    """One row per dataset, 4 metric columns. Each row is exactly the
+    """One row per dataset, 5 metric columns. Each row is exactly the
     original single-run plot; easier to read when comparing more than 2-3
     files or when overlaid lines get too cluttered."""
     n = len(all_datasets)
-    fig, axes = plt.subplots(n, 4, figsize=(24, 5 * n), squeeze=False)
+    fig, axes = plt.subplots(n, N_PANELS, figsize=(6 * N_PANELS, 5 * n), squeeze=False)
 
     for row, (data, label) in enumerate(zip(all_datasets, labels)):
         d, l = [data], [label]
@@ -210,8 +216,10 @@ def plot_grid(all_datasets, labels, color_map, log_scale):
                     axes[row][1], log_scale=log_scale)
         plot_metric(d, l, color_map, BRANCH, f'Branch mispredicts — {label}', 'count',
                     axes[row][2], log_scale=log_scale)
+        plot_metric(d, l, color_map, ALLOC, f'Allocations — {label}', 'alloc',
+                    axes[row][3], log_scale=log_scale)
         plot_rate_metric(d, l, color_map, CACHE, TIME, f'LLC misses / cycle — {label}',
-                          'misses per cycle', axes[row][3])
+                          'misses per cycle', axes[row][4])
 
     fig.tight_layout()
     return fig
@@ -235,7 +243,7 @@ def aggregate_for_violin(all_datasets):
         for combo, rows in data.items():
             for row in rows:
                 k = row[K]
-                for metric_idx in (TIME, CACHE, BRANCH):
+                for metric_idx in (TIME, CACHE, BRANCH, ALLOC):
                     agg[combo][metric_idx][k].append(row[metric_idx])
     return agg
 
@@ -353,19 +361,20 @@ def plot_violin_rate(agg, title, ylabel, ax, color_map):
 
 
 def plot_violin(all_datasets, color_map, log_scale):
-    """One row of 4 panels, same layout as overlay mode, but every input file
+    """One row of 5 panels, same layout as overlay mode, but every input file
     is pooled as a replicate of the same dataset instead of being kept
     distinct -- so each (combo, k) becomes a distribution rather than a
     single line."""
-    fig, axes = plt.subplots(1, 4, figsize=(24, 5))
+    fig, axes = plt.subplots(1, N_PANELS, figsize=(6 * N_PANELS, 5))
 
     agg = aggregate_for_violin(all_datasets)
     plot_violin_metric(agg, TIME, 'Time', 'timestamp cycles', axes[0], color_map, log_scale)
     plot_violin_metric(agg, CACHE, 'Cache misses', 'count', axes[1], color_map, log_scale)
     plot_violin_metric(agg, BRANCH, 'Branch mispredicts', 'count', axes[2], color_map, log_scale)
+    plot_violin_metric(agg, ALLOC, 'Allocations', 'alloc', axes[3], color_map, log_scale)
 
     rate_agg = aggregate_rate_for_violin(all_datasets, CACHE, TIME)
-    plot_violin_rate(rate_agg, 'LLC misses / cycle', 'misses per cycle', axes[3], color_map)
+    plot_violin_rate(rate_agg, 'LLC misses / cycle', 'misses per cycle', axes[4], color_map)
 
     fig.tight_layout()
     return fig
@@ -375,7 +384,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('csv_files', nargs='+',
                          help='One or more benchmark CSV files (columns: '
-                              'k,function,time,...,cache,branch). Pass 2+ to compare '
+                              'k,function,time,...,cache,branch,alloc). Pass 2+ to compare '
                               '(or, in violin mode, to pool as repeated samples of the '
                               'same dataset).')
     parser.add_argument('--labels', nargs='+', default=None,
