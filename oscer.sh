@@ -19,7 +19,18 @@ git push
 
 ssh -O check oscer 2>/dev/null || ssh -fN oscer
 
-JOBID=$(ssh oscer "cd $REMOTE_DIR && git pull -q && make clean >&2 && make taco_bullshit >&2 && sbatch --parsable taco_bench.sbatch")
+JOBID=$(ssh oscer "bash -l -s" <<EOF
+set -euo pipefail
+module load $MODULES >&2
+cd $REMOTE_DIR
+git lfs install --local >&2
+git pull -q
+git lfs pull >&2
+make clean >&2
+make taco_bullshit >&2
+sbatch --parsable taco_bench.sbatch
+EOF
+)
 JOBID=${JOBID%%;*}
 echo "Submitted job $JOBID"
 
