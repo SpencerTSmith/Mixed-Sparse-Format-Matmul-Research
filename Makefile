@@ -33,4 +33,4 @@ taco_bullshit_run: taco_bullshit
 	./taco_bench.x
 
 clean:
-	rm -rf *.x
+	rm -f *.x
