@@ -75,12 +75,6 @@ int main(int argc, char **argv)
 
   Repetition_Series *series = repetition_series_make(60 * STATIC_COUNT(entries), ((const char *[]){"buffer_size", "function"}));
 
-  // NOTE: The repetition series API assumes you iterate colum by column, that is,
-  // it assumes you test all functions at a given size/input/etc before moving on to the
-  // next size/input/etc. I've found this is usually what I want to do anyways,
-  // if I'm loading a big matrix from disk. In that case I also usually prefault
-  // (OS_ALLOCATION_PREFAULT flag passed to os_allocate, if using my COMMON lib)
-  // any memory needed by the input so that it's fair.
   for (usize buffer_size = MB(1); buffer_size <= MB(4); buffer_size *= 4)
   {
     for (usize test_func_idx = 0; test_func_idx < STATIC_COUNT(entries); test_func_idx++)
@@ -96,7 +90,6 @@ int main(int argc, char **argv)
                                                               "--- %s @ %lu MB ---", entry->name,
                                                               buffer_size / MB(1));
 
-      // Possible api:
       repetition_series_set_field(series, "buffer_size", "%lu", buffer_size);
       repetition_series_set_field(series, "function", entry->name);
 
