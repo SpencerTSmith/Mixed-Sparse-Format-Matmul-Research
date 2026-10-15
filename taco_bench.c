@@ -262,6 +262,8 @@ String chop_function_prefix(String function_name, String chop_suffix)
 // Could hash if the list of combos gets too long. Don't expect thats necessary.
 void log_taco_memory_usage(const char *function_name, size_t line, size_t memory_request, void *returned_pointer, void *previous_pointer)
 {
+  LOG_INFO("Alloc in %s:%lu (%lu)", function_name, line, memory_request);
+
   String function_string = string_from_c_string((char *)function_name);
 
   TACO_Memory_Log *log = 0;
@@ -434,14 +436,17 @@ void free_taco_tensor(taco_tensor_t *tensor)
 
 int main(int argc, char **argv)
 {
-  // HACK: For debugging purposes.
-  // setvbuf(stdout, NULL, _IONBF, 0);
-
   Arena arena = arena_make(.reserve_size = GB(64));
 
   Args args = parse_args(&arena, argc, argv);
 
   u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 1);
+
+  if (args_has_flag(&args, STR("oscer")))
+  {
+    // HACK: For debugging purposes.
+    setvbuf(stdout, NULL, _IONBF, 0);
+  }
 
   String output_formats = args_get_string_value(&args, STR("output_format"), STR("coo,csr"));
   b32 use_csr_output = string_find_substring(output_formats, 0, STR("csr")) != output_formats.count;
