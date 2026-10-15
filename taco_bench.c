@@ -262,7 +262,9 @@ String chop_function_prefix(String function_name, String chop_suffix)
 // Could hash if the list of combos gets too long. Don't expect thats necessary.
 void log_taco_memory_usage(const char *function_name, size_t line, size_t memory_request, void *returned_pointer, void *previous_pointer)
 {
-  LOG_INFO("Alloc in %s:%lu (%lu)", function_name, line, memory_request);
+  const char *alloc_type = memory_request == 0 ? "Free" :
+                           previous_pointer    ? "Realloc" : "Malloc";
+  LOG_INFO("%s in %s:%lu (%lu)", alloc_type, function_name, line, memory_request);
 
   String function_string = string_from_c_string((char *)function_name);
 
