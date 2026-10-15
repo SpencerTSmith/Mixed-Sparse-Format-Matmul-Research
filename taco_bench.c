@@ -210,19 +210,29 @@ struct Operation_Entry
   const char    *name;
   Matrix_Format a_format;
   Matrix_Format b_format;
+  Matrix_Format c_format;
   Operation_Function *function;
 };
 
+#define COMBOS(X)  \
+  X(CSR, CSR, COO) \
+  X(CSR, CSC, COO) \
+  X(CSR, COO, COO) \
+  X(CSC, CSR, COO) \
+  X(CSC, COO, COO) \
+  X(COO, CSR, COO) \
+  X(COO, CSC, COO) \
+  X(COO, COO, COO) \
+  X(CSR, CSR, CSR) \
+  X(CSR, COO, CSR) \
+  X(COO, COO, CSR)
+
+#define TEST_ENTRY(A, B, C) \
+ {#A "x" #B "_" #C, MAT_##A, MAT_##B, MAT_##C, A##_x_##B##_##C##_compute},
+
 Operation_Entry test_entries[] =
 {
-  {"CSR_x_CSR", MAT_CSR, MAT_CSR, CSR_x_CSR_compute},
-  {"CSR_x_CSC", MAT_CSR, MAT_CSC, CSR_x_CSC_compute},
-  {"CSR_x_COO", MAT_CSR, MAT_COO, CSR_x_COO_compute},
-  {"CSC_x_CSR", MAT_CSC, MAT_CSR, CSC_x_CSR_compute},
-  {"CSC_x_COO", MAT_CSC, MAT_COO, CSC_x_COO_compute},
-  {"COO_x_CSR", MAT_COO, MAT_CSR, COO_x_CSR_compute},
-  {"COO_x_CSC", MAT_COO, MAT_CSC, COO_x_CSC_compute},
-  {"COO_x_COO", MAT_COO, MAT_COO, COO_x_COO_compute},
+  COMBOS(TEST_ENTRY)
 };
 
 typedef struct Taco_Mode_Info Taco_Mode_Info;
@@ -297,13 +307,17 @@ void free_taco_tensor(taco_tensor_t *tensor)
 int main(int argc, char **argv)
 {
   // HACK: For debugging purposes.
-  setvbuf(stdout, NULL, _IONBF, 0);
+  // setvbuf(stdout, NULL, _IONBF, 0);
 
   Arena arena = arena_make(.reserve_size = GB(64));
 
   Args args = parse_args(&arena, argc, argv);
 
   u32 seconds_to_try_for_min = args_get_integer_value(&args, STR("seconds_to_try_for_min"), 1);
+
+  String output_formats = args_get_string_value(&args, STR("output_format"), STR("coo,csr"));
+  b32 use_csr_output = string_find_substring(output_formats, 0, STR("csr")) != output_formats.count;
+  b32 use_coo_output = string_find_substring(output_formats, 0, STR("coo")) != output_formats.count;
 
   String out_dir = args_get_string_value(&args, STR("out_dir"), STR("taco_kron_results"));
   String kron_dir = args_get_string_value(&args, STR("kron_dir"), STR("krons/AS-Newman"));
@@ -346,16 +360,10 @@ int main(int argc, char **argv)
     {
       Operation_Entry *entry = test_entries + func_idx;
 
-      // Simply too large for the assembling step as done by taco for these functions.
-      if (k > 15)
+      if ((entry->c_format == MAT_COO && !use_coo_output)
+        || entry->c_format == MAT_CSR && !use_csr_output)
       {
-        if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC ||
-            entry->a_format == MAT_CSR && entry->b_format == MAT_COO ||
-            entry->a_format == MAT_COO && entry->b_format == MAT_CSC ||
-            entry->a_format == MAT_COO && entry->b_format == MAT_COO)
-        {
-          continue;
-        }
+        continue;
       }
 
       Taco_Mode_Info a_info = taco_mode_info_from_format(entry->a_format);
@@ -366,59 +374,127 @@ int main(int argc, char **argv)
       taco_tensor_t *B = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, b_info.ordering,
                                             b_info.types);
 
-      // Always COO for C.
-      Taco_Mode_Info c_info = taco_mode_info_from_format(MAT_COO);
+      Taco_Mode_Info c_info = taco_mode_info_from_format(entry->c_format);
       taco_tensor_t *C = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, c_info.ordering,
                                             c_info.types);
 
-      if (0) {}
-      else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSR)
+      // TODO: This dispatch is ugly.
+      if (entry->c_format == MAT_COO)
       {
-        CSR_x_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSR_x_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSR_x_CSR_assemble(C, A, B);
+        printf("HERE!");
+        // Simply too large for these combos
+        if (k > 15)
+        {
+          if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC ||
+              entry->a_format == MAT_CSR && entry->b_format == MAT_COO ||
+              entry->a_format == MAT_COO && entry->b_format == MAT_CSC ||
+              entry->a_format == MAT_COO && entry->b_format == MAT_COO)
+          {
+            continue;
+          }
+        }
+
+        if (0) {}
+        else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSR)
+        {
+          CSR_x_CSR_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_CSR_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_CSR_COO_assemble(C, A, B);
+        }
+        else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC)
+        {
+          CSR_x_CSC_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_CSC_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_CSC_COO_assemble(C, A, B);
+        }
+        else if (entry->a_format == MAT_CSR && entry->b_format == MAT_COO)
+        {
+          CSR_x_COO_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_COO_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_COO_COO_assemble(C, A, B);
+        }
+        else if (entry->a_format == MAT_CSC && entry->b_format == MAT_CSR)
+        {
+          CSC_x_CSR_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSC_x_CSR_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSC_x_CSR_COO_assemble(C, A, B);
+        }
+        else if (entry->a_format == MAT_CSC && entry->b_format == MAT_COO)
+        {
+          CSC_x_COO_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSC_x_COO_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSC_x_COO_COO_assemble(C, A, B);
+        }
+        else if (entry->a_format == MAT_COO && entry->b_format == MAT_CSR)
+        {
+          COO_x_CSR_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_CSR_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_CSR_COO_assemble(C, A, B);
+        }
+        else if (entry->a_format == MAT_COO && entry->b_format == MAT_CSC)
+        {
+          COO_x_CSC_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_CSC_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_CSC_COO_assemble(C, A, B);
+        }
+        else if (entry->a_format == MAT_COO && entry->b_format == MAT_COO)
+        {
+          COO_x_COO_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_COO_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_COO_COO_assemble(C, A, B);
+        }
       }
-      else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC)
+      else if (entry->c_format == MAT_CSR && use_csr_output)
       {
-        CSR_x_CSC_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSR_x_CSC_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSR_x_CSC_assemble(C, A, B);
-      }
-      else if (entry->a_format == MAT_CSR && entry->b_format == MAT_COO)
-      {
-        CSR_x_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSR_x_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSR_x_COO_assemble(C, A, B);
-      }
-      else if (entry->a_format == MAT_CSC && entry->b_format == MAT_CSR)
-      {
-        CSC_x_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSC_x_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSC_x_CSR_assemble(C, A, B);
-      }
-      else if (entry->a_format == MAT_CSC && entry->b_format == MAT_COO)
-      {
-        CSC_x_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSC_x_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        CSC_x_COO_assemble(C, A, B);
-      }
-      else if (entry->a_format == MAT_COO && entry->b_format == MAT_CSR)
-      {
-        COO_x_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        COO_x_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        COO_x_CSR_assemble(C, A, B);
-      }
-      else if (entry->a_format == MAT_COO && entry->b_format == MAT_CSC)
-      {
-        COO_x_CSC_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        COO_x_CSC_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        COO_x_CSC_assemble(C, A, B);
-      }
-      else if (entry->a_format == MAT_COO && entry->b_format == MAT_COO)
-      {
-        COO_x_COO_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        COO_x_COO_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-        COO_x_COO_assemble(C, A, B);
+        if (0) {}
+        else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSR)
+        {
+          CSR_x_CSR_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_CSR_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_CSR_CSR_assemble(C, A, B);
+        }
+        // else if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC)
+        // {
+        //   CSR_x_CSC_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        //   CSR_x_CSC_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        //   CSR_x_CSC_CSR_assemble(C, A, B);
+        // }
+        else if (entry->a_format == MAT_CSR && entry->b_format == MAT_COO)
+        {
+          CSR_x_COO_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_COO_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          CSR_x_COO_CSR_assemble(C, A, B);
+        }
+        // else if (entry->a_format == MAT_CSC && entry->b_format == MAT_CSR)
+        // {
+        //   CSC_x_CSR_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        //   CSC_x_CSR_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        //   CSC_x_CSR_CSR_assemble(C, A, B);
+        // }
+        // else if (entry->a_format == MAT_CSC && entry->b_format == MAT_COO)
+        // {
+        //   CSC_x_COO_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        //   CSC_x_COO_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        //   CSC_x_COO_CSR_assemble(C, A, B);
+        // }
+        else if (entry->a_format == MAT_COO && entry->b_format == MAT_CSR)
+        {
+          COO_x_CSR_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_CSR_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_CSR_CSR_assemble(C, A, B);
+        }
+        // else if (entry->a_format == MAT_COO && entry->b_format == MAT_CSC)
+        // {
+        //   COO_x_CSC_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        //   COO_x_CSC_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        //   COO_x_CSC_CSR_assemble(C, A, B);
+        // }
+        else if (entry->a_format == MAT_COO && entry->b_format == MAT_COO)
+        {
+          COO_x_COO_CSR_pack_A(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_COO_CSR_pack_B(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+          COO_x_COO_CSR_assemble(C, A, B);
+        }
       }
 
       Repetition_Tester tester =
@@ -439,11 +515,8 @@ int main(int argc, char **argv)
       }
 
       free_taco_tensor(C);
-      LOG_INFO("Freed C.");
       free_taco_tensor(A);
-      LOG_INFO("Freed A.");
       free_taco_tensor(B);
-      LOG_INFO("Freed B.");
     }
 
     actual_kron_count += 1;

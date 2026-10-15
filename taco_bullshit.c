@@ -154,7 +154,7 @@ void deinit_taco_tensor_t(taco_tensor_t* t) {
 }
 #endif
 
-int CSR_x_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSR_x_CSR_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   double* restrict C_vals = (double*)(C->vals);
   int A1_dimension = (int)(A->dimensions[0]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
@@ -180,7 +180,7 @@ int CSR_x_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSR_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSR_x_CSR_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   int* restrict C1_pos = (int*)(C->indices[0][0]);
   int* restrict C1_crd = (int*)(C->indices[0][1]);
   int* restrict C2_crd = (int*)(C->indices[1][1]);
@@ -233,7 +233,7 @@ int CSR_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSR_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+int CSR_x_CSR_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
   int A1_dimension = (int)(A->dimensions[0]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
   int* restrict A2_crd = (int*)(A->indices[1][1]);
@@ -300,7 +300,7 @@ int CSR_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
   return 0;
 }
 
-int CSR_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+int CSR_x_CSR_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
   int B1_dimension = (int)(B->dimensions[0]);
   int* restrict B2_pos = (int*)(B->indices[1][0]);
   int* restrict B2_crd = (int*)(B->indices[1][1]);
@@ -367,7 +367,7 @@ int CSR_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
   return 0;
 }
 
-int CSR_x_CSC_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSR_x_CSC_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   double* restrict C_vals = (double*)(C->vals);
   int A1_dimension = (int)(A->dimensions[0]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
@@ -405,7 +405,7 @@ int CSR_x_CSC_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSR_x_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSR_x_CSC_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   int* restrict C1_pos = (int*)(C->indices[0][0]);
   int* restrict C1_crd = (int*)(C->indices[0][1]);
   int* restrict C2_crd = (int*)(C->indices[1][1]);
@@ -450,7 +450,7 @@ int CSR_x_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSR_x_CSC_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+int CSR_x_CSC_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
   int A1_dimension = (int)(A->dimensions[0]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
   int* restrict A2_crd = (int*)(A->indices[1][1]);
@@ -517,7 +517,7 @@ int CSR_x_CSC_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
   return 0;
 }
 
-int CSR_x_CSC_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+int CSR_x_CSC_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
   int B2_dimension = (int)(B->dimensions[1]);
   int* restrict B2_pos = (int*)(B->indices[1][0]);
   int* restrict B2_crd = (int*)(B->indices[1][1]);
@@ -584,7 +584,7 @@ int CSR_x_CSC_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
   return 0;
 }
 
-int CSR_x_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSR_x_COO_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   double* restrict C_vals = (double*)(C->vals);
   int A1_dimension = (int)(A->dimensions[0]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
@@ -625,7 +625,7 @@ int CSR_x_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSR_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSR_x_COO_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   int* restrict C1_pos = (int*)(C->indices[0][0]);
   int* restrict C1_crd = (int*)(C->indices[0][1]);
   int* restrict C2_crd = (int*)(C->indices[1][1]);
@@ -693,7 +693,7 @@ int CSR_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSR_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+int CSR_x_COO_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
   int A1_dimension = (int)(A->dimensions[0]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
   int* restrict A2_crd = (int*)(A->indices[1][1]);
@@ -760,7 +760,7 @@ int CSR_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
   return 0;
 }
 
-int CSR_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+int CSR_x_COO_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
   int* restrict B1_pos = (int*)(B->indices[0][0]);
   int* restrict B1_crd = (int*)(B->indices[0][1]);
   int* restrict B2_crd = (int*)(B->indices[1][1]);
@@ -826,7 +826,7 @@ int CSR_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
   return 0;
 }
 
-int CSC_x_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSC_x_CSR_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   double* restrict C_vals = (double*)(C->vals);
   int A2_dimension = (int)(A->dimensions[1]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
@@ -851,7 +851,7 @@ int CSC_x_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSC_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSC_x_CSR_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   int* restrict C1_pos = (int*)(C->indices[0][0]);
   int* restrict C1_crd = (int*)(C->indices[0][1]);
   int* restrict C2_crd = (int*)(C->indices[1][1]);
@@ -904,7 +904,7 @@ int CSC_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSC_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+int CSC_x_CSR_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
   int A2_dimension = (int)(A->dimensions[1]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
   int* restrict A2_crd = (int*)(A->indices[1][1]);
@@ -971,7 +971,7 @@ int CSC_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
   return 0;
 }
 
-int CSC_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+int CSC_x_CSR_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
   int B1_dimension = (int)(B->dimensions[0]);
   int* restrict B2_pos = (int*)(B->indices[1][0]);
   int* restrict B2_crd = (int*)(B->indices[1][1]);
@@ -1038,7 +1038,7 @@ int CSC_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
   return 0;
 }
 
-int CSC_x_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSC_x_COO_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   double* restrict C_vals = (double*)(C->vals);
   int A2_dimension = (int)(A->dimensions[1]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
@@ -1072,7 +1072,7 @@ int CSC_x_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSC_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int CSC_x_COO_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   int* restrict C1_pos = (int*)(C->indices[0][0]);
   int* restrict C1_crd = (int*)(C->indices[0][1]);
   int* restrict C2_crd = (int*)(C->indices[1][1]);
@@ -1134,7 +1134,7 @@ int CSC_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int CSC_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+int CSC_x_COO_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
   int A2_dimension = (int)(A->dimensions[1]);
   int* restrict A2_pos = (int*)(A->indices[1][0]);
   int* restrict A2_crd = (int*)(A->indices[1][1]);
@@ -1201,7 +1201,7 @@ int CSC_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
   return 0;
 }
 
-int CSC_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+int CSC_x_COO_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
   int* restrict B1_pos = (int*)(B->indices[0][0]);
   int* restrict B1_crd = (int*)(B->indices[0][1]);
   int* restrict B2_crd = (int*)(B->indices[1][1]);
@@ -1267,7 +1267,7 @@ int CSC_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
   return 0;
 }
 
-int COO_x_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int COO_x_CSR_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   double* restrict C_vals = (double*)(C->vals);
   int* restrict A1_pos = (int*)(A->indices[0][0]);
   int* restrict A1_crd = (int*)(A->indices[0][1]);
@@ -1302,7 +1302,7 @@ int COO_x_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int COO_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int COO_x_CSR_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   int* restrict C1_pos = (int*)(C->indices[0][0]);
   int* restrict C1_crd = (int*)(C->indices[0][1]);
   int* restrict C2_crd = (int*)(C->indices[1][1]);
@@ -1364,7 +1364,7 @@ int COO_x_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int COO_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+int COO_x_CSR_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
   int* restrict A1_pos = (int*)(A->indices[0][0]);
   int* restrict A1_crd = (int*)(A->indices[0][1]);
   int* restrict A2_crd = (int*)(A->indices[1][1]);
@@ -1430,7 +1430,7 @@ int COO_x_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
   return 0;
 }
 
-int COO_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+int COO_x_CSR_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
   int B1_dimension = (int)(B->dimensions[0]);
   int* restrict B2_pos = (int*)(B->indices[1][0]);
   int* restrict B2_crd = (int*)(B->indices[1][1]);
@@ -1497,7 +1497,7 @@ int COO_x_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
   return 0;
 }
 
-int COO_x_CSC_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int COO_x_CSC_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   double* restrict C_vals = (double*)(C->vals);
   int* restrict A1_pos = (int*)(A->indices[0][0]);
   int* restrict A1_crd = (int*)(A->indices[0][1]);
@@ -1543,7 +1543,7 @@ int COO_x_CSC_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int COO_x_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int COO_x_CSC_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   int* restrict C1_pos = (int*)(C->indices[0][0]);
   int* restrict C1_crd = (int*)(C->indices[0][1]);
   int* restrict C2_crd = (int*)(C->indices[1][1]);
@@ -1598,7 +1598,7 @@ int COO_x_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int COO_x_CSC_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+int COO_x_CSC_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
   int* restrict A1_pos = (int*)(A->indices[0][0]);
   int* restrict A1_crd = (int*)(A->indices[0][1]);
   int* restrict A2_crd = (int*)(A->indices[1][1]);
@@ -1664,7 +1664,7 @@ int COO_x_CSC_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
   return 0;
 }
 
-int COO_x_CSC_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+int COO_x_CSC_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
   int B2_dimension = (int)(B->dimensions[1]);
   int* restrict B2_pos = (int*)(B->indices[1][0]);
   int* restrict B2_crd = (int*)(B->indices[1][1]);
@@ -1731,7 +1731,7 @@ int COO_x_CSC_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
   return 0;
 }
 
-int COO_x_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int COO_x_COO_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   double* restrict C_vals = (double*)(C->vals);
   int* restrict A1_pos = (int*)(A->indices[0][0]);
   int* restrict A1_crd = (int*)(A->indices[0][1]);
@@ -1780,7 +1780,7 @@ int COO_x_COO_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int COO_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+int COO_x_COO_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   int* restrict C1_pos = (int*)(C->indices[0][0]);
   int* restrict C1_crd = (int*)(C->indices[0][1]);
   int* restrict C2_crd = (int*)(C->indices[1][1]);
@@ -1856,7 +1856,7 @@ int COO_x_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
   return 0;
 }
 
-int COO_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+int COO_x_COO_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
   int* restrict A1_pos = (int*)(A->indices[0][0]);
   int* restrict A1_crd = (int*)(A->indices[0][1]);
   int* restrict A2_crd = (int*)(A->indices[1][1]);
@@ -1922,7 +1922,7 @@ int COO_x_COO_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_
   return 0;
 }
 
-int COO_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+int COO_x_COO_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
   int* restrict B1_pos = (int*)(B->indices[0][0]);
   int* restrict B1_crd = (int*)(B->indices[0][1]);
   int* restrict B2_crd = (int*)(B->indices[1][1]);
@@ -1983,6 +1983,1142 @@ int COO_x_COO_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_
 
   B->indices[0][0] = (uint8_t*)(B1_pos);
   B->indices[0][1] = (uint8_t*)(B1_crd);
+  B->indices[1][1] = (uint8_t*)(B2_crd);
+  B->vals = (uint8_t*)B_vals;
+  return 0;
+}
+
+int CSR_x_CSR_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C1_dimension = (int)(C->dimensions[0]);
+  double* restrict C_vals = (double*)(C->vals);
+  int A1_dimension = (int)(A->dimensions[0]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+  int B1_dimension = (int)(B->dimensions[0]);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  int32_t jC = 0;
+
+  double* restrict w = 0;
+  int32_t* restrict w_index_list = 0;
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+  w = (double*)malloc(sizeof(double) * B2_dimension);
+
+  for (int32_t i = 0; i < A1_dimension; i++) {
+    int32_t w_index_list_size = 0;
+    for (int32_t kA = A2_pos[i]; kA < A2_pos[(i + 1)]; kA++) {
+      int32_t k = A2_crd[kA];
+      for (int32_t jB = B2_pos[k]; jB < B2_pos[(k + 1)]; jB++) {
+        int32_t j = B2_crd[jB];
+        if (!w_already_set[j]) {
+          w[j] = A_vals[kA] * B_vals[jB];
+          w_index_list[w_index_list_size] = j;
+          w_already_set[j] = 1;
+          w_index_list_size++;
+        }
+        else {
+          w[j] = w[j] + A_vals[kA] * B_vals[jB];
+        }
+      }
+    }
+    qsort(w_index_list, w_index_list_size, sizeof(int32_t), cmp);
+    for (int32_t w_index_locator = 0; w_index_locator < w_index_list_size; w_index_locator++) {
+      int32_t j = w_index_list[w_index_locator];
+      C_vals[jC] = w[j];
+      jC++;
+      w_already_set[j] = 0;
+    }
+  }
+
+  free(w_index_list);
+  free(w_already_set);
+  free(w);
+
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+
+int CSR_x_CSR_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C1_dimension = (int)(C->dimensions[0]);
+  int* restrict C2_pos = (int*)(C->indices[1][0]);
+  int* restrict C2_crd = (int*)(C->indices[1][1]);
+  double* restrict C_vals = (double*)(C->vals);
+  int A1_dimension = (int)(A->dimensions[0]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  int B1_dimension = (int)(B->dimensions[0]);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+
+  C2_pos = (int32_t*)malloc(sizeof(int32_t) * (C1_dimension + 1));
+  C2_pos[0] = 0;
+  for (int32_t pC2 = 1; pC2 < (C1_dimension + 1); pC2++) {
+    C2_pos[pC2] = 0;
+  }
+  int64_t C2_crd_size = 1048576;
+  C2_crd = (int32_t*)malloc(sizeof(int32_t) * C2_crd_size);
+  int32_t jC = 0;
+
+  int32_t* restrict w_index_list = 0;
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+
+  for (int32_t i = 0; i < A1_dimension; i++) {
+    int32_t w_index_list_size = 0;
+    for (int32_t kA = A2_pos[i]; kA < A2_pos[(i + 1)]; kA++) {
+      int32_t k = A2_crd[kA];
+      for (int32_t jB = B2_pos[k]; jB < B2_pos[(k + 1)]; jB++) {
+        int32_t j = B2_crd[jB];
+        if (!w_already_set[j]) {
+          w_index_list[w_index_list_size] = j;
+          w_already_set[j] = 1;
+          w_index_list_size++;
+        }
+      }
+    }
+    qsort(w_index_list, w_index_list_size, sizeof(int32_t), cmp);
+    int32_t pC2_begin = jC;
+
+    for (int32_t w_index_locator = 0; w_index_locator < w_index_list_size; w_index_locator++) {
+      int32_t j = w_index_list[w_index_locator];
+      if (C2_crd_size <= jC) {
+        C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * (C2_crd_size * 2));
+        C2_crd_size *= 2;
+      }
+      C2_crd[jC] = j;
+      jC++;
+      w_already_set[j] = 0;
+    }
+
+    C2_pos[i + 1] = jC - pC2_begin;
+  }
+
+  free(w_index_list);
+  free(w_already_set);
+
+  int32_t csC2 = 0;
+  for (int32_t pC20 = 1; pC20 < (C1_dimension + 1); pC20++) {
+    csC2 += C2_pos[pC20];
+    C2_pos[pC20] = csC2;
+  }
+
+  C_vals = (double*)malloc(sizeof(double) * jC);
+
+  C->indices[1][0] = (uint8_t*)(C2_pos);
+  C->indices[1][1] = (uint8_t*)(C2_crd);
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+
+int CSR_x_CSR_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+  int A1_dimension = (int)(A->dimensions[0]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+
+  A2_pos = (int32_t*)malloc(sizeof(int32_t) * (A1_dimension + 1));
+  A2_pos[0] = 0;
+  for (int32_t pA2 = 1; pA2 < (A1_dimension + 1); pA2++) {
+    A2_pos[pA2] = 0;
+  }
+  int64_t A2_crd_size = 1048576;
+  A2_crd = (int32_t*)malloc(sizeof(int32_t) * A2_crd_size);
+  int32_t kA = 0;
+  int64_t A_capacity = 1048576;
+  A_vals = (double*)malloc(sizeof(double) * A_capacity);
+
+  int32_t iA_COO = A_COO1_pos[0];
+  int32_t pA_COO1_end = A_COO1_pos[1];
+
+  while (iA_COO < pA_COO1_end) {
+    int32_t i = A_COO1_crd[iA_COO];
+    int32_t A_COO1_segend = iA_COO + 1;
+    while (A_COO1_segend < pA_COO1_end && A_COO1_crd[A_COO1_segend] == i) {
+      A_COO1_segend++;
+    }
+    int32_t pA2_begin = kA;
+
+    int32_t kA_COO = iA_COO;
+
+    while (kA_COO < A_COO1_segend) {
+      int32_t k = A_COO2_crd[kA_COO];
+      double A_COO_val = A_COO_vals[kA_COO];
+      kA_COO++;
+      while (kA_COO < A_COO1_segend && A_COO2_crd[kA_COO] == k) {
+        A_COO_val += A_COO_vals[kA_COO];
+        kA_COO++;
+      }
+      if (A_capacity <= kA) {
+        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_capacity *= 2;
+      }
+      A_vals[kA] = A_COO_val;
+      if (A2_crd_size <= kA) {
+        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
+        A2_crd_size *= 2;
+      }
+      A2_crd[kA] = k;
+      kA++;
+    }
+
+    A2_pos[i + 1] = kA - pA2_begin;
+    iA_COO = A_COO1_segend;
+  }
+
+  int32_t csA2 = 0;
+  for (int32_t pA20 = 1; pA20 < (A1_dimension + 1); pA20++) {
+    csA2 += A2_pos[pA20];
+    A2_pos[pA20] = csA2;
+  }
+
+  A->indices[1][0] = (uint8_t*)(A2_pos);
+  A->indices[1][1] = (uint8_t*)(A2_crd);
+  A->vals = (uint8_t*)A_vals;
+  return 0;
+}
+
+int CSR_x_CSR_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+  int B1_dimension = (int)(B->dimensions[0]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  B2_pos = (int32_t*)malloc(sizeof(int32_t) * (B1_dimension + 1));
+  B2_pos[0] = 0;
+  for (int32_t pB2 = 1; pB2 < (B1_dimension + 1); pB2++) {
+    B2_pos[pB2] = 0;
+  }
+  int64_t B2_crd_size = 1048576;
+  B2_crd = (int32_t*)malloc(sizeof(int32_t) * B2_crd_size);
+  int32_t jB = 0;
+  int64_t B_capacity = 1048576;
+  B_vals = (double*)malloc(sizeof(double) * B_capacity);
+
+  int32_t kB_COO = B_COO1_pos[0];
+  int32_t pB_COO1_end = B_COO1_pos[1];
+
+  while (kB_COO < pB_COO1_end) {
+    int32_t k = B_COO1_crd[kB_COO];
+    int32_t B_COO1_segend = kB_COO + 1;
+    while (B_COO1_segend < pB_COO1_end && B_COO1_crd[B_COO1_segend] == k) {
+      B_COO1_segend++;
+    }
+    int32_t pB2_begin = jB;
+
+    int32_t jB_COO = kB_COO;
+
+    while (jB_COO < B_COO1_segend) {
+      int32_t j = B_COO2_crd[jB_COO];
+      double B_COO_val = B_COO_vals[jB_COO];
+      jB_COO++;
+      while (jB_COO < B_COO1_segend && B_COO2_crd[jB_COO] == j) {
+        B_COO_val += B_COO_vals[jB_COO];
+        jB_COO++;
+      }
+      if (B_capacity <= jB) {
+        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_capacity *= 2;
+      }
+      B_vals[jB] = B_COO_val;
+      if (B2_crd_size <= jB) {
+        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
+        B2_crd_size *= 2;
+      }
+      B2_crd[jB] = j;
+      jB++;
+    }
+
+    B2_pos[k + 1] = jB - pB2_begin;
+    kB_COO = B_COO1_segend;
+  }
+
+  int32_t csB2 = 0;
+  for (int32_t pB20 = 1; pB20 < (B1_dimension + 1); pB20++) {
+    csB2 += B2_pos[pB20];
+    B2_pos[pB20] = csB2;
+  }
+
+  B->indices[1][0] = (uint8_t*)(B2_pos);
+  B->indices[1][1] = (uint8_t*)(B2_crd);
+  B->vals = (uint8_t*)B_vals;
+  return 0;
+}
+
+int CSR_x_COO_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C1_dimension = (int)(C->dimensions[0]);
+  double* restrict C_vals = (double*)(C->vals);
+  int A1_dimension = (int)(A->dimensions[0]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B1_pos = (int*)(B->indices[0][0]);
+  int* restrict B1_crd = (int*)(B->indices[0][1]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  int32_t jC = 0;
+
+  double* restrict w = 0;
+  int32_t* restrict w_index_list = 0;
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+  w = (double*)malloc(sizeof(double) * B2_dimension);
+
+  for (int32_t i = 0; i < A1_dimension; i++) {
+    int32_t w_index_list_size = 0;
+    int32_t kA = A2_pos[i];
+    int32_t pA2_end = A2_pos[(i + 1)];
+    int32_t kB = B1_pos[0];
+    int32_t pB1_end = B1_pos[1];
+
+    while (kA < pA2_end && kB < pB1_end) {
+      int32_t kA0 = A2_crd[kA];
+      int32_t kB0 = B1_crd[kB];
+      int32_t k = TACO_MIN(kA0,kB0);
+      int32_t B1_segend = kB;
+      while (B1_segend < pB1_end && B1_crd[B1_segend] == k) {
+        B1_segend++;
+      }
+      if (kA0 == k && kB0 == k) {
+        for (int32_t jB = kB; jB < B1_segend; jB++) {
+          int32_t j = B2_crd[jB];
+          if (!w_already_set[j]) {
+            w[j] = A_vals[kA] * B_vals[jB];
+            w_index_list[w_index_list_size] = j;
+            w_already_set[j] = 1;
+            w_index_list_size++;
+          }
+          else {
+            w[j] = w[j] + A_vals[kA] * B_vals[jB];
+          }
+        }
+      }
+      kA += (int32_t)(kA0 == k);
+      kB = B1_segend;
+    }
+    qsort(w_index_list, w_index_list_size, sizeof(int32_t), cmp);
+    for (int32_t w_index_locator = 0; w_index_locator < w_index_list_size; w_index_locator++) {
+      int32_t j = w_index_list[w_index_locator];
+      C_vals[jC] = w[j];
+      jC++;
+      w_already_set[j] = 0;
+    }
+  }
+
+  free(w_index_list);
+  free(w_already_set);
+  free(w);
+
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+
+int CSR_x_COO_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C1_dimension = (int)(C->dimensions[0]);
+  int* restrict C2_pos = (int*)(C->indices[1][0]);
+  int* restrict C2_crd = (int*)(C->indices[1][1]);
+  double* restrict C_vals = (double*)(C->vals);
+  int A1_dimension = (int)(A->dimensions[0]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B1_pos = (int*)(B->indices[0][0]);
+  int* restrict B1_crd = (int*)(B->indices[0][1]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+
+  C2_pos = (int32_t*)malloc(sizeof(int32_t) * (C1_dimension + 1));
+  C2_pos[0] = 0;
+  for (int32_t pC2 = 1; pC2 < (C1_dimension + 1); pC2++) {
+    C2_pos[pC2] = 0;
+  }
+  int64_t C2_crd_size = 1048576;
+  C2_crd = (int32_t*)malloc(sizeof(int32_t) * C2_crd_size);
+  int64_t jC = 0;
+
+  int32_t* restrict w_index_list = 0;
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+
+  for (int32_t i = 0; i < A1_dimension; i++) {
+    int32_t w_index_list_size = 0;
+    int32_t kA = A2_pos[i];
+    int32_t pA2_end = A2_pos[(i + 1)];
+    int32_t kB = B1_pos[0];
+    int32_t pB1_end = B1_pos[1];
+
+    while (kA < pA2_end && kB < pB1_end) {
+      int32_t kA0 = A2_crd[kA];
+      int32_t kB0 = B1_crd[kB];
+      int32_t k = TACO_MIN(kA0,kB0);
+      int32_t B1_segend = kB;
+      while (B1_segend < pB1_end && B1_crd[B1_segend] == k) {
+        B1_segend++;
+      }
+      if (kA0 == k && kB0 == k) {
+        for (int32_t jB = kB; jB < B1_segend; jB++) {
+          int32_t j = B2_crd[jB];
+          if (!w_already_set[j]) {
+            w_index_list[w_index_list_size] = j;
+            w_already_set[j] = 1;
+            w_index_list_size++;
+          }
+        }
+      }
+      kA += (int32_t)(kA0 == k);
+      kB = B1_segend;
+    }
+    qsort(w_index_list, w_index_list_size, sizeof(int32_t), cmp);
+    int32_t pC2_begin = jC;
+
+    for (int32_t w_index_locator = 0; w_index_locator < w_index_list_size; w_index_locator++) {
+      int32_t j = w_index_list[w_index_locator];
+      if (C2_crd_size <= jC) {
+        C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * (C2_crd_size * 2));
+        C2_crd_size *= 2;
+      }
+      C2_crd[jC] = j;
+      jC++;
+      w_already_set[j] = 0;
+    }
+
+    C2_pos[i + 1] = jC - pC2_begin;
+  }
+
+  free(w_index_list);
+  free(w_already_set);
+
+  int32_t csC2 = 0;
+  for (int32_t pC20 = 1; pC20 < (C1_dimension + 1); pC20++) {
+    csC2 += C2_pos[pC20];
+    C2_pos[pC20] = csC2;
+  }
+
+  C_vals = (double*)malloc(sizeof(double) * jC);
+
+  C->indices[1][0] = (uint8_t*)(C2_pos);
+  C->indices[1][1] = (uint8_t*)(C2_crd);
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+
+int CSR_x_COO_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+  int A1_dimension = (int)(A->dimensions[0]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+
+  A2_pos = (int32_t*)malloc(sizeof(int32_t) * (A1_dimension + 1));
+  A2_pos[0] = 0;
+  for (int32_t pA2 = 1; pA2 < (A1_dimension + 1); pA2++) {
+    A2_pos[pA2] = 0;
+  }
+  int64_t A2_crd_size = 1048576;
+  A2_crd = (int32_t*)malloc(sizeof(int32_t) * A2_crd_size);
+  int64_t kA = 0;
+  int64_t A_capacity = 1048576;
+  A_vals = (double*)malloc(sizeof(double) * A_capacity);
+
+  int32_t iA_COO = A_COO1_pos[0];
+  int32_t pA_COO1_end = A_COO1_pos[1];
+
+  while (iA_COO < pA_COO1_end) {
+    int32_t i = A_COO1_crd[iA_COO];
+    int32_t A_COO1_segend = iA_COO + 1;
+    while (A_COO1_segend < pA_COO1_end && A_COO1_crd[A_COO1_segend] == i) {
+      A_COO1_segend++;
+    }
+    int32_t pA2_begin = kA;
+
+    int32_t kA_COO = iA_COO;
+
+    while (kA_COO < A_COO1_segend) {
+      int32_t k = A_COO2_crd[kA_COO];
+      double A_COO_val = A_COO_vals[kA_COO];
+      kA_COO++;
+      while (kA_COO < A_COO1_segend && A_COO2_crd[kA_COO] == k) {
+        A_COO_val += A_COO_vals[kA_COO];
+        kA_COO++;
+      }
+      if (A_capacity <= kA) {
+        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_capacity *= 2;
+      }
+      A_vals[kA] = A_COO_val;
+      if (A2_crd_size <= kA) {
+        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
+        A2_crd_size *= 2;
+      }
+      A2_crd[kA] = k;
+      kA++;
+    }
+
+    A2_pos[i + 1] = kA - pA2_begin;
+    iA_COO = A_COO1_segend;
+  }
+
+  int32_t csA2 = 0;
+  for (int32_t pA20 = 1; pA20 < (A1_dimension + 1); pA20++) {
+    csA2 += A2_pos[pA20];
+    A2_pos[pA20] = csA2;
+  }
+
+  A->indices[1][0] = (uint8_t*)(A2_pos);
+  A->indices[1][1] = (uint8_t*)(A2_crd);
+  A->vals = (uint8_t*)A_vals;
+  return 0;
+}
+
+int CSR_x_COO_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+  int* restrict B1_pos = (int*)(B->indices[0][0]);
+  int* restrict B1_crd = (int*)(B->indices[0][1]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  B1_pos = (int32_t*)malloc(sizeof(int32_t) * 2);
+  B1_pos[0] = 0;
+  int64_t B1_crd_size = 1048576;
+  B1_crd = (int32_t*)malloc(sizeof(int32_t) * B1_crd_size);
+  int64_t B2_crd_size = 1048576;
+  B2_crd = (int32_t*)malloc(sizeof(int32_t) * B2_crd_size);
+  int32_t jB = 0;
+  int64_t B_capacity = 1048576;
+  B_vals = (double*)malloc(sizeof(double) * B_capacity);
+
+
+  int32_t kB_COO = B_COO1_pos[0];
+  int32_t pB_COO1_end = B_COO1_pos[1];
+
+  while (kB_COO < pB_COO1_end) {
+    int32_t k = B_COO1_crd[kB_COO];
+    int32_t B_COO1_segend = kB_COO + 1;
+    while (B_COO1_segend < pB_COO1_end && B_COO1_crd[B_COO1_segend] == k) {
+      B_COO1_segend++;
+    }
+    int32_t jB_COO = kB_COO;
+
+    while (jB_COO < B_COO1_segend) {
+      int32_t j = B_COO2_crd[jB_COO];
+      double B_COO_val = B_COO_vals[jB_COO];
+      jB_COO++;
+      while (jB_COO < B_COO1_segend && B_COO2_crd[jB_COO] == j) {
+        B_COO_val += B_COO_vals[jB_COO];
+        jB_COO++;
+      }
+      if (B_capacity <= jB) {
+        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_capacity *= 2;
+      }
+      B_vals[jB] = B_COO_val;
+      if (B2_crd_size <= jB) {
+        int32_t B2_crd_new_size = TACO_MAX(B2_crd_size * 2,(jB + 1));
+        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * B2_crd_new_size);
+        B2_crd_size = B2_crd_new_size;
+      }
+      B2_crd[jB] = j;
+      if (B1_crd_size <= jB) {
+        B1_crd = (int32_t*)realloc(B1_crd, sizeof(int32_t) * (B1_crd_size * 2));
+        B1_crd_size *= 2;
+      }
+      B1_crd[jB] = k;
+      jB++;
+    }
+    kB_COO = B_COO1_segend;
+  }
+
+  B1_pos[1] = jB;
+
+  B->indices[0][0] = (uint8_t*)(B1_pos);
+  B->indices[0][1] = (uint8_t*)(B1_crd);
+  B->indices[1][1] = (uint8_t*)(B2_crd);
+  B->vals = (uint8_t*)B_vals;
+  return 0;
+}
+
+int COO_x_COO_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C1_dimension = (int)(C->dimensions[0]);
+  double* restrict C_vals = (double*)(C->vals);
+  int* restrict A1_pos = (int*)(A->indices[0][0]);
+  int* restrict A1_crd = (int*)(A->indices[0][1]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B1_pos = (int*)(B->indices[0][0]);
+  int* restrict B1_crd = (int*)(B->indices[0][1]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  int32_t jC = 0;
+
+  double* restrict w = 0;
+  int32_t* restrict w_index_list = 0;
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+  w = (double*)malloc(sizeof(double) * B2_dimension);
+
+  int32_t iA = A1_pos[0];
+  int32_t pA1_end = A1_pos[1];
+
+  while (iA < pA1_end) {
+    int32_t i = A1_crd[iA];
+    int32_t A1_segend = iA + 1;
+    while (A1_segend < pA1_end && A1_crd[A1_segend] == i) {
+      A1_segend++;
+    }
+    int32_t w_index_list_size = 0;
+    int32_t kA = iA;
+    int32_t kB = B1_pos[0];
+    int32_t pB1_end = B1_pos[1];
+
+    while (kA < A1_segend && kB < pB1_end) {
+      int32_t kA0 = A2_crd[kA];
+      int32_t kB0 = B1_crd[kB];
+      int32_t k = TACO_MIN(kA0,kB0);
+      int32_t B1_segend = kB;
+      while (B1_segend < pB1_end && B1_crd[B1_segend] == k) {
+        B1_segend++;
+      }
+      if (kA0 == k && kB0 == k) {
+        for (int32_t jB = kB; jB < B1_segend; jB++) {
+          int32_t j = B2_crd[jB];
+          if (!w_already_set[j]) {
+            w[j] = A_vals[kA] * B_vals[jB];
+            w_index_list[w_index_list_size] = j;
+            w_already_set[j] = 1;
+            w_index_list_size++;
+          }
+          else {
+            w[j] = w[j] + A_vals[kA] * B_vals[jB];
+          }
+        }
+      }
+      kA += (int32_t)(kA0 == k);
+      kB = B1_segend;
+    }
+    qsort(w_index_list, w_index_list_size, sizeof(int32_t), cmp);
+    for (int32_t w_index_locator = 0; w_index_locator < w_index_list_size; w_index_locator++) {
+      int32_t j = w_index_list[w_index_locator];
+      C_vals[jC] = w[j];
+      jC++;
+      w_already_set[j] = 0;
+    }
+    iA = A1_segend;
+  }
+
+  free(w_index_list);
+  free(w_already_set);
+  free(w);
+
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+
+int COO_x_COO_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C1_dimension = (int)(C->dimensions[0]);
+  int* restrict C2_pos = (int*)(C->indices[1][0]);
+  int* restrict C2_crd = (int*)(C->indices[1][1]);
+  double* restrict C_vals = (double*)(C->vals);
+  int* restrict A1_pos = (int*)(A->indices[0][0]);
+  int* restrict A1_crd = (int*)(A->indices[0][1]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B1_pos = (int*)(B->indices[0][0]);
+  int* restrict B1_crd = (int*)(B->indices[0][1]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+
+  C2_pos = (int32_t*)malloc(sizeof(int32_t) * (C1_dimension + 1));
+  C2_pos[0] = 0;
+  for (int32_t pC2 = 1; pC2 < (C1_dimension + 1); pC2++) {
+    C2_pos[pC2] = 0;
+  }
+  int64_t C2_crd_size = 1048576;
+  C2_crd = (int32_t*)malloc(sizeof(int32_t) * C2_crd_size);
+  int64_t jC = 0;
+
+  int32_t* restrict w_index_list = 0;
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+
+  int32_t iA = A1_pos[0];
+  int32_t pA1_end = A1_pos[1];
+
+  while (iA < pA1_end) {
+    int32_t i = A1_crd[iA];
+    int32_t A1_segend = iA + 1;
+    while (A1_segend < pA1_end && A1_crd[A1_segend] == i) {
+      A1_segend++;
+    }
+    int32_t w_index_list_size = 0;
+    int32_t kA = iA;
+    int32_t kB = B1_pos[0];
+    int32_t pB1_end = B1_pos[1];
+
+    while (kA < A1_segend && kB < pB1_end) {
+      int32_t kA0 = A2_crd[kA];
+      int32_t kB0 = B1_crd[kB];
+      int32_t k = TACO_MIN(kA0,kB0);
+      int32_t B1_segend = kB;
+      while (B1_segend < pB1_end && B1_crd[B1_segend] == k) {
+        B1_segend++;
+      }
+      if (kA0 == k && kB0 == k) {
+        for (int32_t jB = kB; jB < B1_segend; jB++) {
+          int32_t j = B2_crd[jB];
+          if (!w_already_set[j]) {
+            w_index_list[w_index_list_size] = j;
+            w_already_set[j] = 1;
+            w_index_list_size++;
+          }
+        }
+      }
+      kA += (int32_t)(kA0 == k);
+      kB = B1_segend;
+    }
+    qsort(w_index_list, w_index_list_size, sizeof(int32_t), cmp);
+    int32_t pC2_begin = jC;
+
+    for (int32_t w_index_locator = 0; w_index_locator < w_index_list_size; w_index_locator++) {
+      int32_t j = w_index_list[w_index_locator];
+      if (C2_crd_size <= jC) {
+        C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * (C2_crd_size * 2));
+        C2_crd_size *= 2;
+      }
+      C2_crd[jC] = j;
+      jC++;
+      w_already_set[j] = 0;
+    }
+
+    C2_pos[i + 1] = jC - pC2_begin;
+    iA = A1_segend;
+  }
+
+  free(w_index_list);
+  free(w_already_set);
+
+  int32_t csC2 = 0;
+  for (int32_t pC20 = 1; pC20 < (C1_dimension + 1); pC20++) {
+    csC2 += C2_pos[pC20];
+    C2_pos[pC20] = csC2;
+  }
+
+  C_vals = (double*)malloc(sizeof(double) * jC);
+
+  C->indices[1][0] = (uint8_t*)(C2_pos);
+  C->indices[1][1] = (uint8_t*)(C2_crd);
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+int COO_x_COO_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+  int* restrict A1_pos = (int*)(A->indices[0][0]);
+  int* restrict A1_crd = (int*)(A->indices[0][1]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+
+  A1_pos = (int32_t*)malloc(sizeof(int32_t) * 2);
+  A1_pos[0] = 0;
+  int64_t A1_crd_size = 1048576;
+  A1_crd = (int32_t*)malloc(sizeof(int32_t) * A1_crd_size);
+  int64_t A2_crd_size = 1048576;
+  A2_crd = (int32_t*)malloc(sizeof(int32_t) * A2_crd_size);
+  int32_t kA = 0;
+  int64_t A_capacity = 1048576;
+  A_vals = (double*)malloc(sizeof(double) * A_capacity);
+
+
+  int32_t iA_COO = A_COO1_pos[0];
+  int32_t pA_COO1_end = A_COO1_pos[1];
+
+  while (iA_COO < pA_COO1_end) {
+    int32_t i = A_COO1_crd[iA_COO];
+    int32_t A_COO1_segend = iA_COO + 1;
+    while (A_COO1_segend < pA_COO1_end && A_COO1_crd[A_COO1_segend] == i) {
+      A_COO1_segend++;
+    }
+    int32_t kA_COO = iA_COO;
+
+    while (kA_COO < A_COO1_segend) {
+      int32_t k = A_COO2_crd[kA_COO];
+      double A_COO_val = A_COO_vals[kA_COO];
+      kA_COO++;
+      while (kA_COO < A_COO1_segend && A_COO2_crd[kA_COO] == k) {
+        A_COO_val += A_COO_vals[kA_COO];
+        kA_COO++;
+      }
+      if (A_capacity <= kA) {
+        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_capacity *= 2;
+      }
+      A_vals[kA] = A_COO_val;
+      if (A2_crd_size <= kA) {
+        int32_t A2_crd_new_size = TACO_MAX(A2_crd_size * 2,(kA + 1));
+        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * A2_crd_new_size);
+        A2_crd_size = A2_crd_new_size;
+      }
+      A2_crd[kA] = k;
+      if (A1_crd_size <= kA) {
+        A1_crd = (int32_t*)realloc(A1_crd, sizeof(int32_t) * (A1_crd_size * 2));
+        A1_crd_size *= 2;
+      }
+      A1_crd[kA] = i;
+      kA++;
+    }
+    iA_COO = A_COO1_segend;
+  }
+
+  A1_pos[1] = kA;
+
+  A->indices[0][0] = (uint8_t*)(A1_pos);
+  A->indices[0][1] = (uint8_t*)(A1_crd);
+  A->indices[1][1] = (uint8_t*)(A2_crd);
+  A->vals = (uint8_t*)A_vals;
+  return 0;
+}
+
+int COO_x_COO_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+  int* restrict B1_pos = (int*)(B->indices[0][0]);
+  int* restrict B1_crd = (int*)(B->indices[0][1]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  B1_pos = (int32_t*)malloc(sizeof(int32_t) * 2);
+  B1_pos[0] = 0;
+  int64_t B1_crd_size = 1048576;
+  B1_crd = (int32_t*)malloc(sizeof(int32_t) * B1_crd_size);
+  int64_t B2_crd_size = 1048576;
+  B2_crd = (int32_t*)malloc(sizeof(int32_t) * B2_crd_size);
+  int64_t jB = 0;
+  int64_t B_capacity = 1048576;
+  B_vals = (double*)malloc(sizeof(double) * B_capacity);
+
+
+  int32_t kB_COO = B_COO1_pos[0];
+  int32_t pB_COO1_end = B_COO1_pos[1];
+
+  while (kB_COO < pB_COO1_end) {
+    int32_t k = B_COO1_crd[kB_COO];
+    int32_t B_COO1_segend = kB_COO + 1;
+    while (B_COO1_segend < pB_COO1_end && B_COO1_crd[B_COO1_segend] == k) {
+      B_COO1_segend++;
+    }
+    int32_t jB_COO = kB_COO;
+
+    while (jB_COO < B_COO1_segend) {
+      int32_t j = B_COO2_crd[jB_COO];
+      double B_COO_val = B_COO_vals[jB_COO];
+      jB_COO++;
+      while (jB_COO < B_COO1_segend && B_COO2_crd[jB_COO] == j) {
+        B_COO_val += B_COO_vals[jB_COO];
+        jB_COO++;
+      }
+      if (B_capacity <= jB) {
+        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_capacity *= 2;
+      }
+      B_vals[jB] = B_COO_val;
+      if (B2_crd_size <= jB) {
+        int32_t B2_crd_new_size = TACO_MAX(B2_crd_size * 2,(jB + 1));
+        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * B2_crd_new_size);
+        B2_crd_size = B2_crd_new_size;
+      }
+      B2_crd[jB] = j;
+      if (B1_crd_size <= jB) {
+        B1_crd = (int32_t*)realloc(B1_crd, sizeof(int32_t) * (B1_crd_size * 2));
+        B1_crd_size *= 2;
+      }
+      B1_crd[jB] = k;
+      jB++;
+    }
+    kB_COO = B_COO1_segend;
+  }
+
+  B1_pos[1] = jB;
+
+  B->indices[0][0] = (uint8_t*)(B1_pos);
+  B->indices[0][1] = (uint8_t*)(B1_crd);
+  B->indices[1][1] = (uint8_t*)(B2_crd);
+  B->vals = (uint8_t*)B_vals;
+  return 0;
+}
+
+int COO_x_CSR_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C1_dimension = (int)(C->dimensions[0]);
+  double* restrict C_vals = (double*)(C->vals);
+  int* restrict A1_pos = (int*)(A->indices[0][0]);
+  int* restrict A1_crd = (int*)(A->indices[0][1]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+  int B1_dimension = (int)(B->dimensions[0]);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  int32_t jC = 0;
+
+  double* restrict w = 0;
+  int32_t* restrict w_index_list = 0;
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+  w = (double*)malloc(sizeof(double) * B2_dimension);
+
+  int32_t iA = A1_pos[0];
+  int32_t pA1_end = A1_pos[1];
+
+  while (iA < pA1_end) {
+    int32_t i = A1_crd[iA];
+    int32_t A1_segend = iA + 1;
+    while (A1_segend < pA1_end && A1_crd[A1_segend] == i) {
+      A1_segend++;
+    }
+    int32_t w_index_list_size = 0;
+    for (int32_t kA = iA; kA < A1_segend; kA++) {
+      int32_t k = A2_crd[kA];
+      for (int32_t jB = B2_pos[k]; jB < B2_pos[(k + 1)]; jB++) {
+        int32_t j = B2_crd[jB];
+        if (!w_already_set[j]) {
+          w[j] = A_vals[kA] * B_vals[jB];
+          w_index_list[w_index_list_size] = j;
+          w_already_set[j] = 1;
+          w_index_list_size++;
+        }
+        else {
+          w[j] = w[j] + A_vals[kA] * B_vals[jB];
+        }
+      }
+    }
+    qsort(w_index_list, w_index_list_size, sizeof(int32_t), cmp);
+    for (int32_t w_index_locator = 0; w_index_locator < w_index_list_size; w_index_locator++) {
+      int32_t j = w_index_list[w_index_locator];
+      C_vals[jC] = w[j];
+      jC++;
+      w_already_set[j] = 0;
+    }
+    iA = A1_segend;
+  }
+
+  free(w_index_list);
+  free(w_already_set);
+  free(w);
+
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+
+int COO_x_CSR_CSR_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C1_dimension = (int)(C->dimensions[0]);
+  int* restrict C2_pos = (int*)(C->indices[1][0]);
+  int* restrict C2_crd = (int*)(C->indices[1][1]);
+  double* restrict C_vals = (double*)(C->vals);
+  int* restrict A1_pos = (int*)(A->indices[0][0]);
+  int* restrict A1_crd = (int*)(A->indices[0][1]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  int B1_dimension = (int)(B->dimensions[0]);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+
+  C2_pos = (int32_t*)malloc(sizeof(int32_t) * (C1_dimension + 1));
+  C2_pos[0] = 0;
+  for (int32_t pC2 = 1; pC2 < (C1_dimension + 1); pC2++) {
+    C2_pos[pC2] = 0;
+  }
+  int64_t C2_crd_size = 1048576;
+  C2_crd = (int32_t*)malloc(sizeof(int32_t) * C2_crd_size);
+  int32_t jC = 0;
+
+  int32_t* restrict w_index_list = 0;
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+
+  int32_t iA = A1_pos[0];
+  int32_t pA1_end = A1_pos[1];
+
+  while (iA < pA1_end) {
+    int32_t i = A1_crd[iA];
+    int32_t A1_segend = iA + 1;
+    while (A1_segend < pA1_end && A1_crd[A1_segend] == i) {
+      A1_segend++;
+    }
+    int32_t w_index_list_size = 0;
+    for (int32_t kA = iA; kA < A1_segend; kA++) {
+      int32_t k = A2_crd[kA];
+      for (int32_t jB = B2_pos[k]; jB < B2_pos[(k + 1)]; jB++) {
+        int32_t j = B2_crd[jB];
+        if (!w_already_set[j]) {
+          w_index_list[w_index_list_size] = j;
+          w_already_set[j] = 1;
+          w_index_list_size++;
+        }
+      }
+    }
+    qsort(w_index_list, w_index_list_size, sizeof(int32_t), cmp);
+    int32_t pC2_begin = jC;
+
+    for (int32_t w_index_locator = 0; w_index_locator < w_index_list_size; w_index_locator++) {
+      int32_t j = w_index_list[w_index_locator];
+      if (C2_crd_size <= jC) {
+        C2_crd = (int32_t*)realloc(C2_crd, sizeof(int32_t) * (C2_crd_size * 2));
+        C2_crd_size *= 2;
+      }
+      C2_crd[jC] = j;
+      jC++;
+      w_already_set[j] = 0;
+    }
+
+    C2_pos[i + 1] = jC - pC2_begin;
+    iA = A1_segend;
+  }
+
+  free(w_index_list);
+  free(w_already_set);
+
+  int32_t csC2 = 0;
+  for (int32_t pC20 = 1; pC20 < (C1_dimension + 1); pC20++) {
+    csC2 += C2_pos[pC20];
+    C2_pos[pC20] = csC2;
+  }
+
+  C_vals = (double*)malloc(sizeof(double) * jC);
+
+  C->indices[1][0] = (uint8_t*)(C2_pos);
+  C->indices[1][1] = (uint8_t*)(C2_crd);
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+int COO_x_CSR_CSR_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+  int* restrict A1_pos = (int*)(A->indices[0][0]);
+  int* restrict A1_crd = (int*)(A->indices[0][1]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+
+  A1_pos = (int32_t*)malloc(sizeof(int32_t) * 2);
+  A1_pos[0] = 0;
+  int64_t A1_crd_size = 1048576;
+  A1_crd = (int32_t*)malloc(sizeof(int32_t) * A1_crd_size);
+  int64_t A2_crd_size = 1048576;
+  A2_crd = (int32_t*)malloc(sizeof(int32_t) * A2_crd_size);
+  int32_t kA = 0;
+  int64_t A_capacity = 1048576;
+  A_vals = (double*)malloc(sizeof(double) * A_capacity);
+
+
+  int32_t iA_COO = A_COO1_pos[0];
+  int32_t pA_COO1_end = A_COO1_pos[1];
+
+  while (iA_COO < pA_COO1_end) {
+    int32_t i = A_COO1_crd[iA_COO];
+    int32_t A_COO1_segend = iA_COO + 1;
+    while (A_COO1_segend < pA_COO1_end && A_COO1_crd[A_COO1_segend] == i) {
+      A_COO1_segend++;
+    }
+    int32_t kA_COO = iA_COO;
+
+    while (kA_COO < A_COO1_segend) {
+      int32_t k = A_COO2_crd[kA_COO];
+      double A_COO_val = A_COO_vals[kA_COO];
+      kA_COO++;
+      while (kA_COO < A_COO1_segend && A_COO2_crd[kA_COO] == k) {
+        A_COO_val += A_COO_vals[kA_COO];
+        kA_COO++;
+      }
+      if (A_capacity <= kA) {
+        A_vals = (double*)realloc(A_vals, sizeof(double) * (A_capacity * 2));
+        A_capacity *= 2;
+      }
+      A_vals[kA] = A_COO_val;
+      if (A2_crd_size <= kA) {
+        int32_t A2_crd_new_size = TACO_MAX(A2_crd_size * 2,(kA + 1));
+        A2_crd = (int32_t*)realloc(A2_crd, sizeof(int32_t) * A2_crd_new_size);
+        A2_crd_size = A2_crd_new_size;
+      }
+      A2_crd[kA] = k;
+      if (A1_crd_size <= kA) {
+        A1_crd = (int32_t*)realloc(A1_crd, sizeof(int32_t) * (A1_crd_size * 2));
+        A1_crd_size *= 2;
+      }
+      A1_crd[kA] = i;
+      kA++;
+    }
+    iA_COO = A_COO1_segend;
+  }
+
+  A1_pos[1] = kA;
+
+  A->indices[0][0] = (uint8_t*)(A1_pos);
+  A->indices[0][1] = (uint8_t*)(A1_crd);
+  A->indices[1][1] = (uint8_t*)(A2_crd);
+  A->vals = (uint8_t*)A_vals;
+  return 0;
+}
+
+int COO_x_CSR_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+  int B1_dimension = (int)(B->dimensions[0]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  B2_pos = (int32_t*)malloc(sizeof(int32_t) * (B1_dimension + 1));
+  B2_pos[0] = 0;
+  for (int32_t pB2 = 1; pB2 < (B1_dimension + 1); pB2++) {
+    B2_pos[pB2] = 0;
+  }
+  int64_t B2_crd_size = 1048576;
+  B2_crd = (int32_t*)malloc(sizeof(int32_t) * B2_crd_size);
+  int32_t jB = 0;
+  int64_t B_capacity = 1048576;
+  B_vals = (double*)malloc(sizeof(double) * B_capacity);
+
+  int32_t kB_COO = B_COO1_pos[0];
+  int32_t pB_COO1_end = B_COO1_pos[1];
+
+  while (kB_COO < pB_COO1_end) {
+    int32_t k = B_COO1_crd[kB_COO];
+    int32_t B_COO1_segend = kB_COO + 1;
+    while (B_COO1_segend < pB_COO1_end && B_COO1_crd[B_COO1_segend] == k) {
+      B_COO1_segend++;
+    }
+    int32_t pB2_begin = jB;
+
+    int32_t jB_COO = kB_COO;
+
+    while (jB_COO < B_COO1_segend) {
+      int32_t j = B_COO2_crd[jB_COO];
+      double B_COO_val = B_COO_vals[jB_COO];
+      jB_COO++;
+      while (jB_COO < B_COO1_segend && B_COO2_crd[jB_COO] == j) {
+        B_COO_val += B_COO_vals[jB_COO];
+        jB_COO++;
+      }
+      if (B_capacity <= jB) {
+        B_vals = (double*)realloc(B_vals, sizeof(double) * (B_capacity * 2));
+        B_capacity *= 2;
+      }
+      B_vals[jB] = B_COO_val;
+      if (B2_crd_size <= jB) {
+        B2_crd = (int32_t*)realloc(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
+        B2_crd_size *= 2;
+      }
+      B2_crd[jB] = j;
+      jB++;
+    }
+
+    B2_pos[k + 1] = jB - pB2_begin;
+    kB_COO = B_COO1_segend;
+  }
+
+  int32_t csB2 = 0;
+  for (int32_t pB20 = 1; pB20 < (B1_dimension + 1); pB20++) {
+    csB2 += B2_pos[pB20];
+    B2_pos[pB20] = csB2;
+  }
+
+  B->indices[1][0] = (uint8_t*)(B2_pos);
   B->indices[1][1] = (uint8_t*)(B2_crd);
   B->vals = (uint8_t*)B_vals;
   return 0;
