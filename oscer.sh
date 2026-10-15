@@ -19,8 +19,6 @@ git push
 
 ssh -O check oscer 2>/dev/null || ssh -fN oscer
 
-ssh oscer "module load GCC"
-
 JOBID=$(ssh oscer "cd $REMOTE_DIR && git pull -q && make clean >&2 && make taco_bullshit >&2 && sbatch --parsable taco_bench.sbatch")
 JOBID=${JOBID%%;*}
 echo "Submitted job $JOBID"
