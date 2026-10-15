@@ -578,6 +578,24 @@ String args_get_string_value(Args *args, String option, String default_);
 
 #define COMMON_IMPLEMENTATION
 #ifdef COMMON_IMPLEMENTATION
+
+b32 mem_is_zero(void *ptr, usize size)
+{
+  b32 result = true;
+  for (usize i = 0; i < size; i++)
+  {
+    if (((u8*)ptr)[i])
+    {
+      result = false;
+      break;
+    }
+  }
+
+  return result;
+}
+
+#define STRUCT_IS_ZERO(ptr)  (mem_is_zero(ptr, sizeof(*(ptr))))
+
 // Returns size of file, or 0 if it can't open the file
 usize read_file_to_memory(const char *name, u8 *buffer, usize buffer_size)
 {

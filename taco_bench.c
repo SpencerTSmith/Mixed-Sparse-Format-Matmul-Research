@@ -228,12 +228,140 @@ struct Operation_Entry
   X(COO, COO, CSR)
 
 #define TEST_ENTRY(A, B, C) \
- {#A "x" #B "_" #C, MAT_##A, MAT_##B, MAT_##C, A##_x_##B##_##C##_compute},
+ {#A "_x_" #B "_" #C, MAT_##A, MAT_##B, MAT_##C, A##_x_##B##_##C##_compute},
 
 Operation_Entry test_entries[] =
 {
   COMBOS(TEST_ENTRY)
 };
+
+typedef struct TACO_Memory_Alloc TACO_Memory_Alloc;
+struct TACO_Memory_Alloc
+{
+  void  *pointer;
+  usize request;
+};
+
+typedef struct TACO_Memory_Log TACO_Memory_Log;
+struct TACO_Memory_Log
+{
+  String function_prefix;
+  usize  memory_usage;
+  TACO_Memory_Alloc allocs[64]; // Max should be sufficient.
+};
+
+TACO_Memory_Log taco_mem_logs[STATIC_COUNT(test_entries)] = {0};
+usize taco_mem_logs_count = 0;
+
+String chop_function_prefix(String function_name, String chop_suffix)
+{
+  usize end = string_find_substring(function_name, 0, chop_suffix);
+  return string_substring(function_name, 0, end);
+}
+
+// Could hash if the list of combos gets too long. Don't expect thats necessary.
+void log_taco_memory_usage(const char *function_name, size_t line, size_t memory_request, void *returned_pointer, void *previous_pointer)
+{
+  String function_string = string_from_c_string((char *)function_name);
+
+  TACO_Memory_Log *log = 0;
+
+  // See if we already started a log.
+  for (usize log_idx = 0; log_idx < taco_mem_logs_count; log_idx++)
+  {
+    TACO_Memory_Log *potential_log = taco_mem_logs + log_idx;
+    if (string_starts_with(function_string, potential_log->function_prefix))
+    {
+      log = potential_log;
+      break;
+    }
+  }
+
+  // No existent log yet, add new.
+  if (!log)
+  {
+    ASSERT(taco_mem_logs_count < STATIC_COUNT(taco_mem_logs), "Too many TACO memory logs!");
+    log = taco_mem_logs + taco_mem_logs_count;
+    taco_mem_logs_count += 1;
+    ZERO_STRUCT(log);
+
+    log->function_prefix = function_string;
+    log->function_prefix = chop_function_prefix(log->function_prefix, STR("_compute"));
+    log->function_prefix = chop_function_prefix(log->function_prefix, STR("_assemble"));
+    log->function_prefix = chop_function_prefix(log->function_prefix, STR("_pack_A"));
+    log->function_prefix = chop_function_prefix(log->function_prefix, STR("_pack_B"));
+    log->function_prefix = chop_function_prefix(log->function_prefix, STR("_pack_C"));
+  }
+
+  // Subtract out any previous request in the case of realloc and free.
+  if (previous_pointer)
+  {
+    for (usize alloc_idx = 0; alloc_idx < STATIC_COUNT(log->allocs); alloc_idx++)
+    {
+      // Subtract out any previous request.
+      if (log->allocs[alloc_idx].pointer == previous_pointer)
+      {
+        log->memory_usage -= log->allocs[alloc_idx].request;
+
+        // Reset for reuse.
+        ZERO_STRUCT(&log->allocs[alloc_idx]);
+        break;
+      }
+    }
+  }
+
+  if (memory_request)
+  {
+    if (returned_pointer)
+    {
+      // Find a free allocation log.
+      TACO_Memory_Alloc *alloc = 0;
+      for (usize alloc_idx = 0; alloc_idx < STATIC_COUNT(log->allocs); alloc_idx++)
+      {
+        if (STRUCT_IS_ZERO(&log->allocs[alloc_idx]))
+        {
+          alloc = &log->allocs[alloc_idx];
+          break;
+        }
+      }
+
+      if (alloc)
+      {
+        alloc->pointer = returned_pointer;
+        alloc->request = memory_request;
+        log->memory_usage += memory_request;
+      }
+      else
+      {
+        LOG_ERROR("Unable to find free alloc slot for TACO memory logging: %s,%lu", function_name, line);
+      }
+    }
+    else
+    {
+      LOG_FATAL("TACO allocation failed: %s,%lu (request = %lu)", 1, function_name, line, memory_request);
+    }
+  }
+}
+
+TACO_Memory_Log *memory_log_from_name(const char *name)
+{
+  String function_string = string_from_c_string((char *)name);
+
+  TACO_Memory_Log *log = 0;
+
+  // See if we already started a log.
+  for (usize log_idx = 0; log_idx < taco_mem_logs_count; log_idx++)
+  {
+    TACO_Memory_Log *potential_log = taco_mem_logs + log_idx;
+    if (string_starts_with(function_string, potential_log->function_prefix))
+    {
+      log = potential_log;
+      break;
+    }
+  }
+
+  return log;
+}
 
 typedef struct Taco_Mode_Info Taco_Mode_Info;
 struct Taco_Mode_Info
@@ -329,7 +457,7 @@ int main(int argc, char **argv)
 
   // Max 30 k.
   Repetition_Series *series = repetition_series_make(30 * STATIC_COUNT(test_entries),
-                                                     ((const char *[]){"k", "function"}));
+                                                     ((const char *[]){"k", "function", "alloc"}));
 
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
@@ -338,11 +466,11 @@ int main(int argc, char **argv)
   {
     Scratch scratch = scratch_begin(&arena);
 
-    LOG_INFO("Loading kron: %.*s.", STRF(kron_file->value));
+    // LOG_INFO("Loading kron: %.*s.", STRF(kron_file->value));
     Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value, k_min, k_max, sample);
     if (!kron_coo.valid)
     {
-      LOG_INFO("Kron determined invalid: %.*s.", STRF(kron_file->value));
+      // LOG_INFO("Kron determined invalid: %.*s.", STRF(kron_file->value));
       continue;
     }
     LOG_INFO("Loaded, k=%lu s=%lu nnz=%d.", kron_coo.k, kron_coo.s, kron_coo.pos[1]);
@@ -381,7 +509,6 @@ int main(int argc, char **argv)
       // TODO: This dispatch is ugly.
       if (entry->c_format == MAT_COO)
       {
-        printf("HERE!");
         // Simply too large for these combos
         if (k > 15)
         {
@@ -504,8 +631,10 @@ int main(int argc, char **argv)
                                      "--- %.*s, %s (%d C nnz) ---",
                                      STRF(kron_coo.name),
                                      entry->name, C->vals_size);
+
       repetition_series_set_field(series, "k", "%lu", k);
       repetition_series_set_field(series, "function", entry->name);
+      repetition_series_set_field(series, "alloc", "%lu", memory_log_from_name(entry->name)->memory_usage);
 
       while (repetition_series_is_testing(series, &tester))
       {
