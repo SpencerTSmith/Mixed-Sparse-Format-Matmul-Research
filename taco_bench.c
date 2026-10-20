@@ -247,7 +247,7 @@ struct TACO_Memory_Log
 {
   String function_prefix;
   usize  memory_usage;
-  TACO_Memory_Alloc allocs[64]; // Max should be sufficient.
+  TACO_Memory_Alloc allocs[64]; // Max pool 64 should be sufficient.
 };
 
 TACO_Memory_Log taco_mem_logs[STATIC_COUNT(test_entries)] = {0};
@@ -259,6 +259,7 @@ String chop_function_prefix(String function_name, String chop_suffix)
   return string_substring(function_name, 0, end);
 }
 
+// TODO: This is a lot of logic... some functions allocate in compute... probably not great.
 // Could hash if the list of combos gets too long. Don't expect thats necessary.
 void log_taco_memory_usage(const char *function_name, size_t line, size_t memory_request, void *returned_pointer, void *previous_pointer)
 {
@@ -515,7 +516,7 @@ int main(int argc, char **argv)
                                             c_info.types);
 
       // TODO: This dispatch is ugly.
-      if (entry->c_format == MAT_COO)
+      if (entry->c_format == MAT_COO && use_coo_output)
       {
         // Simply too large for these combos
         if (k > 15)
