@@ -1,4 +1,4 @@
-CFLAGS := -g -DDEBUG -lm
+CFLAGS := -g -DDEBUG -lm -D_GNU_SOURCE
 
 SECONDS := 2
 SWEEP   := both

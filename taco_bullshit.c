@@ -1,8 +1,41 @@
-
+#define _GNU_SOURCE
+#include <sys/mman.h>
+#include <unistd.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 
+static char *fake_buffer = 0;
+
+void* __malloc_fake(int64_t size, const char *function_name, int64_t line)
+{
+  // If we haven't allocated the fake buffer, do so.
+  if (fake_buffer == 0)
+  {
+    size_t actual_size = 1024L * 1024L * 1024L;
+    size_t buffer_size = actual_size * 256;
+    int fd = memfd_create("fake", 0);
+    ftruncate(fd, actual_size);
+
+    // Fake buffer mapped out to 256 GB.
+    fake_buffer = mmap(NULL, buffer_size, PROT_NONE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+    // Map the same 1gb page back to back over the adress range of the fake buffer.
+    for (size_t off = 0; off < buffer_size; off += actual_size)
+    {
+        void *stop_complaining = mmap(fake_buffer + off, actual_size,
+                                      PROT_READ | PROT_WRITE,
+                                      MAP_SHARED | MAP_FIXED, fd, 0);
+    }
+
+    close(fd);
+  }
+
+  // Always just return the base of this fake buffer... we are just faking it anyways.
+  return fake_buffer;
+}
+
+// NOTE: We do not collect compute memory allocations since there is book keeping code to do so and that would throw off timings.
 void log_taco_memory_usage(const char *function_name, size_t line, size_t memory_request, void *returned_pointer, void *realloc_pointer);
 
 void *__realloc_log(void *ptr, int64_t size, const char *function_name, int64_t line)
@@ -36,6 +69,7 @@ void __free_log(void *ptr, const char *function_name, int64_t line)
 #define malloc_log(size)        __malloc_log(size, __func__, __LINE__)
 #define calloc_log(count, size) __calloc_log(count, size, __func__, __LINE__)
 #define free_log(ptr)           __free_log(ptr, __func__, __LINE__)
+#define malloc_fake(ptr)        __malloc_fake(ptr, __func__, __LINE__)
 
 #ifndef TACO_C_HEADERS
 #define TACO_C_HEADERS
@@ -243,7 +277,7 @@ int CSR_x_CSR_COO_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
 
   C1_pos[1] = jC;
 
-  C_vals = (double*)malloc_log(sizeof(double) * jC);
+  C_vals = (double*)malloc_fake(sizeof(double) * jC);
 
   C->indices[0][0] = (uint8_t*)(C1_pos);
   C->indices[0][1] = (uint8_t*)(C1_crd);
@@ -3403,4 +3437,30 @@ int CSC_x_CSC_CSC_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int
   B->indices[1][1] = (uint8_t*)(B2_crd);
   B->vals = (uint8_t*)B_vals;
   return 0;
+}
+
+// Great, fucking incompetents.
+void free_taco_tensor(taco_tensor_t *tensor)
+{
+  if (tensor->vals && tensor->vals != (uint8_t *)fake_buffer)
+  {
+    free(tensor->vals);
+  }
+
+  for (size_t i = 0; i < tensor->order; i++)
+  {
+    if (tensor->mode_types[i] != taco_mode_dense)
+    {
+      if (tensor->indices[i][0])
+      {
+        free(tensor->indices[i][0]);
+      }
+      if (tensor->indices[i][1])
+      {
+        free(tensor->indices[i][1]);
+      }
+    }
+  }
+
+  deinit_taco_tensor_t(tensor);
 }

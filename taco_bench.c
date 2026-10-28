@@ -221,18 +221,18 @@ struct Operation_Entry
 };
 
 #define COMBOS(X)  \
-  X(CSR, CSR, COO) \
-  X(CSR, CSC, COO) \
-  X(CSR, COO, COO) \
-  X(CSC, CSR, COO) \
-  X(CSC, COO, COO) \
-  X(COO, CSR, COO) \
-  X(COO, CSC, COO) \
-  X(COO, COO, COO) \
-  X(CSR, CSR, CSR) \
-  X(CSC, CSC, CSC) \
-  X(CSR, COO, CSR) \
-  X(COO, COO, CSR)
+  X(CSR, CSR, COO)
+  // X(CSR, CSC, COO) \
+  // X(CSR, COO, COO) \
+  // X(CSC, CSR, COO) \
+  // X(CSC, COO, COO) \
+  // X(COO, CSR, COO) \
+  // X(COO, CSC, COO) \
+  // X(COO, COO, COO) \
+  // X(CSR, CSR, CSR) \
+  // X(CSC, CSC, CSC) \
+  // X(CSR, COO, CSR) \
+  // X(COO, COO, CSR)
 
 #define TEST_ENTRY(A, B, C) \
  {#A "_x_" #B "_" #C, MAT_##A, MAT_##B, MAT_##C, A##_x_##B##_##C##_compute, A##_x_##B##_##C##_pack_A, A##_x_##B##_##C##_pack_B, A##_x_##B##_##C##_assemble},
@@ -254,7 +254,7 @@ struct TACO_Memory_Log
 {
   String function_prefix;
   usize  memory_usage;
-  TACO_Memory_Alloc allocs[64]; // Max pool 64 should be sufficient.
+  TACO_Memory_Alloc allocs[128]; // Max pool should be sufficient.
 };
 
 TACO_Memory_Log taco_mem_logs[STATIC_COUNT(test_entries)] = {0};
@@ -266,8 +266,6 @@ String chop_function_prefix(String function_name, String chop_suffix)
   return string_substring(function_name, 0, end);
 }
 
-// TODO: This is a lot of logic... some functions allocate in compute... probably not great.
-// Could hash if the list of combos gets too long. Don't expect thats necessary.
 void log_taco_memory_usage(const char *function_name, size_t line, size_t memory_request, void *returned_pointer, void *previous_pointer)
 {
   const char *alloc_type = memory_request == 0 ? "Free" :
@@ -305,9 +303,10 @@ void log_taco_memory_usage(const char *function_name, size_t line, size_t memory
     log->function_prefix = chop_function_prefix(log->function_prefix, STR("_pack_C"));
   }
 
-  // Subtract out any previous request in the case of realloc and free.
+  // Subtract out any previous request in the case of realloc or free, and reset the slot for reuse.
   if (previous_pointer)
   {
+    // Find a previous log if we have it.
     for (usize alloc_idx = 0; alloc_idx < STATIC_COUNT(log->allocs); alloc_idx++)
     {
       // Subtract out any previous request.
@@ -322,11 +321,13 @@ void log_taco_memory_usage(const char *function_name, size_t line, size_t memory
     }
   }
 
+  // Asked for memory -> log it.
   if (memory_request)
   {
+    // If we the memory request succeeed and we got a pointer to it.
     if (returned_pointer)
     {
-      // Find a free allocation log.
+      // Find a free allocation log slot.
       TACO_Memory_Alloc *alloc = 0;
       for (usize alloc_idx = 0; alloc_idx < STATIC_COUNT(log->allocs); alloc_idx++)
       {
@@ -427,31 +428,6 @@ Taco_Mode_Info taco_mode_info_from_format(Matrix_Format format)
   return result;
 }
 
-// Great, fucking incompetents.
-void free_taco_tensor(taco_tensor_t *tensor)
-{
-  if (tensor->vals)
-  {
-    free(tensor->vals);
-  }
-
-  for (usize i = 0; i < tensor->order; i++)
-  {
-    if (tensor->mode_types[i] != taco_mode_dense)
-    {
-      if (tensor->indices[i][0])
-      {
-        free(tensor->indices[i][0]);
-      }
-      if (tensor->indices[i][1])
-      {
-        free(tensor->indices[i][1]);
-      }
-    }
-  }
-
-  deinit_taco_tensor_t(tensor);
-}
 
 int main(int argc, char **argv)
 {
@@ -562,6 +538,9 @@ int main(int argc, char **argv)
       entry->pack_b(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
       entry->assemble(C, A, B);
 
+      // Should have our memory log now after running our pack and assemble funcs.
+      TACO_Memory_Log *memory_log = memory_log_from_name(entry->name);
+
       Repetition_Tester tester =
         repetition_series_new_tester(series, 0,
                                      cpu_timer_frequency,
@@ -570,9 +549,13 @@ int main(int argc, char **argv)
                                      STRF(kron_coo.name),
                                      entry->name, C->vals_size);
 
+
       repetition_series_set_field(series, "k", "%lu", k);
       repetition_series_set_field(series, "function", entry->name);
-      repetition_series_set_field(series, "alloc", "%lu", memory_log_from_name(entry->name)->memory_usage);
+      repetition_series_set_field(series, "alloc", "%lu", memory_log->memory_usage);
+
+      // Zero out any logs now.
+      ZERO_SIZE(memory_log->allocs, sizeof(memory_log->allocs));
 
       while (repetition_series_is_testing(series, &tester))
       {
