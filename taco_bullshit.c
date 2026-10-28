@@ -2024,9 +2024,9 @@ int CSR_x_CSR_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
 
   double* restrict w = 0;
   int32_t* restrict w_index_list = 0;
-  w_index_list = (int32_t*)malloc_log(sizeof(int32_t) * B2_dimension);
-  bool* restrict w_already_set = calloc_log(B2_dimension, sizeof(bool));
-  w = (double*)malloc_log(sizeof(double) * B2_dimension);
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+  w = (double*)malloc(sizeof(double) * B2_dimension);
 
   for (int32_t i = 0; i < A1_dimension; i++) {
     int32_t w_index_list_size = 0;
@@ -2054,9 +2054,9 @@ int CSR_x_CSR_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
     }
   }
 
-  free_log(w_index_list);
-  free_log(w_already_set);
-  free_log(w);
+  free(w_index_list);
+  free(w_already_set);
+  free(w);
 
   C->vals = (uint8_t*)C_vals;
   return 0;
@@ -2286,9 +2286,9 @@ int CSR_x_COO_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
 
   double* restrict w = 0;
   int32_t* restrict w_index_list = 0;
-  w_index_list = (int32_t*)malloc_log(sizeof(int32_t) * B2_dimension);
-  bool* restrict w_already_set = calloc_log(B2_dimension, sizeof(bool));
-  w = (double*)malloc_log(sizeof(double) * B2_dimension);
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+  w = (double*)malloc(sizeof(double) * B2_dimension);
 
   for (int32_t i = 0; i < A1_dimension; i++) {
     int32_t w_index_list_size = 0;
@@ -2331,9 +2331,9 @@ int CSR_x_COO_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
     }
   }
 
-  free_log(w_index_list);
-  free_log(w_already_set);
-  free_log(w);
+  free(w_index_list);
+  free(w_already_set);
+  free(w);
 
   C->vals = (uint8_t*)C_vals;
   return 0;
@@ -2577,9 +2577,9 @@ int COO_x_COO_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
 
   double* restrict w = 0;
   int32_t* restrict w_index_list = 0;
-  w_index_list = (int32_t*)malloc_log(sizeof(int32_t) * B2_dimension);
-  bool* restrict w_already_set = calloc_log(B2_dimension, sizeof(bool));
-  w = (double*)malloc_log(sizeof(double) * B2_dimension);
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+  w = (double*)malloc(sizeof(double) * B2_dimension);
 
   int32_t iA = A1_pos[0];
   int32_t pA1_end = A1_pos[1];
@@ -2630,9 +2630,9 @@ int COO_x_COO_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
     iA = A1_segend;
   }
 
-  free_log(w_index_list);
-  free_log(w_already_set);
-  free_log(w);
+  free(w_index_list);
+  free(w_already_set);
+  free(w);
 
   C->vals = (uint8_t*)C_vals;
   return 0;
@@ -2882,9 +2882,9 @@ int COO_x_CSR_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
 
   double* restrict w = 0;
   int32_t* restrict w_index_list = 0;
-  w_index_list = (int32_t*)malloc_log(sizeof(int32_t) * B2_dimension);
-  bool* restrict w_already_set = calloc_log(B2_dimension, sizeof(bool));
-  w = (double*)malloc_log(sizeof(double) * B2_dimension);
+  w_index_list = (int32_t*)malloc(sizeof(int32_t) * B2_dimension);
+  bool* restrict w_already_set = calloc(B2_dimension, sizeof(bool));
+  w = (double*)malloc(sizeof(double) * B2_dimension);
 
   int32_t iA = A1_pos[0];
   int32_t pA1_end = A1_pos[1];
@@ -2921,9 +2921,9 @@ int COO_x_CSR_CSR_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
     iA = A1_segend;
   }
 
-  free_log(w_index_list);
-  free_log(w_already_set);
-  free_log(w);
+  free(w_index_list);
+  free(w_already_set);
+  free(w);
 
   C->vals = (uint8_t*)C_vals;
   return 0;
@@ -3160,9 +3160,9 @@ int CSC_x_CSC_CSC_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
 
   double* restrict workspace = 0;
   int32_t* restrict workspace_index_list = 0;
-  workspace_index_list = (int32_t*)malloc_log(sizeof(int32_t) * A1_dimension);
-  bool* restrict workspace_already_set = calloc_log(A1_dimension, sizeof(bool));
-  workspace = (double*)malloc_log(sizeof(double) * A1_dimension);
+  workspace_index_list = (int32_t*)malloc(sizeof(int32_t) * A1_dimension);
+  bool* restrict workspace_already_set = calloc(A1_dimension, sizeof(bool));
+  workspace = (double*)malloc(sizeof(double) * A1_dimension);
 
   for (int32_t j = 0; j < B2_dimension; j++) {
     int32_t workspace_index_list_size = 0;
@@ -3190,9 +3190,9 @@ int CSC_x_CSC_CSC_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) 
     }
   }
 
-  free_log(workspace_index_list);
-  free_log(workspace_already_set);
-  free_log(workspace);
+  free(workspace_index_list);
+  free(workspace_already_set);
+  free(workspace);
 
   C->vals = (uint8_t*)C_vals;
   return 0;
