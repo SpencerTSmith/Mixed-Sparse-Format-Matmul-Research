@@ -3250,7 +3250,7 @@ int CSC_x_CSC_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B)
   for (int32_t pC2 = 1; pC2 < (C2_dimension + 1); pC2++) {
     C2_pos[pC2] = 0;
   }
-  int32_t C2_crd_size = 1048576;
+  int64_t C2_crd_size = 1048576;
   C2_crd = (int32_t*)malloc_log(sizeof(int32_t) * C2_crd_size);
   int32_t iC = 0;
 
