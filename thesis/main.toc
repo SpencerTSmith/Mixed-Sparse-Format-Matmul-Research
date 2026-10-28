@@ -14,30 +14,31 @@
 \contentsline {chapter}{\numberline {3}Literature Review}{6}{}%
 \contentsline {chapter}{\numberline {4}Reptest Library}{7}{}%
 \contentsline {chapter}{\numberline {5}PACT Stuff, title this better.}{8}{}%
-\contentsline {section}{\numberline {5.1}Mechanism / Methodology}{8}{}%
-\contentsline {subsection}{\numberline {5.1.1}Instrumentation and Benchmarking}{8}{}%
-\contentsline {subsection}{\numberline {5.1.2}Formula Derivations}{10}{}%
-\contentsline {paragraph}{Dense $\times $ CSR}{12}{}%
-\contentsline {paragraph}{COO $\times $ COO}{12}{}%
-\contentsline {subsection}{\numberline {5.1.3}Format Selection Optimization}{14}{}%
-\contentsline {subsection}{\numberline {5.1.4}Sparse with BLIS structure}{16}{}%
-\contentsline {subsection}{\numberline {5.1.5}Kronecker Graphs}{18}{}%
-\contentsline {section}{\numberline {5.2}Analysis}{20}{}%
-\contentsline {subsection}{\numberline {5.2.1}Format Benchmarking and Instrumentation Results}{20}{}%
-\contentsline {subsection}{\numberline {5.2.2}Format Selection Optimization Results}{21}{}%
-\contentsline {subsubsection}{\numberline {5.2.2.1}Blocking Sensitivity}{23}{}%
-\contentsline {subsubsection}{\numberline {5.2.2.2}Thread Sensitivity}{23}{}%
-\contentsline {subsection}{\numberline {5.2.3}Kronecker Graph Results}{24}{}%
-\contentsline {section}{\numberline {5.3}Summary}{24}{}%
-\contentsline {chapter}{\numberline {6}Recent stuff, title this better.}{37}{}%
-\contentsline {chapter}{\numberline {7}FPGA Stuff, title this better.}{38}{}%
-\contentsline {section}{\numberline {7.1}Theory}{38}{}%
-\contentsline {section}{\numberline {7.2}Mechanism}{39}{}%
-\contentsline {subsection}{\numberline {7.2.1}Implementation}{39}{}%
-\contentsline {section}{\numberline {7.3}Analysis}{45}{}%
-\contentsline {subsection}{\numberline {7.3.1}Preliminary Results}{45}{}%
-\contentsline {subsection}{\numberline {7.3.2}Future Work}{46}{}%
-\contentsline {section}{\numberline {7.4}Summary}{47}{}%
-\contentsline {chapter}{\numberline {8}Discussion and Future Work}{49}{}%
-\contentsline {chapter}{\numberline {A}Additional Figures}{53}{}%
-\contentsline {section}{\numberline {A.1}Results}{53}{}%
+\contentsline {section}{\numberline {5.1}Introduction}{8}{}%
+\contentsline {section}{\numberline {5.2}Mechanism / Methodology}{9}{}%
+\contentsline {subsection}{\numberline {5.2.1}Instrumentation and Benchmarking}{9}{}%
+\contentsline {subsection}{\numberline {5.2.2}Formula Derivations}{11}{}%
+\contentsline {paragraph}{Dense $\times $ CSR}{13}{}%
+\contentsline {paragraph}{COO $\times $ COO}{14}{}%
+\contentsline {subsection}{\numberline {5.2.3}Format Selection Optimization}{15}{}%
+\contentsline {subsection}{\numberline {5.2.4}Sparse with BLIS structure}{17}{}%
+\contentsline {subsection}{\numberline {5.2.5}Kronecker Graphs}{19}{}%
+\contentsline {section}{\numberline {5.3}Analysis}{21}{}%
+\contentsline {subsection}{\numberline {5.3.1}Format Benchmarking and Instrumentation Results}{21}{}%
+\contentsline {subsection}{\numberline {5.3.2}Format Selection Optimization Results}{23}{}%
+\contentsline {subsubsection}{\numberline {5.3.2.1}Blocking Sensitivity}{24}{}%
+\contentsline {subsubsection}{\numberline {5.3.2.2}Thread Sensitivity}{25}{}%
+\contentsline {subsection}{\numberline {5.3.3}Kronecker Graph Results}{25}{}%
+\contentsline {section}{\numberline {5.4}Summary}{25}{}%
+\contentsline {chapter}{\numberline {6}Recent stuff, title this better.}{38}{}%
+\contentsline {chapter}{\numberline {7}FPGA Stuff, title this better.}{39}{}%
+\contentsline {section}{\numberline {7.1}Theory}{39}{}%
+\contentsline {section}{\numberline {7.2}Mechanism}{40}{}%
+\contentsline {subsection}{\numberline {7.2.1}Implementation}{40}{}%
+\contentsline {section}{\numberline {7.3}Analysis}{46}{}%
+\contentsline {subsection}{\numberline {7.3.1}Preliminary Results}{46}{}%
+\contentsline {subsection}{\numberline {7.3.2}Future Work}{47}{}%
+\contentsline {section}{\numberline {7.4}Summary}{48}{}%
+\contentsline {chapter}{\numberline {8}Discussion and Future Work}{50}{}%
+\contentsline {chapter}{\numberline {A}Additional Figures}{54}{}%
+\contentsline {section}{\numberline {A.1}Results}{54}{}%

@@ -5,6 +5,41 @@
   This might need to be split up a bit...
   Big listing is a little ugly...
 }
+\section{Introduction}
+SpGEMM is a important kernel in graph analytics, scientific computing, and machine learning, and its performance
+can depend heavily on how the input matrices are stored. Dense, CSR, CSC, and COO each exploit different sparsity patterns. Usually a single format is chosen
+to compress an entire matrix. However, real-world matrices often have varying sparsity patterns across the whole matrix, e.g. dense diagonal bands
+surrounded by very sparse blocks, like those often seen in kronecker graphs. This chapter explores one avenue of exploiting this structured sparsity by
+partitioning each input matrix into smaller blocks and storing each block in whichever format would suit it best for the operation.
+
+This chapter will investigate whether that idea paid off. The hypothesis was that assigning storage formats per block with a custom cost model and executing the
+multiply operation within a BLIS-inspired block loop structure would outperform a single global format. I went about this in this way:
+
+\begin{enumerate}
+  \item I implemented SpGEMM kernels for all sixteen pairings of the four
+        formats, instrumented them to count floating point and memory
+        operations, and derived analytical cost formulae for each.
+  \item I formulated per-block format selection as a mixed integer nonlinear
+        program using those cost formulae, and built a sparse BLIS pipeline
+        that executes the resulting heterogeneous assignment.
+  \item I evaluated the pipeline against uniform-format and global-compression
+        baselines on synthetic banded matrices and finally on Kronecker graphs.
+\end{enumerate}
+
+The results as you will see are mixed. The cost formulae predict operation counts quite accurately for 14/16 of the format combos, and some benchmarking reveals
+some crossover points between formats across varying density. Brining it all together in the heterogenous BLIS format did not succeed, however. There is too much
+overhead from both the dense blocking structure and from format dispatch. Even when the solver chose more 'optimal' formats it did not ever beat
+simple global compression. Operation counts also proved as a poor proxy for runtime. And finally, the solver does not scale beyond small matrices and
+proved intractable at sizes where blocking could potentially have benefits.
+
+I believe that even where this experiment failed is still informative so I present all the results in full.
+
+\paragraph{Attribution.}
+% Adapt to your department's required template.
+This chapter is based on work conducted with Dr. Richard Veras and Moez Durrani. I
+implemented the kernels, instrumentation, solver pipeline, and experiments,
+and performed the analysis and wrote this chapter. Dr. Richard Veras proposed the
+initial research direction and provided supervision. Moez Durrani provided the kronecker datasets used in some of the experiments.
 
 \section{Mechanism / Methodology}
 

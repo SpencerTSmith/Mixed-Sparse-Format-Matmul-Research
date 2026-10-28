@@ -3,24 +3,24 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Observed and Formula FLOPs. Observed data points fall mostly on the dotted line plotted from formulas.}}{22}{}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Observed and Formula memops. Observed data points fall mostly on the dotted line plotted from formulas.}}{26}{}%
-\contentsline {figure}{\numberline {5.3}{\ignorespaces FLOPs: Relative error of Formula vs Observed. Very close fit by the formula, and flop count is determined entirely by compression combination.}}{27}{}%
-\contentsline {figure}{\numberline {5.4}{\ignorespaces memops: Relative error of Formula vs Observed. Close fit by most formulas, variability due to the effect of variability of sparsity patterns.}}{28}{}%
-\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime Performance: Timestamp Cycles. Crossover points at 0.7\% density when performing a simple dense x dense is better.}}{29}{}%
-\contentsline {figure}{\numberline {5.6}{\ignorespaces Roofline Model. Sparse formats are entirely memory bound.}}{30}{}%
-\contentsline {figure}{\numberline {5.7}{\ignorespaces Diagonal Matrix Results. Poor performance compared to simple global compression, but optimal micro-format selection wins over naive format selection.}}{31}{}%
-\contentsline {figure}{\numberline {5.8}{\ignorespaces Block Size Performance Impact. Performance degrades as block sizes increase.}}{32}{}%
-\contentsline {figure}{\numberline {5.9}{\ignorespaces Thread Count Performance Impact. At matrix sizes that can be solved, threading provides minimal benefit beyond 2 threads.}}{33}{}%
-\contentsline {figure}{\numberline {5.10}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{34}{}%
-\contentsline {figure}{\numberline {5.11}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{35}{}%
-\contentsline {figure}{\numberline {5.12}{\ignorespaces Kronecker Graph k=10 (AS-Newman) block size sweep. Block dispatch overhead generally decreases as block size increases, but not nearly enough to be comparable to simple global compression.}}{36}{}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Observed and Formula FLOPs. Observed data points fall mostly on the dotted line plotted from formulas.}}{23}{}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Observed and Formula memops. Observed data points fall mostly on the dotted line plotted from formulas.}}{27}{}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces FLOPs: Relative error of Formula vs Observed. Very close fit by the formula, and flop count is determined entirely by compression combination.}}{28}{}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces memops: Relative error of Formula vs Observed. Close fit by most formulas, variability due to the effect of variability of sparsity patterns.}}{29}{}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime Performance: Timestamp Cycles. Crossover points at 0.7\% density when performing a simple dense x dense is better.}}{30}{}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Roofline Model. Sparse formats are entirely memory bound.}}{31}{}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Diagonal Matrix Results. Poor performance compared to simple global compression, but optimal micro-format selection wins over naive format selection.}}{32}{}%
+\contentsline {figure}{\numberline {5.8}{\ignorespaces Block Size Performance Impact. Performance degrades as block sizes increase.}}{33}{}%
+\contentsline {figure}{\numberline {5.9}{\ignorespaces Thread Count Performance Impact. At matrix sizes that can be solved, threading provides minimal benefit beyond 2 threads.}}{34}{}%
+\contentsline {figure}{\numberline {5.10}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{35}{}%
+\contentsline {figure}{\numberline {5.11}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{36}{}%
+\contentsline {figure}{\numberline {5.12}{\ignorespaces Kronecker Graph k=10 (AS-Newman) block size sweep. Block dispatch overhead generally decreases as block size increases, but not nearly enough to be comparable to simple global compression.}}{37}{}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {7.1}{\ignorespaces Current Sequential Implementation}}{39}{}%
-\contentsline {figure}{\numberline {7.2}{\ignorespaces Conceptual View of Matrix Stream}}{41}{}%
-\contentsline {figure}{\numberline {7.3}{\ignorespaces Future Parallel Implementation}}{47}{}%
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Current Sequential Implementation}}{40}{}%
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Conceptual View of Matrix Stream}}{42}{}%
+\contentsline {figure}{\numberline {7.3}{\ignorespaces Future Parallel Implementation}}{48}{}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {A.1}{\ignorespaces Some example placeholder figure.}}{53}{}%
-\contentsline {figure}{\numberline {A.2}{\ignorespaces Some example placeholder figure.}}{54}{}%
+\contentsline {figure}{\numberline {A.1}{\ignorespaces Some example placeholder figure.}}{54}{}%
+\contentsline {figure}{\numberline {A.2}{\ignorespaces Some example placeholder figure.}}{55}{}%
