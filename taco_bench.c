@@ -221,18 +221,18 @@ struct Operation_Entry
 };
 
 #define COMBOS(X)  \
-  X(CSR, CSR, COO)
-  // X(CSR, CSC, COO) \
-  // X(CSR, COO, COO) \
-  // X(CSC, CSR, COO) \
-  // X(CSC, COO, COO) \
-  // X(COO, CSR, COO) \
-  // X(COO, CSC, COO) \
-  // X(COO, COO, COO) \
-  // X(CSR, CSR, CSR) \
-  // X(CSC, CSC, CSC) \
-  // X(CSR, COO, CSR) \
-  // X(COO, COO, CSR)
+  X(CSR, CSR, COO) \
+  X(CSR, CSC, COO) \
+  X(CSR, COO, COO) \
+  X(CSC, CSR, COO) \
+  X(CSC, COO, COO) \
+  X(COO, CSR, COO) \
+  X(COO, CSC, COO) \
+  X(COO, COO, COO) \
+  X(CSR, CSR, CSR) \
+  X(CSC, CSC, CSC) \
+  X(CSR, COO, CSR) \
+  X(COO, COO, CSR)
 
 #define TEST_ENTRY(A, B, C) \
  {#A "_x_" #B "_" #C, MAT_##A, MAT_##B, MAT_##C, A##_x_##B##_##C##_compute, A##_x_##B##_##C##_pack_A, A##_x_##B##_##C##_pack_B, A##_x_##B##_##C##_assemble},
@@ -443,6 +443,8 @@ int main(int argc, char **argv)
     setvbuf(stdout, NULL, _IONBF, 0);
   }
 
+  String node_name = args_get_string_value(&args, STR("node_name"), STR(""));
+
   String output_formats = args_get_string_value(&args, STR("output_format"), STR("coo,csr,csc"));
   b32 use_coo_output = string_find_substring(output_formats, 0, STR("coo")) != output_formats.count;
   b32 use_csr_output = string_find_substring(output_formats, 0, STR("csr")) != output_formats.count;
@@ -572,10 +574,10 @@ int main(int argc, char **argv)
   }
 
   String timestamp = string_timestamp(&arena);
-  String filename  = string_formatted(&arena, "%.*s/%.*s_s%lu_%.*s.csv",
+  String filename  = string_formatted(&arena, "%.*s/%.*s_s%lu_%.*s_%.*s.csv",
                                           STRF(out_dir),
                                           STRF(file_basename(kron_dir)), sample,
-                                          STRF(timestamp));
+                                          STRF(timestamp), STRF(node_name));
 
   mkdir(string_to_c_string(&arena, out_dir), 0755);
 
