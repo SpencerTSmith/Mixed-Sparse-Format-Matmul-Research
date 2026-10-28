@@ -22,6 +22,9 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
+from statistics import median
+from matplotlib.patches import Rectangle
+
 # Cycle through these for each input file, in order given on the CLI.
 # Only used in 'overlay' mode.
 LINESTYLES = ['-', '--', ':', '-.']
@@ -48,7 +51,7 @@ def load_results(csv_path):
                 int(row['time']),
                 int(row['cache']),
                 int(row['branch']),
-                int(row['alloc']),
+                int(row.get('alloc', 0)),
             ))
 
     for combo in data:
@@ -379,6 +382,77 @@ def plot_violin(all_datasets, color_map, log_scale):
     fig.tight_layout()
     return fig
 
+def best_per_k(datasets):
+    """Ranks combos by time at each k. `datasets` is a list of load_results()
+    dicts that are pooled as replicates (pass a single-element list for one
+    file). Uses the median when a (combo, k) has several samples.
+    Returns { k: [(combo, time), ...] } with each list sorted fastest-first.
+    Points with time <= 0 are skipped, matching the plots (treated as missing).
+    """
+    pooled = defaultdict(lambda: defaultdict(list))
+    for data in datasets:
+        for combo, rows in data.items():
+            for r in rows:
+                if r[TIME] > 0:
+                    pooled[r[K]][combo].append(r[TIME])
+    return {
+        k: sorted(((c, median(v)) for c, v in combos.items()), key=lambda x: x[1])
+        for k, combos in sorted(pooled.items())
+    }
+
+
+def print_best_table(groups):
+    """groups: list of (label, [datasets]). Prints one table per group."""
+    for label, datasets in groups:
+        ranking = best_per_k(datasets)
+        print(f'\n== Fastest function per k: {label} ==')
+        print(f'{"k":>3}  {"best":<16} {"time":>14}  {"runner-up":<16} {"slower by":>10}')
+        for k, ranked in ranking.items():
+            best, t = ranked[0]
+            if len(ranked) > 1:
+                ru, ru_t = ranked[1]
+                margin = f'{ru_t / t:.2f}x'
+            else:
+                ru, margin = '-', '-'
+            print(f'{k:>3}  {best:<16} {t:>14,.0f}  {ru:<16} {margin:>10}')
+
+
+def plot_best(groups, color_map):
+    """Winner strip: one row per group, one cell per k, colored by the fastest
+    combo (same colors as the other plots). Each cell also shows how much
+    slower the runner-up was (e.g. 1.8x)."""
+    rankings = [(label, best_per_k(ds)) for label, ds in groups]
+    all_ks = sorted({k for _, r in rankings for k in r})
+    if not all_ks:
+        return None
+    k_idx = {k: i for i, k in enumerate(all_ks)}
+
+    fig, ax = plt.subplots(figsize=(max(6, 1.1 * len(all_ks) + 3),
+                                    0.9 * len(rankings) + 1.8))
+    used = set()
+    for row, (label, ranking) in enumerate(rankings):
+        for k, ranked in ranking.items():
+            combo, t = ranked[0]
+            used.add(combo)
+            x = k_idx[k]
+            ax.add_patch(Rectangle((x, row), 1, 1, facecolor=color_map[combo],
+                                   edgecolor='white', alpha=0.85))
+            note = f'{ranked[1][1] / t:.1f}x' if len(ranked) > 1 else ''
+            ax.text(x + 0.5, row + 0.5, note, ha='center', va='center', fontsize=8)
+
+    ax.set_xlim(0, len(all_ks))
+    ax.set_ylim(len(rankings), 0)
+    ax.set_xticks([i + 0.5 for i in range(len(all_ks))])
+    ax.set_xticklabels([str(k) for k in all_ks])
+    ax.set_yticks([i + 0.5 for i in range(len(rankings))])
+    ax.set_yticklabels([label for label, _ in rankings])
+    ax.set_xlabel('k  (matrix dim = 2^k)')
+    ax.set_title('Fastest function per k (by time; label = runner-up slowdown)')
+    ax.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
+              fontsize='small', loc='upper left', bbox_to_anchor=(1.01, 1))
+    fig.tight_layout()
+    return fig
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -437,6 +511,19 @@ def main():
     else:
         fig = plot_violin(all_datasets, color_map, log_scale)
         fig.suptitle(f'TACO format benchmark: {len(args.csv_files)} samples')
+
+    if args.mode == 'violin':
+        groups = [(f'{len(args.csv_files)} samples (median)', all_datasets)]
+    else:
+        groups = [(lbl, [d]) for lbl, d in zip(labels, all_datasets)]
+
+    print_best_table(groups)
+    best_fig = plot_best(groups, color_map)
+    if best_fig is not None:
+        stem, ext = os.path.splitext(args.out)
+        best_path = f'{stem}_best{ext or ".png"}'
+        best_fig.savefig(best_path, dpi=150, bbox_inches='tight')
+        print(f'Saved best-function plot to {best_path}')
 
     fig.savefig(args.out, dpi=150, bbox_inches='tight')
     print(f'Saved plot to {args.out}')
