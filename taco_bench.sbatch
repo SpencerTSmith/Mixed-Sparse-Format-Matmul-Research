@@ -32,11 +32,11 @@ NODE_NAME=$(hostname -s)
     --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/AS-Newman
 
-# Answers
-/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
-    --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
-    --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Answers
+# # Answers
+# /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
+#     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
+#     --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
+#     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Answers
 
 # AS-RouteViews
 /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
@@ -44,11 +44,11 @@ NODE_NAME=$(hostname -s)
     --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/AS-RouteViews
 
-# Delicious
-/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
-    --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
-    --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Delicious
+# # Delicious
+# /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
+#     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
+#     --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
+#     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Delicious
 
 # Flickr
 /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \

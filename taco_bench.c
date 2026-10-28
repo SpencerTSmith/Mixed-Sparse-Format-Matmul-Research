@@ -471,13 +471,13 @@ int main(int argc, char **argv)
     if (!kron_coo.valid)
     {
       // LOG_INFO("Kron determined invalid: %.*s.", STRF(kron_file->value));
+      scratch_close(&scratch);
       continue;
     }
     LOG_INFO("Loaded, k=%lu s=%lu nnz=%d.", kron_coo.k, kron_coo.s, kron_coo.pos[1]);
 
     u64 k = kron_coo.k;
 
-    // TODO: check this before parsing and laoding.
     if (k > k_max || k < k_min || kron_coo.s != sample)
     {
       scratch_close(&scratch);
