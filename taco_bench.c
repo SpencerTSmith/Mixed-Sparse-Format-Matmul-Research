@@ -489,8 +489,7 @@ int main(int argc, char **argv)
       Operation_Entry *entry = test_entries + func_idx;
 
       if ((entry->c_format == MAT_COO && !use_coo_output)
-      ||  (entry->c_format == MAT_CSR && !use_csr_output)
-      ||  (entry->c_format == MAT_COO && k > 22))
+      ||  (entry->c_format == MAT_CSR && !use_csr_output))
       {
         continue;
       }
