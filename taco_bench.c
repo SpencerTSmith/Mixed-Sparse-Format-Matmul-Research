@@ -254,7 +254,7 @@ struct TACO_Memory_Log
 {
   String function_prefix;
   usize  memory_usage;
-  TACO_Memory_Alloc allocs[128]; // Max pool should be sufficient.
+  TACO_Memory_Alloc allocs[64]; // Max pool should be sufficient.
 };
 
 TACO_Memory_Log taco_mem_logs[STATIC_COUNT(test_entries)] = {0};
