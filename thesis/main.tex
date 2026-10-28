@@ -1,0 +1,53 @@
+\documentclass[12pt]{report}
+
+% Include preamble and variables
+\input{preamble}
+\input{variables}
+
+\begin{document}
+
+% Front Matter
+\pagenumbering{gobble}
+\input{frontmatter/titlepage}
+\input{frontmatter/committee}
+\input{frontmatter/copyright}
+
+% Switch to Roman numerals
+\pagenumbering{roman}
+\setcounter{page}{4}
+
+\input{frontmatter/acknowledgements}
+
+\cleardoublepage
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\tableofcontents
+
+\cleardoublepage
+\addcontentsline{toc}{section}{\listfigurename}\listoffigures
+
+\cleardoublepage
+\addcontentsline{toc}{section}{\listtablename}\listoftables
+
+\newpage
+
+\input{frontmatter/abstract}
+
+\newpage
+
+% Main Content
+\pagenumbering{arabic}
+\input{chapters/introduction}
+\input{chapters/background}
+\input{chapters/literature}
+\input{chapters/reptest}
+\input{chapters/pact_stuff}
+\input{chapters/recent_taco_stuff}
+\input{chapters/fpga_stuff}
+\input{chapters/future}
+
+% Back Matter
+\input{backmatter/references}
+\input{backmatter/appendices}
+
+\end{document}

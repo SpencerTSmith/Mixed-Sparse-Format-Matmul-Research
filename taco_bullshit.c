@@ -3142,3 +3142,265 @@ int COO_x_CSR_CSR_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int
   B->vals = (uint8_t*)B_vals;
   return 0;
 }
+
+int CSC_x_CSC_CSC_compute(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C2_dimension = (int)(C->dimensions[1]);
+  double* restrict C_vals = (double*)(C->vals);
+  int A1_dimension = (int)(A->dimensions[0]);
+  int A2_dimension = (int)(A->dimensions[1]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  int32_t iC = 0;
+
+  double* restrict workspace = 0;
+  int32_t* restrict workspace_index_list = 0;
+  workspace_index_list = (int32_t*)malloc_log(sizeof(int32_t) * A1_dimension);
+  bool* restrict workspace_already_set = calloc_log(A1_dimension, sizeof(bool));
+  workspace = (double*)malloc_log(sizeof(double) * A1_dimension);
+
+  for (int32_t j = 0; j < B2_dimension; j++) {
+    int32_t workspace_index_list_size = 0;
+    for (int32_t kB = B2_pos[j]; kB < B2_pos[(j + 1)]; kB++) {
+      int32_t k = B2_crd[kB];
+      for (int32_t iA = A2_pos[k]; iA < A2_pos[(k + 1)]; iA++) {
+        int32_t i = A2_crd[iA];
+        if (!workspace_already_set[i]) {
+          workspace[i] = A_vals[iA] * B_vals[kB];
+          workspace_index_list[workspace_index_list_size] = i;
+          workspace_already_set[i] = 1;
+          workspace_index_list_size++;
+        }
+        else {
+          workspace[i] = workspace[i] + A_vals[iA] * B_vals[kB];
+        }
+      }
+    }
+    qsort(workspace_index_list, workspace_index_list_size, sizeof(int32_t), cmp);
+    for (int32_t workspace_index_locator = 0; workspace_index_locator < workspace_index_list_size; workspace_index_locator++) {
+      int32_t i = workspace_index_list[workspace_index_locator];
+      C_vals[iC] = workspace[i];
+      iC++;
+      workspace_already_set[i] = 0;
+    }
+  }
+
+  free_log(workspace_index_list);
+  free_log(workspace_already_set);
+  free_log(workspace);
+
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+
+int CSC_x_CSC_CSC_assemble(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B) {
+  int C2_dimension = (int)(C->dimensions[1]);
+  int* restrict C2_pos = (int*)(C->indices[1][0]);
+  int* restrict C2_crd = (int*)(C->indices[1][1]);
+  double* restrict C_vals = (double*)(C->vals);
+  int A1_dimension = (int)(A->dimensions[0]);
+  int A2_dimension = (int)(A->dimensions[1]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+
+  C2_pos = (int32_t*)malloc_log(sizeof(int32_t) * (C2_dimension + 1));
+  C2_pos[0] = 0;
+  for (int32_t pC2 = 1; pC2 < (C2_dimension + 1); pC2++) {
+    C2_pos[pC2] = 0;
+  }
+  int32_t C2_crd_size = 1048576;
+  C2_crd = (int32_t*)malloc_log(sizeof(int32_t) * C2_crd_size);
+  int32_t iC = 0;
+
+  int32_t* restrict workspace_index_list = 0;
+  workspace_index_list = (int32_t*)malloc_log(sizeof(int32_t) * A1_dimension);
+  bool* restrict workspace_already_set = calloc_log(A1_dimension, sizeof(bool));
+
+  for (int32_t j = 0; j < B2_dimension; j++) {
+    int32_t workspace_index_list_size = 0;
+    for (int32_t kB = B2_pos[j]; kB < B2_pos[(j + 1)]; kB++) {
+      int32_t k = B2_crd[kB];
+      for (int32_t iA = A2_pos[k]; iA < A2_pos[(k + 1)]; iA++) {
+        int32_t i = A2_crd[iA];
+        if (!workspace_already_set[i]) {
+          workspace_index_list[workspace_index_list_size] = i;
+          workspace_already_set[i] = 1;
+          workspace_index_list_size++;
+        }
+      }
+    }
+    qsort(workspace_index_list, workspace_index_list_size, sizeof(int32_t), cmp);
+    int32_t pC2_begin = iC;
+
+    for (int32_t workspace_index_locator = 0; workspace_index_locator < workspace_index_list_size; workspace_index_locator++) {
+      int32_t i = workspace_index_list[workspace_index_locator];
+      if (C2_crd_size <= iC) {
+        C2_crd = (int32_t*)realloc_log(C2_crd, sizeof(int32_t) * (C2_crd_size * 2));
+        C2_crd_size *= 2;
+      }
+      C2_crd[iC] = i;
+      iC++;
+      workspace_already_set[i] = 0;
+    }
+
+    C2_pos[j + 1] = iC - pC2_begin;
+  }
+
+  free_log(workspace_index_list);
+  free_log(workspace_already_set);
+
+  int32_t csC2 = 0;
+  for (int32_t pC20 = 1; pC20 < (C2_dimension + 1); pC20++) {
+    csC2 += C2_pos[pC20];
+    C2_pos[pC20] = csC2;
+  }
+
+  C_vals = (double*)malloc_log(sizeof(double) * iC);
+
+  C->indices[1][0] = (uint8_t*)(C2_pos);
+  C->indices[1][1] = (uint8_t*)(C2_crd);
+  C->vals = (uint8_t*)C_vals;
+  return 0;
+}
+
+int CSC_x_CSC_CSC_pack_A(taco_tensor_t *A, int* A_COO1_pos, int* A_COO1_crd, int* A_COO2_crd, double* A_COO_vals) {
+  int A2_dimension = (int)(A->dimensions[1]);
+  int* restrict A2_pos = (int*)(A->indices[1][0]);
+  int* restrict A2_crd = (int*)(A->indices[1][1]);
+  double* restrict A_vals = (double*)(A->vals);
+
+  A2_pos = (int32_t*)malloc_log(sizeof(int32_t) * (A2_dimension + 1));
+  A2_pos[0] = 0;
+  for (int32_t pA2 = 1; pA2 < (A2_dimension + 1); pA2++) {
+    A2_pos[pA2] = 0;
+  }
+  int64_t A2_crd_size = 1048576;
+  A2_crd = (int32_t*)malloc_log(sizeof(int32_t) * A2_crd_size);
+  int32_t iA = 0;
+  int64_t A_capacity = 1048576;
+  A_vals = (double*)malloc_log(sizeof(double) * A_capacity);
+
+  int32_t kA_COO = A_COO1_pos[0];
+  int32_t pA_COO1_end = A_COO1_pos[1];
+
+  while (kA_COO < pA_COO1_end) {
+    int32_t k = A_COO1_crd[kA_COO];
+    int32_t A_COO1_segend = kA_COO + 1;
+    while (A_COO1_segend < pA_COO1_end && A_COO1_crd[A_COO1_segend] == k) {
+      A_COO1_segend++;
+    }
+    int32_t pA2_begin = iA;
+
+    int32_t iA_COO = kA_COO;
+
+    while (iA_COO < A_COO1_segend) {
+      int32_t i = A_COO2_crd[iA_COO];
+      double A_COO_val = A_COO_vals[iA_COO];
+      iA_COO++;
+      while (iA_COO < A_COO1_segend && A_COO2_crd[iA_COO] == i) {
+        A_COO_val += A_COO_vals[iA_COO];
+        iA_COO++;
+      }
+      if (A_capacity <= iA) {
+        A_vals = (double*)realloc_log(A_vals, sizeof(double) * (A_capacity * 2));
+        A_capacity *= 2;
+      }
+      A_vals[iA] = A_COO_val;
+      if (A2_crd_size <= iA) {
+        A2_crd = (int32_t*)realloc_log(A2_crd, sizeof(int32_t) * (A2_crd_size * 2));
+        A2_crd_size *= 2;
+      }
+      A2_crd[iA] = i;
+      iA++;
+    }
+
+    A2_pos[k + 1] = iA - pA2_begin;
+    kA_COO = A_COO1_segend;
+  }
+
+  int32_t csA2 = 0;
+  for (int32_t pA20 = 1; pA20 < (A2_dimension + 1); pA20++) {
+    csA2 += A2_pos[pA20];
+    A2_pos[pA20] = csA2;
+  }
+
+  A->indices[1][0] = (uint8_t*)(A2_pos);
+  A->indices[1][1] = (uint8_t*)(A2_crd);
+  A->vals = (uint8_t*)A_vals;
+  return 0;
+}
+
+int CSC_x_CSC_CSC_pack_B(taco_tensor_t *B, int* B_COO1_pos, int* B_COO1_crd, int* B_COO2_crd, double* B_COO_vals) {
+  int B2_dimension = (int)(B->dimensions[1]);
+  int* restrict B2_pos = (int*)(B->indices[1][0]);
+  int* restrict B2_crd = (int*)(B->indices[1][1]);
+  double* restrict B_vals = (double*)(B->vals);
+
+  B2_pos = (int32_t*)malloc_log(sizeof(int32_t) * (B2_dimension + 1));
+  B2_pos[0] = 0;
+  for (int32_t pB2 = 1; pB2 < (B2_dimension + 1); pB2++) {
+    B2_pos[pB2] = 0;
+  }
+  int64_t B2_crd_size = 1048576;
+  B2_crd = (int32_t*)malloc_log(sizeof(int32_t) * B2_crd_size);
+  int32_t kB = 0;
+  int64_t B_capacity = 1048576;
+  B_vals = (double*)malloc_log(sizeof(double) * B_capacity);
+
+  int32_t jB_COO = B_COO1_pos[0];
+  int32_t pB_COO1_end = B_COO1_pos[1];
+
+  while (jB_COO < pB_COO1_end) {
+    int32_t j = B_COO1_crd[jB_COO];
+    int32_t B_COO1_segend = jB_COO + 1;
+    while (B_COO1_segend < pB_COO1_end && B_COO1_crd[B_COO1_segend] == j) {
+      B_COO1_segend++;
+    }
+    int32_t pB2_begin = kB;
+
+    int32_t kB_COO = jB_COO;
+
+    while (kB_COO < B_COO1_segend) {
+      int32_t k = B_COO2_crd[kB_COO];
+      double B_COO_val = B_COO_vals[kB_COO];
+      kB_COO++;
+      while (kB_COO < B_COO1_segend && B_COO2_crd[kB_COO] == k) {
+        B_COO_val += B_COO_vals[kB_COO];
+        kB_COO++;
+      }
+      if (B_capacity <= kB) {
+        B_vals = (double*)realloc_log(B_vals, sizeof(double) * (B_capacity * 2));
+        B_capacity *= 2;
+      }
+      B_vals[kB] = B_COO_val;
+      if (B2_crd_size <= kB) {
+        B2_crd = (int32_t*)realloc_log(B2_crd, sizeof(int32_t) * (B2_crd_size * 2));
+        B2_crd_size *= 2;
+      }
+      B2_crd[kB] = k;
+      kB++;
+    }
+
+    B2_pos[j + 1] = kB - pB2_begin;
+    jB_COO = B_COO1_segend;
+  }
+
+  int32_t csB2 = 0;
+  for (int32_t pB20 = 1; pB20 < (B2_dimension + 1); pB20++) {
+    csB2 += B2_pos[pB20];
+    B2_pos[pB20] = csB2;
+  }
+
+  B->indices[1][0] = (uint8_t*)(B2_pos);
+  B->indices[1][1] = (uint8_t*)(B2_crd);
+  B->vals = (uint8_t*)B_vals;
+  return 0;
+}

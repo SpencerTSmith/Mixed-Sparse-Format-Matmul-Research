@@ -1,0 +1,13 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Arithmetic and memory operation count formulae for all sixteen format combinations. $\text {matches} = L_{NZ} \cdot R_{NZ} / L_{CC}$, $L_S = \min (L_{RC}, L_{NZ})$, $R_S = \min (L_{CC}, R_{NZ})$.}}{14}{}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {7.1}{\ignorespaces Stream Memory Layout: fixed-size header followed by format-specific data.}}{42}{}%
+\contentsline {table}{\numberline {7.2}{\ignorespaces Memory Usage for Matrix Size}}{46}{}%
+\contentsline {table}{\numberline {7.3}{\ignorespaces FPGA Synthesis Resource Usage}}{46}{}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }

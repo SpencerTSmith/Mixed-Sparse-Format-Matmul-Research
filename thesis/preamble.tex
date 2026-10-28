@@ -1,0 +1,55 @@
+% preamble.tex
+\usepackage[margin=1.25in]{geometry}
+\usepackage{setspace}
+\usepackage{tocloft}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{caption}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{subfig}
+\usepackage{minted}
+\usepackage{caption}
+\usepackage{tcolorbox}
+
+\usepackage[table]{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\definecolor{sectionbg}{HTML}{D8F0D0}
+\newcommand{\specsection}[1]{%
+  \rowcolor{sectionbg}\multicolumn{2}{l}{\textbf{#1}}\\
+}
+
+\newcommand{\note}[1]{%
+  \begin{tcolorbox}[
+    boxrule=0pt,
+    leftrule=3pt,
+    colback=gray!8,
+    colframe=gray!50,
+    left=8pt, right=8pt, top=6pt, bottom=6pt,
+    sharp corners,
+  ]
+  #1
+  \end{tcolorbox}%
+}
+
+\setminted{
+    fontsize=\small,
+    breaklines=true,
+    linenos,
+    frame=lines,
+    tabsize=4
+}
+
+% double spaced
+\doublespacing
+
+% bib
+\usepackage[style=ieee]{biblatex}
+\addbibresource{references.bib}
+
+% toc stuff
+\renewcommand{\contentsname}{Table of Contents}
