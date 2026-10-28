@@ -59,7 +59,7 @@ NODE_NAME=$(hostname -s)
 # Bio-Proteins
 /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
+    --k_min=0 --k_max=23 --oscer --node_name=$NODE_NAME \
     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Bio-Proteins
 
 # Web-Notredame
