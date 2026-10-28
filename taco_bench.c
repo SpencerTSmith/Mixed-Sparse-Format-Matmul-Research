@@ -544,7 +544,8 @@ int main(int argc, char **argv)
         repetition_series_new_tester(series, 0,
                                      cpu_timer_frequency,
                                      seconds_to_try_for_min,
-                                     "--- %.*s, %s (%d C nnz) ---",
+                                     "--- %.*s %.*s, %s (%d C nnz) ---",
+                                     STRF(file_basename(kron_dir)),
                                      STRF(kron_coo.name),
                                      entry->name, C->vals_size);
 
