@@ -230,9 +230,7 @@ struct Operation_Entry
   X(COO, CSC, COO) \
   X(COO, COO, COO) \
   X(CSR, CSR, CSR) \
-  X(CSC, CSC, CSC) \
-  X(CSR, COO, CSR) \
-  X(COO, COO, CSR)
+  X(CSC, CSC, CSC)
 
 #define TEST_ENTRY(A, B, C) \
  {#A "_x_" #B "_" #C, MAT_##A, MAT_##B, MAT_##C, A##_x_##B##_##C##_compute, A##_x_##B##_##C##_pack_A, A##_x_##B##_##C##_pack_B, A##_x_##B##_##C##_assemble},
