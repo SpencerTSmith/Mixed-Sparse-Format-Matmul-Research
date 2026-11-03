@@ -1,1 +1,132 @@
-\chapter{Reptest Library}
+\chapter{Repetition Test Library}
+\label{reptest}
+
+This chapter discusses the library I created for benchmarking which was used in most experiments excepting any experiments utilizing FPGAs. Though not all
+functionality was present through all experiments using it. It was inspired
+and initially based architecturally on the one covered by Casey Muratori's Computer Enhance project \cite{muratori}. It builds off of and requires my own base
+layer library of C code. It, like most of my C code, currently only supports Linux, but especially this particular library because it relies on the
+Linux 'Perf' \cite{perf_2024} syscall API for collecting CPU hardware counters.
+
+As one might assume from its title, it is primarily used to repeatedly test functions, collecting info
+about them such as timing, page faults, in addition to the aforementioned hardware counters for things such as branch and cache misses. In my own biased opinion,
+it provides this functionality in a straightforward and flexible way. It will continue to collect this info in a loop, collecting new minimums to try to
+eliminate any OS-scheduling or other noise. It allows programs to own their own control flow, while simply marking up important
+sections for benchmarking and data collection. It also allows users to provide additional info to calculate second order statistics such as throughput by
+providing byte counts. Finally, it allows easy access to this data via options to output as CSV, containing both library generated data and user-provided data.
+It also pushes live info as it is collected to the terminal.
+
+\section{Motivation}
+The experiments in this thesis required a library/harness with a particular combination of capabilities which none of the options I considered provided all of.
+
+\paragraph{Hardware counters for diagnosis.}
+The experiments in Chapter~\ref{ch:pact} compare operation counts against
+runtime, and the gap between the two cannot be explained by operation
+counts alone nor do they necessarily even predict real performance. At this point the library did not collect hardware counter events, but explaining
+performance in reality requires cache misses, branch mispredictions,
+and other hardware events. Collecting these through source-level
+instrumentation, as I did with the counting macros in that chapter,
+perturbs the performance being measured, in addition to being tedious to insert. Hardware counters read via
+the Linux \texttt{perf} interface \cite{perf_2024} avoid this, so a harness that exposed them directly was necessary.
+
+\paragraph{Measurement of marked regions, not whole processes.}
+Tools such as \texttt{perf stat} report counters for entire processes, which includes setup, input generation, verification, etc. I wanted
+measurements scoped to individual kernels, so the harness had to let the program and user mark the regions of interest.
+
+\paragraph{Program-owned control flow.}
+Many benchmarking frameworks invert control. Often they require the user to register a
+function and the framework or library decides when and how to call it. This is
+awkward for kernels that need per-experiment setup, such as matrix
+generation at a chosen density, or that are driven from a sweep loop in
+the host program, or that have special blocking transformations that need to be done on input matrices.
+I wanted the program to own its own control flow and simply mark the section to be repeated and measured.
+
+\paragraph{Simplicity.}
+My code is written in C on top of a small base library of my own. I considered heavier weight libraries like PAPI \cite{papi}, which would have potentially
+allowed me to collect even more cross-microarchitecture (TODO: better way to say 'cross-microarchitecture'?) hardware counter events such as
+flop/load/store instructions retired easier. However, I decided against it in the interest of keeping
+benchmarking complexity low. I wanted to save most of my mental complexity budget for dealing with the actual experiments. As well, its always
+more interesting to build your own thing than use a library.
+
+\section{Example Usage}
+Below I provide a simple example program demonstrating the library's use. Note that the user is free do define the order and sections of interest.
+The example usage below is not the only way to use the library, but it has the general structure most of my experiments ended up in.
+
+\note{Probably this giant ass listing needs to go in the appendix...}
+\begin{lstlisting}[language=C, caption={Example usage of Repetition Test Library}]
+// NOTE: Define the interface that all the functions we want to test conform to.
+typedef void (*Test_Function)(u8 *buffer, usize buffer_size);
+static
+void read_buffer_linearly(u8 *buffer, usize buffer_size)
+{
+  ... // Omitted for brevity
+}
+static
+void read_buffer_randomly(u8 *buffer, usize buffer_size)
+{
+  ... // Omitted for brevity
+}
+
+// NOTE: Each entry is just going to be the function and
+// then a little string to name it.
+typedef struct Function_Entry Function_Entry;
+struct Function_Entry
+{
+  const char    *name;
+  Test_Function function;
+};
+// NOTE: Ok now we can just make an array of all the functions we want to test.
+Function_Entry entries[] =
+{
+  {"linearly", read_buffer_linearly},
+  {"randomly", read_buffer_randomly},
+};
+
+int main(int argc, char **argv)
+{
+  Arena arena = arena_make(.reserve_size = GB(64));
+  u64 cpu_timer_frequency = estimate_cpu_timer_freq();
+
+  // NOTE: How many seconds to keep trying for a new min, will reset once
+  // we find a new minimum.
+  u32 seconds_to_try_for_min = 1;
+
+  // NOTE: User may provide custom fields.
+  Repetition_Series *series = repetition_series_make(60 * STATIC_COUNT(entries), ((const char *[]){"buffer_size", "function"}));
+
+  for (usize buffer_size = MB(1); buffer_size <= MB(4); buffer_size *= 4)
+  {
+    for (usize test_func_idx = 0; test_func_idx < STATIC_COUNT(entries); test_func_idx++)
+    {
+      // NOTE: Allocating and deallocating every time to make it fair page-fault wise.
+      u8 *buffer = os_allocate(buffer_size, OS_ALLOCATION_COMMIT);
+
+      Function_Entry *entry = &entries[test_func_idx];
+
+      Repetition_Tester tester = repetition_series_new_tester(series, buffer_size,
+                                                              cpu_timer_frequency,
+                                                              seconds_to_try_for_min,
+                                                              "--- %s @ %lu MB ---", entry->name,
+                                                              buffer_size / MB(1));
+
+      // NOTE: User may set fields of current test.
+      repetition_series_set_field(series, "buffer_size", "%lu", buffer_size);
+      repetition_series_set_field(series, "function", entry->name);
+
+      // NOTE: The main loop, it will continue testing until the minimum time has not decreased in user-provided time-frame.
+      while (repetition_series_is_testing(series, &tester))
+      {
+        repetition_tester_begin_time(&tester);
+        entry->function(buffer, buffer_size);
+        repetition_tester_close_time(&tester);
+
+        repetition_tester_count_bytes(&tester, buffer_size);
+      }
+
+      os_deallocate(buffer, buffer_size);
+    }
+  }
+
+  // NOTE: Self-explanatory
+  repetition_series_save_csv(series, "out.csv");
+}
+\end{lstlisting}

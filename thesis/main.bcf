@@ -2384,21 +2384,27 @@
     <bcf:citekey order="8" intorder="1">pyomo</bcf:citekey>
     <bcf:citekey order="9" intorder="1">mindtpy</bcf:citekey>
     <bcf:citekey order="10" intorder="1">muratori</bcf:citekey>
-    <bcf:citekey order="11" intorder="1">matplotlib</bcf:citekey>
-    <bcf:citekey order="12" intorder="1">pyomo</bcf:citekey>
-    <bcf:citekey order="13" intorder="1">mindtpy</bcf:citekey>
-    <bcf:citekey order="14" intorder="1">glpk</bcf:citekey>
-    <bcf:citekey order="15" intorder="1">ipopt</bcf:citekey>
-    <bcf:citekey order="16" intorder="1">blis</bcf:citekey>
-    <bcf:citekey order="17" intorder="1">blis</bcf:citekey>
-    <bcf:citekey order="18" intorder="1">pyomo</bcf:citekey>
-    <bcf:citekey order="19" intorder="1">mindtpy</bcf:citekey>
-    <bcf:citekey order="20" intorder="1">kronecker</bcf:citekey>
-    <bcf:citekey order="21" intorder="1">overcoming-irreg</bcf:citekey>
-    <bcf:citekey order="22" intorder="1">xilinx_guide</bcf:citekey>
-    <bcf:citekey order="23" intorder="1">xilinx_guide</bcf:citekey>
-    <bcf:citekey order="24" intorder="1">hybrid_format</bcf:citekey>
-    <bcf:citekey order="25" intorder="1">fpga-stream</bcf:citekey>
+    <bcf:citekey order="11" intorder="1">perf_2024</bcf:citekey>
+    <bcf:citekey order="12" intorder="1">perf_2024</bcf:citekey>
+    <bcf:citekey order="13" intorder="1">papi</bcf:citekey>
+    <bcf:citekey order="14" intorder="1">muratori</bcf:citekey>
+    <bcf:citekey order="15" intorder="1">matplotlib</bcf:citekey>
+    <bcf:citekey order="16" intorder="1">pyomo</bcf:citekey>
+    <bcf:citekey order="17" intorder="1">mindtpy</bcf:citekey>
+    <bcf:citekey order="18" intorder="1">glpk</bcf:citekey>
+    <bcf:citekey order="19" intorder="1">ipopt</bcf:citekey>
+    <bcf:citekey order="20" intorder="1">blis</bcf:citekey>
+    <bcf:citekey order="21" intorder="1">blis</bcf:citekey>
+    <bcf:citekey order="22" intorder="1">pyomo</bcf:citekey>
+    <bcf:citekey order="23" intorder="1">mindtpy</bcf:citekey>
+    <bcf:citekey order="24" intorder="1">kronecker</bcf:citekey>
+    <bcf:citekey order="25" intorder="1">kronecker</bcf:citekey>
+    <bcf:citekey order="26" intorder="1">taco</bcf:citekey>
+    <bcf:citekey order="27" intorder="1">overcoming-irreg</bcf:citekey>
+    <bcf:citekey order="28" intorder="1">xilinx_guide</bcf:citekey>
+    <bcf:citekey order="29" intorder="1">xilinx_guide</bcf:citekey>
+    <bcf:citekey order="30" intorder="1">hybrid_format</bcf:citekey>
+    <bcf:citekey order="31" intorder="1">fpga-stream</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

@@ -8,6 +8,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{caption}
 \usepackage{textcomp}
+\usepackage[T1]{fontenc}
 \usepackage{listings}
 \usepackage{float}
 \usepackage{subfig}
@@ -42,6 +43,13 @@
     linenos,
     frame=lines,
     tabsize=4
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,   % without a monospace font, " goes through \textquotedbl
+  breaklines=true,              % wrap long lines like the repetition_series_make(...) one
+  columns=fullflexible,
+  upquote=true
 }
 
 % double spaced

@@ -1,8 +1,8 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.10.22)  28 OCT 2026 10:00
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.10.22)  2 NOV 2026 13:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**main.tex
+**main
 (./main.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -243,6 +243,9 @@ Package caption Info: Standard document class detected.
 )
 (/usr/share/texmf-dist/tex/latex/base/textcomp.sty
 Package: textcomp 2024/04/24 v2.1b Standard LaTeX package
+)
+(/usr/share/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
 )
 (/usr/share/texmf-dist/tex/latex/listings/listings.sty
 \lst@mode=\count303
@@ -1113,9 +1116,10 @@ Package biblatex Info: Reference segment=0 on input line 7.
 
 (./frontmatter/titlepage.tex [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]) (./frontmatter/committee.
-tex [2]) (./frontmatter/copyright.tex [3{/usr/share/texmf-dist/fonts/enc/dvips/
-cm-super/cm-super-ts1.enc}])
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texmf-dist/fonts
+/enc/dvips/cm-super/cm-super-t1.enc}])
+(./frontmatter/committee.tex [2]) (./frontmatter/copyright.tex [3{/usr/share/te
+xmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}])
 (./frontmatter/acknowledgements.tex) [4
 
 
@@ -1131,24 +1135,24 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 1.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [5
 
-])
+] [6])
 \tf@toc=\write6
 \openout6 = `main.toc'.
 
- [6] (./main.lof
-[7
+ [7] (./main.lof
+[8
 
 ])
 \tf@lof=\write7
 \openout7 = `main.lof'.
 
- [8] (./main.lot)
+ [9] (./main.lot)
 \tf@lot=\write8
 \openout8 = `main.lot'.
 
- [9
+ [10
 
-] (./frontmatter/abstract.tex) [10
+] (./frontmatter/abstract.tex) [11
 
 
 ]
@@ -1161,9 +1165,9 @@ Chapter 2.
 [2
 
 ]
-Overfull \hbox (6.61722pt too wide) in paragraph at lines 41--51
-\OT1/cmr/m/n/12 The BLAS-like Li-brary In-stan-ti-a-tion Soft-ware (BLIS) frame
--work [4] pro-vides a portable
+Overfull \hbox (6.51424pt too wide) in paragraph at lines 41--51
+\T1/cmr/m/n/12 The BLAS-like Li-brary In-stan-ti-a-tion Soft-ware (BLIS) frame-
+work [4] pro-vides a portable
  []
 
 [3] [4]) (./chapters/literature.tex [5]
@@ -1172,289 +1176,179 @@ Chapter 3.
 
 ]
 Chapter 4.
-) (./chapters/pact_stuff.tex [7
+[7
 
-]
-Chapter 5.
-[8
-
-]
-
-LaTeX Warning: Reference `sec:methodology' on page 9 undefined on input line 22
-.
-
-
-LaTeX Warning: Reference `sec:analysis' on page 9 undefined on input line 28.
-
-[9] (/usr/share/texmf-dist/tex/latex/listings/lstlang1.sty
+] [8] (/usr/share/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2025/11/14 1.11b listings language file
 )
 (/usr/share/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2025/11/14 1.11b (Carsten Heinz)
 )
-LaTeX Font Info:    Trying to load font information for OMS+cmr on input line 5
-3.
-
-(/usr/share/texmf-dist/tex/latex/base/omscmr.fd
-File: omscmr.fd 2024/11/19 v2.5n Standard LaTeX font definitions
-)
-LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 53.
- [10]
-LaTeX Font Info:    Trying to load font information for OML+cmr on input line 7
-4.
-
-(/usr/share/texmf-dist/tex/latex/base/omlcmr.fd
-File: omlcmr.fd 2024/11/19 v2.5n Standard LaTeX font definitions
-)
-LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <12> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 74.
-
-Overfull \hbox (24.6292pt too wide) in paragraph at lines 74--75
-[][][][][][][][][][][][][][][][][][][][][][][][][] 
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 57.
+ [9] [10]
+Overfull \hbox (6.59908pt too wide) in paragraph at lines 107--108
+[][][][] 
  []
 
+[11] [12]) (./chapters/pact_stuff.tex [13]
+Chapter 5.
+[14
 
-Overfull \hbox (24.6292pt too wide) in paragraph at lines 77--79
-[][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (24.6292pt too wide) in paragraph at lines 84--85
-[][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (52.82915pt too wide) in paragraph at lines 85--86
-[][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (52.82915pt too wide) in paragraph at lines 91--92
-[][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (3.47923pt too wide) in paragraph at lines 92--94
-[][][][][][][][][][][][][][][][][] 
- []
-
-[11] [12] [13] [14]
-Overfull \hbox (3.84814pt too wide) in paragraph at lines 173--198
+] [15] [16] [17] [18] [19] [20]
+Overfull \hbox (3.46pt too wide) in paragraph at lines 184--209
  [][] 
  []
 
-[15] [16] [17] [18]
-Overfull \hbox (45.77916pt too wide) in paragraph at lines 318--319
-[][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
 
+LaTeX Warning: `h' float specifier changed to `ht'.
 
-Overfull \hbox (59.87914pt too wide) in paragraph at lines 320--321
-[][][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
+[21] [22] [23] [24] [25]
 
+LaTeX Warning: Float too large for page by 44.80525pt on input line 375.
 
-Overfull \hbox (73.97911pt too wide) in paragraph at lines 322--323
-[][][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (45.77916pt too wide) in paragraph at lines 324--325
-[][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (59.87914pt too wide) in paragraph at lines 326--327
-[][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (73.97911pt too wide) in paragraph at lines 334--335
-[][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (88.07909pt too wide) in paragraph at lines 341--342
-[][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (95.12907pt too wide) in paragraph at lines 343--344
-[][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (38.72917pt too wide) in paragraph at lines 350--351
-[][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (38.72917pt too wide) in paragraph at lines 351--353
-[][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (24.6292pt too wide) in paragraph at lines 353--354
-[][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (66.92912pt too wide) in paragraph at lines 356--357
-[][][][][][][][][][][][][][][][][][] 
- []
-
-
-LaTeX Warning: Float too large for page by 85.20499pt on input line 364.
-
-[19] [20] [21]
-<figures/plot_flops.png, id=118, 544.1931pt x 414.8298pt>
+[26] [27] [28]
+<figures/plot_flops.png, id=149, 544.1931pt x 414.8298pt>
 File: figures/plot_flops.png Graphic file (type png)
 <use figures/plot_flops.png>
-Package pdftex.def Info: figures/plot_flops.png  used on input line 440.
+Package pdftex.def Info: figures/plot_flops.png  used on input line 451.
 (pdftex.def)             Requested size: 433.62001pt x 330.54135pt.
-<figures/plot_memops.png, id=120, 544.1931pt x 414.8298pt>
+<figures/plot_memops.png, id=151, 544.1931pt x 414.8298pt>
 File: figures/plot_memops.png Graphic file (type png)
 <use figures/plot_memops.png>
-Package pdftex.def Info: figures/plot_memops.png  used on input line 447.
+Package pdftex.def Info: figures/plot_memops.png  used on input line 458.
 (pdftex.def)             Requested size: 433.62001pt x 330.54135pt.
-<figures/plot_flop_error.png, id=121, 544.1931pt x 414.8298pt>
+<figures/plot_flop_error.png, id=152, 544.1931pt x 414.8298pt>
 File: figures/plot_flop_error.png Graphic file (type png)
 <use figures/plot_flop_error.png>
-Package pdftex.def Info: figures/plot_flop_error.png  used on input line 454.
+Package pdftex.def Info: figures/plot_flop_error.png  used on input line 465.
 (pdftex.def)             Requested size: 433.62001pt x 330.54135pt.
-<figures/plot_memop_error.png, id=122, 544.1931pt x 414.8298pt>
+<figures/plot_memop_error.png, id=153, 544.1931pt x 414.8298pt>
 File: figures/plot_memop_error.png Graphic file (type png)
 <use figures/plot_memop_error.png>
-Package pdftex.def Info: figures/plot_memop_error.png  used on input line 461.
+Package pdftex.def Info: figures/plot_memop_error.png  used on input line 472.
 (pdftex.def)             Requested size: 433.62001pt x 330.54135pt.
-<figures/plot_time.png, id=123, 544.1931pt x 414.8298pt>
+<figures/plot_time.png, id=154, 544.1931pt x 414.8298pt>
 File: figures/plot_time.png Graphic file (type png)
 <use figures/plot_time.png>
-Package pdftex.def Info: figures/plot_time.png  used on input line 468.
+Package pdftex.def Info: figures/plot_time.png  used on input line 479.
 (pdftex.def)             Requested size: 433.62001pt x 330.54135pt.
-<figures/plot_roofline.png, id=124, 544.1931pt x 414.8298pt>
+<figures/plot_roofline.png, id=155, 544.1931pt x 414.8298pt>
 File: figures/plot_roofline.png Graphic file (type png)
 <use figures/plot_roofline.png>
-Package pdftex.def Info: figures/plot_roofline.png  used on input line 475.
+Package pdftex.def Info: figures/plot_roofline.png  used on input line 486.
 (pdftex.def)             Requested size: 433.62001pt x 330.54135pt.
- [22] [23 <./figures/plot_flops.png>]
-<figures/diagonal_results.png, id=132, 462.528pt x 346.896pt>
+ [29] [30 <./figures/plot_flops.png>]
+<figures/diagonal_results.png, id=163, 462.528pt x 346.896pt>
 File: figures/diagonal_results.png Graphic file (type png)
 <use figures/diagonal_results.png>
-Package pdftex.def Info: figures/diagonal_results.png  used on input line 495.
+Package pdftex.def Info: figures/diagonal_results.png  used on input line 506.
 (pdftex.def)             Requested size: 433.62001pt x 325.23007pt.
-<figures/block_size_sweep.png, id=133, 462.528pt x 346.896pt>
+<figures/block_size_sweep.png, id=164, 462.528pt x 346.896pt>
 File: figures/block_size_sweep.png Graphic file (type png)
 <use figures/block_size_sweep.png>
-Package pdftex.def Info: figures/block_size_sweep.png  used on input line 516.
+Package pdftex.def Info: figures/block_size_sweep.png  used on input line 527.
 (pdftex.def)             Requested size: 433.62001pt x 325.23007pt.
-<figures/thread_scaling.png, id=134, 462.528pt x 346.896pt>
+<figures/thread_scaling.png, id=165, 462.528pt x 346.896pt>
 File: figures/thread_scaling.png Graphic file (type png)
 <use figures/thread_scaling.png>
-Package pdftex.def Info: figures/thread_scaling.png  used on input line 528.
+Package pdftex.def Info: figures/thread_scaling.png  used on input line 539.
 (pdftex.def)             Requested size: 433.62001pt x 325.23007pt.
- [24]
-<figures/kronecker_scaling.png, id=138, 462.528pt x 346.896pt>
+ [31]
+<figures/kronecker_scaling.png, id=169, 462.528pt x 346.896pt>
 File: figures/kronecker_scaling.png Graphic file (type png)
 <use figures/kronecker_scaling.png>
-Package pdftex.def Info: figures/kronecker_scaling.png  used on input line 540.
+Package pdftex.def Info: figures/kronecker_scaling.png  used on input line 551.
 
 (pdftex.def)             Requested size: 433.62001pt x 325.23007pt.
 File: figures/kronecker_scaling.png Graphic file (type png)
 <use figures/kronecker_scaling.png>
-Package pdftex.def Info: figures/kronecker_scaling.png  used on input line 547.
+Package pdftex.def Info: figures/kronecker_scaling.png  used on input line 558.
 
 (pdftex.def)             Requested size: 433.62001pt x 325.23007pt.
-<figures/kron_block_scaling.png, id=139, 462.528pt x 346.896pt>
+<figures/kron_block_scaling.png, id=170, 462.528pt x 346.896pt>
 File: figures/kron_block_scaling.png Graphic file (type png)
 <use figures/kron_block_scaling.png>
-Package pdftex.def Info: figures/kron_block_scaling.png  used on input line 554
+Package pdftex.def Info: figures/kron_block_scaling.png  used on input line 565
 .
 (pdftex.def)             Requested size: 433.62001pt x 325.23007pt.
- [25])
+ [32])
 (./chapters/recent_taco_stuff.tex
-Overfull \hbox (18.96242pt too wide) in paragraph at lines 587--1
-[]\OT1/cmr/m/n/12 Several di-rec-tions could ad-dress these lim-i-ta-tions. A m
-ore uni-form block-ing/adaptable
+Overfull \hbox (18.86061pt too wide) in paragraph at lines 598--1
+[]\T1/cmr/m/n/12 Several di-rec-tions could ad-dress these lim-i-ta-tions. A mo
+re uni-form block-ing/adaptable
  []
 
-[26] [27 <./figures/plot_memops.png>] [28 <./figures/plot_flop_error.png>]
-[29 <./figures/plot_memop_error.png>] [30 <./figures/plot_time.png>] [31 <./fig
-ures/plot_roofline.png>] [32 <./figures/diagonal_results.png>] [33 <./figures/b
-lock_size_sweep.png>] [34 <./figures/thread_scaling.png>] [35 <./figures/kronec
-ker_scaling.png>] [36] [37 <./figures/kron_block_scaling.png>]
+[33] [34 <./figures/plot_memops.png>] [35 <./figures/plot_flop_error.png>]
+[36 <./figures/plot_memop_error.png>] [37 <./figures/plot_time.png>] [38 <./fig
+ures/plot_roofline.png>] [39 <./figures/diagonal_results.png>] [40 <./figures/b
+lock_size_sweep.png>] [41 <./figures/thread_scaling.png>] [42 <./figures/kronec
+ker_scaling.png>] [43] [44 <./figures/kron_block_scaling.png>]
 Chapter 6.
-) (./chapters/fpga_stuff.tex [38
+[45
 
 ]
+
+LaTeX Warning: Reference `ch:reptest' on page 46 undefined on input line 38.
+
+
+LaTeX Warning: Reference `sec:taco-limits' on page 46 undefined on input line 5
+3.
+
+[46]
+Overfull \hbox (49.08385pt too wide) in paragraph at lines 59--59
+ []\T1/cmr/bx/n/12 Block-ing.[] [] 
+ []
+
+<figures/taco_bench_altogether.png, id=230, 2159.4276pt x 371.4678pt>
+File: figures/taco_bench_altogether.png Graphic file (type png)
+<use figures/taco_bench_altogether.png>
+Package pdftex.def Info: figures/taco_bench_altogether.png  used on input line 
+87.
+(pdftex.def)             Requested size: 433.62001pt x 74.58698pt.
+<figures/taco_bench_best_for_k.png, id=231, 2034.1596pt x 382.5492pt>
+File: figures/taco_bench_best_for_k.png Graphic file (type png)
+<use figures/taco_bench_best_for_k.png>
+Package pdftex.def Info: figures/taco_bench_best_for_k.png  used on input line 
+94.
+(pdftex.def)             Requested size: 433.62001pt x 81.546pt.
+) (./chapters/fpga_stuff.tex [47] [48 <./figures/taco_bench_altogether.png> <./
+figures/taco_bench_best_for_k.png>]
 Chapter 7.
-[39
+[49
 
 ]
-<figures/current_impl.png, id=198, 813.0375pt x 639.13782pt>
+<figures/current_impl.png, id=244, 813.0375pt x 639.13782pt>
 File: figures/current_impl.png Graphic file (type png)
 <use figures/current_impl.png>
 Package pdftex.def Info: figures/current_impl.png  used on input line 15.
 (pdftex.def)             Requested size: 390.25536pt x 306.78267pt.
- [40 <./figures/current_impl.png>]
-Overfull \hbox (24.6292pt too wide) in paragraph at lines 33--34
-[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-<figures/conceptual.png, id=203, 813.0375pt x 685.05937pt>
+ [50 <./figures/current_impl.png>]
+<figures/conceptual.png, id=249, 813.0375pt x 685.05937pt>
 File: figures/conceptual.png Graphic file (type png)
 <use figures/conceptual.png>
 Package pdftex.def Info: figures/conceptual.png  used on input line 42.
 (pdftex.def)             Requested size: 390.25536pt x 328.82475pt.
-[41] [42 <./figures/conceptual.png>]
-Overfull \hbox (10.52922pt too wide) in paragraph at lines 70--71
-[][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (45.77916pt too wide) in paragraph at lines 99--100
-[][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (10.52922pt too wide) in paragraph at lines 117--118
-[][][][][][][][][][][][][][][][][][][][][] 
- []
-
-[43] [44] [45] [46]
-<figures/reduction_impl.png, id=223, 813.0375pt x 785.18344pt>
+ [51] [52 <./figures/conceptual.png>]
+[53] [54] [55] [56]
+<figures/reduction_impl.png, id=269, 813.0375pt x 785.18344pt>
 File: figures/reduction_impl.png Graphic file (type png)
 <use figures/reduction_impl.png>
 Package pdftex.def Info: figures/reduction_impl.png  used on input line 161.
 (pdftex.def)             Requested size: 390.25536pt x 376.88377pt.
- [47]) (./chapters/future.tex [48 <./figures/reduction_impl.png>] [49]
+ [57]) (./chapters/future.tex [58 <./figures/reduction_impl.png>] [59]
 Chapter 8.
-) (./backmatter/references.tex [50
+) (./backmatter/references.tex [60
 
-]) [51
+]) [61
 
-] [52]
-Overfull \hbox (0.48741pt too wide) in paragraph at lines 50--50
-[]\OT1/cmr/m/n/12 M. Hos-sein-abady and J. Nunez-Yanez, ``A Stream-ing Dataflow
- En-gine for Sparse
- []
-
-(./backmatter/appendices.tex [53]
+] [62] (./backmatter/appendices.tex
+[63]
 Appendix A.
-<figures/placeholder.png, id=247, 451.6875pt x 191.9672pt>
-File: figures/placeholder.png Graphic file (type png)
-<use figures/placeholder.png>
-Package pdftex.def Info: figures/placeholder.png  used on input line 9.
-(pdftex.def)             Requested size: 368.57965pt x 156.65546pt.
-File: figures/placeholder.png Graphic file (type png)
-<use figures/placeholder.png>
-Package pdftex.def Info: figures/placeholder.png  used on input line 16.
-(pdftex.def)             Requested size: 368.57965pt x 156.65546pt.
-) [54
+) [64
 
- <./figures/placeholder.png>] [55]
-runsystem(latexminted cleantemp  --timestamp 20261028100047 FAD58DE7366495DB465
+]
+runsystem(latexminted cleantemp  --timestamp 20261102130405 FAD58DE7366495DB465
 0CFEFAC2FCD61)...executed safely (allowed).
 
  (./main.aux)
@@ -1474,30 +1368,35 @@ Package logreq Info: Writing requests to 'main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 33045 strings out of 469515
- 686840 string characters out of 5470806
- 1638989 words of memory out of 5000000
- 61196 multiletter control sequences out of 15000+600000
- 638171 words of font info for 79 fonts, out of 8000000 for 9000
+ 33339 strings out of 469515
+ 690240 string characters out of 5470806
+ 1782298 words of memory out of 5000000
+ 61480 multiletter control sequences out of 15000+600000
+ 647533 words of font info for 86 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 102i,15n,121p,1482b,1496s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/
-texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texmf-dist/fon
-ts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/share/texmf-dist/fonts/type1/publ
-ic/amsfonts/cm/cmex10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmmi10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></
-usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texmf
--dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfo
-nts/cm/cmr12.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.p
-fb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/share
-/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb></usr/share/texmf-dist/fo
-nts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf-dist/fonts/type1/publi
-c/cm-super/sfrm1200.pfb>
-Output written on main.pdf (65 pages, 900405 bytes).
+ 102i,15n,121p,1478b,1771s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmmi6.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/c
+mmi8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/
+share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmsy10.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/
+sfbx1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></
+usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf
+-dist/fonts/type1/public/cm-super/sfbx1728.pfb></usr/share/texmf-dist/fonts/typ
+e1/public/cm-super/sfbx2488.pfb></usr/share/texmf-dist/fonts/type1/public/cm-su
+per/sfcc1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfit1095.pf
+b></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/t
+exmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/share/texmf-dist/fonts
+/type1/public/cm-super/sfrm1200.pfb></usr/share/texmf-dist/fonts/type1/public/c
+m-super/sfti1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt109
+5.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt1200.pfb>
+Output written on main.pdf (75 pages, 1778656 bytes).
 PDF statistics:
- 321 PDF objects out of 1000 (max. 8388607)
- 195 compressed objects within 2 object streams
+ 396 PDF objects out of 1000 (max. 8388607)
+ 242 compressed objects within 3 object streams
  0 named destinations out of 1000 (max. 500000)
- 88 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 93 words of extra memory for PDF output out of 10000 (max. 10000000)
 

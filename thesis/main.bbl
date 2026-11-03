@@ -441,6 +441,30 @@
       \field{title}{Performance-Aware Programming}
       \field{year}{2023}
     \endentry
+    \entry{perf_2024}{misc}{}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{journaltitle}{perf}
+      \field{month}{12}
+      \field{year}{2024}
+      \verb{urlraw}
+      \verb https://perfwiki.github.io/main/
+      \endverb
+      \verb{url}
+      \verb https://perfwiki.github.io/main/
+      \endverb
+    \endentry
+    \entry{papi}{misc}{}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{journaltitle}{Innovative Computing Laboratory}
+      \verb{urlraw}
+      \verb https://icl.utk.edu/papi/
+      \endverb
+      \verb{url}
+      \verb https://icl.utk.edu/papi/
+      \endverb
+    \endentry
     \entry{matplotlib}{article}{}{}
       \name{author}{1}{}{%
         {{hash=a2f53dcc6bb05a06b8ad94176f80fe26}{%
