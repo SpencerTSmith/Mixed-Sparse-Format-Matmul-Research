@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.10.22)  2 NOV 2026 13:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.10.22)  4 NOV 2026 09:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1300,55 +1300,55 @@ Overfull \hbox (49.08385pt too wide) in paragraph at lines 59--59
  []\T1/cmr/bx/n/12 Block-ing.[] [] 
  []
 
-<figures/taco_bench_altogether.png, id=230, 2159.4276pt x 371.4678pt>
+<figures/taco_bench_altogether.png, id=230, 5899.1592pt x 7219.2912pt>
 File: figures/taco_bench_altogether.png Graphic file (type png)
 <use figures/taco_bench_altogether.png>
 Package pdftex.def Info: figures/taco_bench_altogether.png  used on input line 
 87.
-(pdftex.def)             Requested size: 433.62001pt x 74.58698pt.
-<figures/taco_bench_best_for_k.png, id=231, 2034.1596pt x 382.5492pt>
+(pdftex.def)             Requested size: 433.62001pt x 530.62807pt.
+<figures/taco_bench_best_for_k.png, id=231, 2033.6778pt x 1423.2372pt>
 File: figures/taco_bench_best_for_k.png Graphic file (type png)
 <use figures/taco_bench_best_for_k.png>
 Package pdftex.def Info: figures/taco_bench_best_for_k.png  used on input line 
 94.
-(pdftex.def)             Requested size: 433.62001pt x 81.546pt.
-) (./chapters/fpga_stuff.tex [47] [48 <./figures/taco_bench_altogether.png> <./
-figures/taco_bench_best_for_k.png>]
+(pdftex.def)             Requested size: 433.62001pt x 303.44916pt.
+) (./chapters/fpga_stuff.tex [47] [48 <./figures/taco_bench_altogether.png>]
+[49 <./figures/taco_bench_best_for_k.png>]
 Chapter 7.
-[49
+[50
 
 ]
-<figures/current_impl.png, id=244, 813.0375pt x 639.13782pt>
+<figures/current_impl.png, id=248, 813.0375pt x 639.13782pt>
 File: figures/current_impl.png Graphic file (type png)
 <use figures/current_impl.png>
 Package pdftex.def Info: figures/current_impl.png  used on input line 15.
 (pdftex.def)             Requested size: 390.25536pt x 306.78267pt.
- [50 <./figures/current_impl.png>]
-<figures/conceptual.png, id=249, 813.0375pt x 685.05937pt>
+ [51 <./figures/current_impl.png>]
+<figures/conceptual.png, id=252, 813.0375pt x 685.05937pt>
 File: figures/conceptual.png Graphic file (type png)
 <use figures/conceptual.png>
 Package pdftex.def Info: figures/conceptual.png  used on input line 42.
 (pdftex.def)             Requested size: 390.25536pt x 328.82475pt.
- [51] [52 <./figures/conceptual.png>]
-[53] [54] [55] [56]
-<figures/reduction_impl.png, id=269, 813.0375pt x 785.18344pt>
+ [52] [53 <./figures/conceptual.png>]
+[54] [55] [56] [57]
+<figures/reduction_impl.png, id=272, 813.0375pt x 785.18344pt>
 File: figures/reduction_impl.png Graphic file (type png)
 <use figures/reduction_impl.png>
 Package pdftex.def Info: figures/reduction_impl.png  used on input line 161.
 (pdftex.def)             Requested size: 390.25536pt x 376.88377pt.
- [57]) (./chapters/future.tex [58 <./figures/reduction_impl.png>] [59]
+ [58]) (./chapters/future.tex [59 <./figures/reduction_impl.png>] [60]
 Chapter 8.
-) (./backmatter/references.tex [60
+) (./backmatter/references.tex [61
 
-]) [61
+]) [62
 
-] [62] (./backmatter/appendices.tex
-[63]
+] [63] (./backmatter/appendices.tex
+[64]
 Appendix A.
-) [64
+) [65
 
 ]
-runsystem(latexminted cleantemp  --timestamp 20261102130405 FAD58DE7366495DB465
+runsystem(latexminted cleantemp  --timestamp 20261104092007 FAD58DE7366495DB465
 0CFEFAC2FCD61)...executed safely (allowed).
 
  (./main.aux)
@@ -1393,10 +1393,10 @@ exmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/share/texmf-dist/fonts
 /type1/public/cm-super/sfrm1200.pfb></usr/share/texmf-dist/fonts/type1/public/c
 m-super/sfti1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt109
 5.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt1200.pfb>
-Output written on main.pdf (75 pages, 1778656 bytes).
+Output written on main.pdf (76 pages, 12072793 bytes).
 PDF statistics:
- 396 PDF objects out of 1000 (max. 8388607)
- 242 compressed objects within 3 object streams
+ 399 PDF objects out of 1000 (max. 8388607)
+ 244 compressed objects within 3 object streams
  0 named destinations out of 1000 (max. 500000)
  93 words of extra memory for PDF output out of 10000 (max. 10000000)
 

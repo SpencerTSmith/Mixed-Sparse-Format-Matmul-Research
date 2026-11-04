@@ -29,8 +29,8 @@ from matplotlib.patches import Rectangle
 # Only used in 'overlay' mode.
 LINESTYLES = ['-', '--', ':', '-.']
 
-# Tuple layout used everywhere below: (k, time, cache, branch, alloc).
-K, TIME, CACHE, BRANCH, ALLOC = range(5)
+# Tuple layout used everywhere below: (k, time, cache, branch, alloc, kron_nnz).
+K, TIME, CACHE, BRANCH, ALLOC, KRON = range(6)
 
 # Number of panels per row (time, cache, branch, alloc, LLC misses/cycle).
 N_PANELS = 5
@@ -51,7 +51,8 @@ def load_results(csv_path):
                 int(row['time']),
                 int(row['cache']),
                 int(row['branch']),
-                int(row.get('alloc', 0)),
+                int(row.get('alloc') or 0),
+                int(row.get('kron_nnz') or 0),
             ))
 
     for combo in data:
@@ -382,24 +383,98 @@ def plot_violin(all_datasets, color_map, log_scale):
     fig.tight_layout()
     return fig
 
-def best_per_k(datasets):
-    """Ranks combos by time at each k. `datasets` is a list of load_results()
-    dicts that are pooled as replicates (pass a single-element list for one
-    file). Uses the median when a (combo, k) has several samples.
-    Returns { k: [(combo, time), ...] } with each list sorted fastest-first.
-    Points with time <= 0 are skipped, matching the plots (treated as missing).
-    """
+def best_by(datasets, key_fn):
+    """Ranks combos by median time for each key returned by key_fn(row).
+    Rows where key_fn returns None, or time <= 0, are skipped.
+    Returns { key: [(combo, time), ...] } fastest-first, keys sorted."""
     pooled = defaultdict(lambda: defaultdict(list))
     for data in datasets:
         for combo, rows in data.items():
             for r in rows:
                 if r[TIME] > 0:
-                    pooled[r[K]][combo].append(r[TIME])
+                    key = key_fn(r)
+                    if key is not None:
+                        pooled[key][combo].append(r[TIME])
     return {
-        k: sorted(((c, median(v)) for c, v in combos.items()), key=lambda x: x[1])
-        for k, combos in sorted(pooled.items())
+        key: sorted(((c, median(v)) for c, v in combos.items()), key=lambda x: x[1])
+        for key, combos in sorted(pooled.items())
     }
 
+
+def best_per_k(datasets):
+    return best_by(datasets, lambda r: r[K])
+
+
+def _density(k, nnz):
+    return nnz / float(4 ** k)   # nnz / (2^k * 2^k)
+
+
+def plot_best_kron(groups, color_map):
+    """Winner strip ordered by kron_nnz. One cell per (kron_nnz, k) point;
+    cell text = runner-up slowdown. Tick labels show nnz and k."""
+    rankings = [(label, best_by(ds, lambda r: (r[KRON], r[K]) if r[KRON] > 0 else None))
+                for label, ds in groups]
+    all_keys = sorted({key for _, r in rankings for key in r})
+    if not all_keys:
+        print('No kron_nnz data found; skipping kron_nnz plot.')
+        return None
+    idx = {key: i for i, key in enumerate(all_keys)}
+
+    fig, ax = plt.subplots(figsize=(max(8, 0.6 * len(all_keys) + 3),
+                                    0.9 * len(rankings) + 2.5))
+    used = set()
+    for row, (label, ranking) in enumerate(rankings):
+        for key, ranked in ranking.items():
+            combo, t = ranked[0]
+            used.add(combo)
+            x = idx[key]
+            ax.add_patch(Rectangle((x, row), 1, 1, facecolor=color_map[combo],
+                                   edgecolor='white', alpha=0.85))
+            note = f'{ranked[1][1] / t:.1f}x' if len(ranked) > 1 else ''
+            ax.text(x + 0.5, row + 0.5, note, ha='center', va='center', fontsize=7)
+
+    ax.set_xlim(0, len(all_keys))
+    ax.set_ylim(len(rankings), 0)
+    ax.set_xticks([i + 0.5 for i in range(len(all_keys))])
+    ax.set_xticklabels([f'{nnz:,}\n(k={k})' for nnz, k in all_keys],
+                       rotation=60, ha='right', fontsize=7)
+    ax.set_yticks([i + 0.5 for i in range(len(rankings))])
+    ax.set_yticklabels([label for label, _ in rankings])
+    ax.set_xlabel('kron_nnz  (k = matrix exponent, dim = 2^k)')
+    ax.set_title('Fastest function per kron_nnz (label = runner-up slowdown)')
+    ax.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
+              fontsize='small', loc='upper left', bbox_to_anchor=(1.01, 1))
+    fig.tight_layout()
+    return fig
+
+
+def plot_best_density(groups, color_map):
+    """Winner scatter: x = density (log), y = k, color = fastest combo.
+    If the winner depends only on density, colors form vertical bands;
+    mixed colors at the same density mean size/structure matters too."""
+    fig, axes = plt.subplots(len(groups), 1, figsize=(9, 3.5 * len(groups)),
+                             squeeze=False)
+    used = set()
+    for ax, (label, ds) in zip(axes[:, 0], groups):
+        ranking = best_by(ds, lambda r: (r[K], r[KRON]) if r[KRON] > 0 else None)
+        for (k, nnz), ranked in ranking.items():
+            combo, t = ranked[0]
+            used.add(combo)
+            ax.scatter(_density(k, nnz), k, s=60, marker='s',
+                       color=color_map[combo], edgecolor='black', linewidth=0.3)
+        ax.set_xscale('log')
+        ax.set_xlabel('density = kron_nnz / 4^k')
+        ax.set_ylabel('k  (dim = 2^k)')
+        ax.set_title(f'Fastest function by density and size: {label}')
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.grid(True, alpha=0.3)
+    if not used:
+        plt.close(fig)
+        return None
+    fig.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
+               fontsize='small', loc='center left', bbox_to_anchor=(1.0, 0.5))
+    fig.tight_layout()
+    return fig
 
 def print_best_table(groups):
     """groups: list of (label, [datasets]). Prints one table per group."""
@@ -448,6 +523,50 @@ def plot_best(groups, color_map):
     ax.set_yticklabels([label for label, _ in rankings])
     ax.set_xlabel('k  (matrix dim = 2^k)')
     ax.set_title('Fastest function per k (by time; label = runner-up slowdown)')
+    ax.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
+              fontsize='small', loc='upper left', bbox_to_anchor=(1.01, 1))
+    fig.tight_layout()
+    return fig
+
+def plot_best_by_density_strip(groups, color_map):
+    """Winner strip ordered by density (low -> high). One cell per distinct
+    (density, k); color = fastest combo; text = runner-up slowdown.
+    k is kept in the key so runs at different sizes (which have very
+    different absolute times) are never pooled into one median."""
+    def key_fn(r):
+        if r[KRON] <= 0:
+            return None
+        return (float(f'{_density(r[K], r[KRON]):.6g}'), r[K])
+
+    rankings = [(label, best_by(ds, key_fn)) for label, ds in groups]
+    all_keys = sorted({key for _, r in rankings for key in r})
+    if not all_keys:
+        print('No kron_nnz data found; skipping density strip.')
+        return None
+    idx = {key: i for i, key in enumerate(all_keys)}
+
+    fig, ax = plt.subplots(figsize=(max(8, 0.6 * len(all_keys) + 3),
+                                    0.9 * len(rankings) + 2.5))
+    used = set()
+    for row, (label, ranking) in enumerate(rankings):
+        for key, ranked in ranking.items():
+            combo, t = ranked[0]
+            used.add(combo)
+            x = idx[key]
+            ax.add_patch(Rectangle((x, row), 1, 1, facecolor=color_map[combo],
+                                   edgecolor='white', alpha=0.85))
+            note = f'{ranked[1][1] / t:.1f}x' if len(ranked) > 1 else ''
+            ax.text(x + 0.5, row + 0.5, note, ha='center', va='center', fontsize=7)
+
+    ax.set_xlim(0, len(all_keys))
+    ax.set_ylim(len(rankings), 0)
+    ax.set_xticks([i + 0.5 for i in range(len(all_keys))])
+    ax.set_xticklabels([f'{d:.2e}\n(k={k})' for d, k in all_keys],
+                       rotation=60, ha='right', fontsize=7)
+    ax.set_yticks([i + 0.5 for i in range(len(rankings))])
+    ax.set_yticklabels([label for label, _ in rankings])
+    ax.set_xlabel('density = kron_nnz / 4^k  (sparsest -> densest)')
+    ax.set_title('Fastest function per density (label = runner-up slowdown)')
     ax.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
               fontsize='small', loc='upper left', bbox_to_anchor=(1.01, 1))
     fig.tight_layout()
@@ -524,6 +643,16 @@ def main():
         best_path = f'{stem}_best{ext or ".png"}'
         best_fig.savefig(best_path, dpi=150, bbox_inches='tight')
         print(f'Saved best-function plot to {best_path}')
+
+    stem, ext = os.path.splitext(args.out)
+    for suffix, fn in (('_best_kron', plot_best_kron),
+                       ('_best_density', plot_best_density),
+                       ('_best_density_strip', plot_best_by_density_strip)):
+        f = fn(groups, color_map)
+        if f is not None:
+            path = f'{stem}{suffix}{ext or ".png"}'
+            f.savefig(path, dpi=150, bbox_inches='tight')
+            print(f'Saved {suffix[1:]} plot to {path}')
 
     fig.savefig(args.out, dpi=150, bbox_inches='tight')
     print(f'Saved plot to {args.out}')

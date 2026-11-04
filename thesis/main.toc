@@ -47,14 +47,14 @@
 \contentsline {paragraph}{Blocking.}{47}{}%
 \contentsline {section}{\numberline {6.2}Taco Limitations}{47}{}%
 \contentsline {section}{\numberline {6.3}Results}{47}{}%
-\contentsline {chapter}{\numberline {7}FPGA Stuff, title this better.}{49}{}%
-\contentsline {section}{\numberline {7.1}Theory}{49}{}%
-\contentsline {section}{\numberline {7.2}Mechanism}{50}{}%
-\contentsline {subsection}{\numberline {7.2.1}Implementation}{50}{}%
-\contentsline {section}{\numberline {7.3}Analysis}{56}{}%
-\contentsline {subsection}{\numberline {7.3.1}Preliminary Results}{56}{}%
-\contentsline {subsection}{\numberline {7.3.2}Future Work}{57}{}%
-\contentsline {section}{\numberline {7.4}Summary}{58}{}%
-\contentsline {chapter}{\numberline {8}Discussion and Future Work}{60}{}%
-\contentsline {chapter}{\numberline {A}Additional Figures}{64}{}%
-\contentsline {section}{\numberline {A.1}Results}{64}{}%
+\contentsline {chapter}{\numberline {7}FPGA Stuff, title this better.}{50}{}%
+\contentsline {section}{\numberline {7.1}Theory}{50}{}%
+\contentsline {section}{\numberline {7.2}Mechanism}{51}{}%
+\contentsline {subsection}{\numberline {7.2.1}Implementation}{51}{}%
+\contentsline {section}{\numberline {7.3}Analysis}{57}{}%
+\contentsline {subsection}{\numberline {7.3.1}Preliminary Results}{57}{}%
+\contentsline {subsection}{\numberline {7.3.2}Future Work}{58}{}%
+\contentsline {section}{\numberline {7.4}Summary}{59}{}%
+\contentsline {chapter}{\numberline {8}Discussion and Future Work}{61}{}%
+\contentsline {chapter}{\numberline {A}Additional Figures}{65}{}%
+\contentsline {section}{\numberline {A.1}Results}{65}{}%
