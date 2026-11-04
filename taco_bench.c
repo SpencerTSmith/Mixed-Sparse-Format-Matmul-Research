@@ -584,4 +584,6 @@ int main(int argc, char **argv)
     // Checkpoint write out results.
     repetition_series_save_csv(series, "%.*s", STRF(out_filename));
   }
+
+  LOG_INFO("Completed reptest on kron dir: %.*s", STRF(kron_dir));
 }
