@@ -27,10 +27,10 @@ cd "$COREDIR"
 NODE_NAME=$(hostname -s)
 
 # AS-Newman
-/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
-    --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
-    --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/AS-Newman
+# /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
+#     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
+#     --k_min=0 --k_max=23 --oscer --node_name=$NODE_NAME \
+#     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/AS-Newman
 
 # # Answers
 # /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
@@ -41,7 +41,7 @@ NODE_NAME=$(hostname -s)
 # AS-RouteViews
 /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
+    --k_min=0 --k_max=23 --oscer --node_name=$NODE_NAME \
     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/AS-RouteViews
 
 # # Delicious
@@ -51,22 +51,22 @@ NODE_NAME=$(hostname -s)
 #     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Delicious
 
 # Flickr
-/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
-    --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
-    --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Flickr
+# /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
+#     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
+#     --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
+#     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Flickr
 
 # Bio-Proteins
-/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
-    --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --k_min=0 --k_max=23 --oscer --node_name=$NODE_NAME \
-    --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Bio-Proteins
+# /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
+#     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
+#     --k_min=0 --k_max=23 --oscer --node_name=$NODE_NAME \
+#     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Bio-Proteins
 
 # Web-Notredame
-/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
-    --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
-    --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
-    --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Web-Notredame
+# /ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_bench.x \
+#     --out_dir=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research/taco_kron_results \
+#     --k_min=0 --k_max=24 --oscer --node_name=$NODE_NAME \
+#     --kron_dir=/ourdisk/hpc/soonerhpclab/dont_archive/moezdurrani/data/Web-Notredame
 
 EXIT_CODE=$?
 

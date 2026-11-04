@@ -268,7 +268,7 @@ void log_taco_memory_usage(const char *function_name, size_t line, size_t memory
 {
   const char *alloc_type = memory_request == 0 ? "Free" :
                            previous_pointer    ? "Realloc" : "Malloc";
-  LOG_INFO("%s in %s:%lu (%lu)", alloc_type, function_name, line, memory_request);
+  // LOG_INFO("%s in %s:%lu (%lu)", alloc_type, function_name, line, memory_request);
 
   String function_string = string_from_c_string((char *)function_name);
 
@@ -443,7 +443,7 @@ int main(int argc, char **argv)
 
   String node_name = args_get_string_value(&args, STR("node_name"), STR(""));
 
-  String output_formats = args_get_string_value(&args, STR("output_format"), STR("coo,csr,csc"));
+  String output_formats = args_get_string_value(&args, STR("output_format"), STR("coo"));
   b32 use_coo_output = string_find_substring(output_formats, 0, STR("coo")) != output_formats.count;
   b32 use_csr_output = string_find_substring(output_formats, 0, STR("csr")) != output_formats.count;
   b32 use_csc_output = string_find_substring(output_formats, 0, STR("csc")) != output_formats.count;
@@ -454,11 +454,19 @@ int main(int argc, char **argv)
   u64 k_max = args_get_integer_value(&args, STR("k_max"), 20);
   u64 k_min = args_get_integer_value(&args, STR("k_min"), 0);
 
+  String timestamp = string_timestamp(&arena);
+  String out_filename  = string_formatted(&arena, "%.*s/%.*s_s%lu_%.*s_%.*s.csv",
+                                          STRF(out_dir),
+                                          STRF(file_basename(kron_dir)), sample,
+                                          STRF(timestamp), STRF(node_name));
+
+  mkdir(string_to_c_string(&arena, out_dir), 0755);
+
   String_List krons = folder_children(&arena, kron_dir);
 
   // Max 30 k.
   Repetition_Series *series = repetition_series_make(30 * STATIC_COUNT(test_entries),
-                                                     ((const char *[]){"k", "function", "alloc"}));
+                                                     ((const char *[]){"k", "function", "alloc", "kron_nnz"}));
 
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
@@ -553,6 +561,7 @@ int main(int argc, char **argv)
       repetition_series_set_field(series, "k", "%lu", k);
       repetition_series_set_field(series, "function", entry->name);
       repetition_series_set_field(series, "alloc", "%lu", memory_log->memory_usage);
+      repetition_series_set_field(series, "kron_nnz", "%lu", kron_coo.pos[1]);
 
       // Zero out any logs now.
       ZERO_SIZE(memory_log->allocs, sizeof(memory_log->allocs));
@@ -570,15 +579,8 @@ int main(int argc, char **argv)
     }
 
     scratch_close(&scratch);
+
+    // Checkpoint write out results.
+    repetition_series_save_csv(series, "%.*s", STRF(out_filename));
   }
-
-  String timestamp = string_timestamp(&arena);
-  String filename  = string_formatted(&arena, "%.*s/%.*s_s%lu_%.*s_%.*s.csv",
-                                          STRF(out_dir),
-                                          STRF(file_basename(kron_dir)), sample,
-                                          STRF(timestamp), STRF(node_name));
-
-  mkdir(string_to_c_string(&arena, out_dir), 0755);
-
-  repetition_series_save_csv(series, "%.*s", STRF(filename));
 }
