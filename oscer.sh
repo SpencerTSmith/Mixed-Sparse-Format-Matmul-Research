@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+SAMPLE=$1
+
 REMOTE_DIR=/ourdisk/hpc/soonerhpclab/dont_archive/spencer03/Mixed-Sparse-Format-Matmul-Research
 MODULES="git-lfs GCC"
 
@@ -27,7 +29,7 @@ cd $REMOTE_DIR
 git pull -q
 make clean >&2
 make taco_bullshit >&2
-sbatch --parsable taco_bench.sbatch
+sbatch --parsable taco_bench.sbatch $SAMPLE
 EOF
 )
 JOBID=${JOBID%%;*}
