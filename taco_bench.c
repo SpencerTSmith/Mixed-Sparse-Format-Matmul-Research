@@ -450,7 +450,7 @@ int main(int argc, char **argv)
 
   String out_dir = args_get_string_value(&args, STR("out_dir"), STR("taco_kron_results"));
   String kron_dir = args_get_string_value(&args, STR("kron_dir"), STR("krons/AS-Newman"));
-  u64 sample = args_get_integer_value(&args, STR("sample"), 2);
+  u64 sample = args_get_integer_value(&args, STR("s"), 2);
   u64 k_max = args_get_integer_value(&args, STR("k_max"), 20);
   u64 k_min = args_get_integer_value(&args, STR("k_min"), 0);
 
