@@ -1,60 +1,91 @@
 \contentsline {section}{Acknowledgments}{iv}{}%
 \contentsline {section}{List of Figures}{viii}{}%
-\contentsline {section}{List of Tables}{x}{}%
-\contentsline {section}{Abstract}{xi}{}%
+\contentsline {section}{List of Tables}{xi}{}%
+\contentsline {section}{Abstract}{xii}{}%
 \contentsline {chapter}{\numberline {1}Introduction}{1}{}%
 \contentsline {chapter}{\numberline {2}Background}{2}{}%
 \contentsline {subsection}{\numberline {2.0.1}Sparse Matrix Storage Formats}{2}{}%
 \contentsline {subsection}{\numberline {2.0.2}SpGEMM}{3}{}%
-\contentsline {subsection}{\numberline {2.0.3}BLIS}{3}{}%
-\contentsline {subsection}{\numberline {2.0.4}Roofline Model}{4}{}%
-\contentsline {subsection}{\numberline {2.0.5}TACO}{4}{}%
-\contentsline {subsection}{\numberline {2.0.6}Kronecker Graphs}{4}{}%
-\contentsline {subsection}{\numberline {2.0.7}Optimization}{5}{}%
-\contentsline {chapter}{\numberline {3}Literature Review}{6}{}%
-\contentsline {chapter}{\numberline {4}Repetition Test Library}{7}{}%
-\contentsline {section}{\numberline {4.1}Motivation}{8}{}%
-\contentsline {paragraph}{Hardware counters for diagnosis.}{8}{}%
-\contentsline {paragraph}{Measurement of marked regions, not whole processes.}{8}{}%
-\contentsline {paragraph}{Program-owned control flow.}{8}{}%
-\contentsline {paragraph}{Simplicity.}{9}{}%
-\contentsline {section}{\numberline {4.2}Example Usage}{9}{}%
-\contentsline {chapter}{\numberline {5}PACT Stuff, title this better.}{14}{}%
-\contentsline {section}{\numberline {5.1}Introduction}{14}{}%
-\contentsline {paragraph}{Attribution.}{15}{}%
-\contentsline {section}{\numberline {5.2}Mechanism / Methodology}{16}{}%
-\contentsline {subsection}{\numberline {5.2.1}Instrumentation and Benchmarking}{16}{}%
-\contentsline {subsection}{\numberline {5.2.2}Formula Derivations}{19}{}%
-\contentsline {paragraph}{Dense $\times $ CSR}{20}{}%
-\contentsline {paragraph}{COO $\times $ COO}{20}{}%
-\contentsline {subsection}{\numberline {5.2.3}Format Selection Optimization}{22}{}%
-\contentsline {subsection}{\numberline {5.2.4}Sparse with BLIS structure}{24}{}%
-\contentsline {subsection}{\numberline {5.2.5}Kronecker Graphs}{26}{}%
-\contentsline {section}{\numberline {5.3}Analysis}{28}{}%
-\contentsline {subsection}{\numberline {5.3.1}Format Benchmarking and Instrumentation Results}{28}{}%
-\contentsline {subsection}{\numberline {5.3.2}Format Selection Optimization Results}{30}{}%
-\contentsline {subsubsection}{\numberline {5.3.2.1}Blocking Sensitivity}{31}{}%
-\contentsline {subsubsection}{\numberline {5.3.2.2}Thread Sensitivity}{32}{}%
-\contentsline {subsection}{\numberline {5.3.3}Kronecker Graph Results}{32}{}%
-\contentsline {section}{\numberline {5.4}Summary}{32}{}%
-\contentsline {chapter}{\numberline {6}Recent stuff, title this better.}{45}{}%
-\contentsline {section}{\numberline {6.1}Introduction}{45}{}%
-\contentsline {paragraph}{Structured inputs.}{46}{}%
-\contentsline {paragraph}{Sweeping scale instead of comparing named graphs.}{46}{}%
-\contentsline {paragraph}{Explaining performance with hardware counters.}{46}{}%
-\contentsline {paragraph}{Compiler-generated kernels.}{46}{}%
-\contentsline {paragraph}{Scope.}{47}{}%
-\contentsline {paragraph}{Blocking.}{47}{}%
-\contentsline {section}{\numberline {6.2}Taco Limitations}{47}{}%
-\contentsline {section}{\numberline {6.3}Results}{47}{}%
-\contentsline {chapter}{\numberline {7}FPGA Stuff, title this better.}{50}{}%
-\contentsline {section}{\numberline {7.1}Theory}{50}{}%
-\contentsline {section}{\numberline {7.2}Mechanism}{51}{}%
-\contentsline {subsection}{\numberline {7.2.1}Implementation}{51}{}%
-\contentsline {section}{\numberline {7.3}Analysis}{57}{}%
-\contentsline {subsection}{\numberline {7.3.1}Preliminary Results}{57}{}%
-\contentsline {subsection}{\numberline {7.3.2}Future Work}{58}{}%
-\contentsline {section}{\numberline {7.4}Summary}{59}{}%
-\contentsline {chapter}{\numberline {8}Discussion and Future Work}{61}{}%
-\contentsline {chapter}{\numberline {A}Additional Figures}{65}{}%
-\contentsline {section}{\numberline {A.1}Results}{65}{}%
+\contentsline {subsection}{\numberline {2.0.3}SpGEMM Dataflows}{4}{}%
+\contentsline {paragraph}{Inner product ($i,j,k$).}{4}{}%
+\contentsline {paragraph}{Outer product ($k,i,j$).}{5}{}%
+\contentsline {paragraph}{Row-wise product / Gustavson ($i,k,j$).}{5}{}%
+\contentsline {paragraph}{Accumulating partial products.}{5}{}%
+\contentsline {paragraph}{Relevance to format selection.}{6}{}%
+\contentsline {subsection}{\numberline {2.0.4}BLIS}{6}{}%
+\contentsline {subsection}{\numberline {2.0.5}Roofline Model}{7}{}%
+\contentsline {subsection}{\numberline {2.0.6}TACO}{8}{}%
+\contentsline {subsection}{\numberline {2.0.7}Kronecker Graphs}{8}{}%
+\contentsline {chapter}{\numberline {3}Literature Review}{9}{}%
+\contentsline {section}{\numberline {3.1}Outline}{9}{}%
+\contentsline {section}{\numberline {3.2}Sparse Formats and Format Selection}{9}{}%
+\contentsline {subsection}{\numberline {3.2.1}Formats beyond CSR, CSC, and COO}{9}{}%
+\contentsline {subsection}{\numberline {3.2.2}Automated Format Selection}{10}{}%
+\contentsline {subsubsection}{\numberline {3.2.2.1}TACO.}{11}{}%
+\contentsline {paragraph}{Matrices as coordinate hierarchies.}{12}{}%
+\contentsline {paragraph}{Format to Dataflow.}{12}{}%
+\contentsline {paragraph}{Sparse $\times $ sparse products.}{13}{}%
+\contentsline {paragraph}{Limits.}{13}{}%
+\contentsline {subsection}{\numberline {3.2.3}Heterogeneity within a matrix}{14}{}%
+\contentsline {section}{\numberline {3.3}Motivating Flop and Memory-Operation Models}{14}{}%
+\contentsline {subsection}{\numberline {3.3.1}Operation Counts}{15}{}%
+\contentsline {subsection}{\numberline {3.3.2}Using operation counts for prediction}{16}{}%
+\contentsline {subsection}{\numberline {3.3.3}Limits of operation counts}{16}{}%
+\contentsline {section}{\numberline {3.4}Benchmark Inputs for Sparse Kernels}{17}{}%
+\contentsline {subsection}{\numberline {3.4.1}Collections of real matrices}{17}{}%
+\contentsline {subsection}{\numberline {3.4.2}Synthetic generators}{17}{}%
+\contentsline {section}{\numberline {3.5}Hardware Acceleration for Sparse Computations}{18}{}%
+\contentsline {subsection}{\numberline {3.5.1}SpGEMM accelerators and dataflows}{18}{}%
+\contentsline {subsection}{\numberline {3.5.2}FPGA implementations}{18}{}%
+\contentsline {section}{\numberline {3.6}Gaps Identified}{19}{}%
+\contentsline {chapter}{\numberline {4}Repetition Test Library}{20}{}%
+\contentsline {section}{\numberline {4.1}Motivation}{21}{}%
+\contentsline {paragraph}{Hardware counters for diagnosis.}{21}{}%
+\contentsline {paragraph}{Measurement of marked regions, not whole processes.}{21}{}%
+\contentsline {paragraph}{Program-owned control flow.}{21}{}%
+\contentsline {paragraph}{Simplicity.}{22}{}%
+\contentsline {section}{\numberline {4.2}Specific Measurements}{22}{}%
+\contentsline {paragraph}{Time.}{22}{}%
+\contentsline {paragraph}{Hardware counters.}{22}{}%
+\contentsline {paragraph}{Page faults.}{23}{}%
+\contentsline {paragraph}{Allocations.}{23}{}%
+\contentsline {section}{\numberline {4.3}Example Usage}{23}{}%
+\contentsline {chapter}{\numberline {5}PACT Stuff, title this better.}{28}{}%
+\contentsline {section}{\numberline {5.1}Introduction}{28}{}%
+\contentsline {paragraph}{Attribution.}{29}{}%
+\contentsline {section}{\numberline {5.2}Mechanism / Methodology}{30}{}%
+\contentsline {subsection}{\numberline {5.2.1}Instrumentation and Benchmarking}{30}{}%
+\contentsline {subsection}{\numberline {5.2.2}Formula Derivations}{33}{}%
+\contentsline {paragraph}{Dense $\times $ CSR}{34}{}%
+\contentsline {paragraph}{COO $\times $ COO}{34}{}%
+\contentsline {subsection}{\numberline {5.2.3}Format Selection Optimization}{36}{}%
+\contentsline {subsection}{\numberline {5.2.4}Sparse with BLIS structure}{38}{}%
+\contentsline {subsection}{\numberline {5.2.5}Kronecker Graphs}{40}{}%
+\contentsline {section}{\numberline {5.3}Analysis}{42}{}%
+\contentsline {subsection}{\numberline {5.3.1}Format Benchmarking and Instrumentation Results}{42}{}%
+\contentsline {subsection}{\numberline {5.3.2}Format Selection Optimization Results}{44}{}%
+\contentsline {subsubsection}{\numberline {5.3.2.1}Blocking Sensitivity}{45}{}%
+\contentsline {subsubsection}{\numberline {5.3.2.2}Thread Sensitivity}{46}{}%
+\contentsline {subsection}{\numberline {5.3.3}Kronecker Graph Results}{46}{}%
+\contentsline {section}{\numberline {5.4}Summary}{46}{}%
+\contentsline {chapter}{\numberline {6}Recent stuff, title this better.}{59}{}%
+\contentsline {section}{\numberline {6.1}Introduction}{59}{}%
+\contentsline {paragraph}{Structured inputs.}{60}{}%
+\contentsline {paragraph}{Sweeping scale instead of comparing individual graphs.}{60}{}%
+\contentsline {paragraph}{Explaining performance with hardware counters.}{60}{}%
+\contentsline {paragraph}{TACO-generated kernels.}{60}{}%
+\contentsline {paragraph}{Scope.}{61}{}%
+\contentsline {paragraph}{Blocking.}{61}{}%
+\contentsline {section}{\numberline {6.2}Taco Limitations}{61}{}%
+\contentsline {section}{\numberline {6.3}Results}{61}{}%
+\contentsline {chapter}{\numberline {7}FPGA Stuff, title this better.}{63}{}%
+\contentsline {section}{\numberline {7.1}Theory}{63}{}%
+\contentsline {section}{\numberline {7.2}Mechanism}{64}{}%
+\contentsline {subsection}{\numberline {7.2.1}Implementation}{64}{}%
+\contentsline {section}{\numberline {7.3}Analysis}{70}{}%
+\contentsline {subsection}{\numberline {7.3.1}Preliminary Results}{70}{}%
+\contentsline {subsection}{\numberline {7.3.2}Future Work}{71}{}%
+\contentsline {section}{\numberline {7.4}Summary}{72}{}%
+\contentsline {chapter}{\numberline {8}Discussion and Future Work}{74}{}%
+\contentsline {chapter}{\numberline {A}Additional Figures}{82}{}%
+\contentsline {section}{\numberline {A.1}Results}{82}{}%

@@ -14,11 +14,18 @@
 \usepackage{subfig}
 \usepackage{minted}
 \usepackage{caption}
-\usepackage{tcolorbox}
-
 \usepackage[table]{xcolor}
 \usepackage{tabularx}
 \usepackage{booktabs}
+
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{matrix,positioning}
+
+\tikzset{
+  cell/.style={draw, minimum width=7mm, minimum height=7mm, inner sep=0pt, font=\small},
+  lbl/.style={font=\small\ttfamily, anchor=east},
+}
 \definecolor{sectionbg}{HTML}{D8F0D0}
 \newcommand{\specsection}[1]{%
   \rowcolor{sectionbg}\multicolumn{2}{l}{\textbf{#1}}\\
@@ -50,6 +57,31 @@
   breaklines=true,              % wrap long lines like the repetition_series_make(...) one
   columns=fullflexible,
   upquote=true
+}
+
+% Dense 4x4 example matrix with non-zeros shaded.
+\newcommand{\densematrix}{%
+  \matrix[matrix of math nodes, ampersand replacement=\&,
+          left delimiter={[}, right delimiter={]},
+          nodes={minimum width=7mm, minimum height=7mm, inner sep=0pt},
+          column sep=0mm, row sep=0mm] (A) at (0,0) {
+    5 \& 0 \& 0 \& 1 \\
+    0 \& 8 \& 0 \& 0 \\
+    0 \& 0 \& 3 \& 0 \\
+    6 \& 0 \& 2 \& 4 \\
+  };
+  \foreach \r/\c in {1/1,1/4,2/2,3/3,4/1,4/3,4/4}{
+    \fill[blue, opacity=0.15] (A-\r-\c.north west) rectangle (A-\r-\c.south east);
+  }
+}
+
+% One labelled array: first row = position indices (grey), second row = values.
+% \arr{node name}{position}{label}{content}
+\newcommand{\arr}[4]{%
+  \matrix[matrix of nodes, ampersand replacement=\&, nodes={cell}, anchor=west,
+          row 1/.style={nodes={draw=none, font=\scriptsize\color{gray}, minimum height=4mm}},
+          column sep=-\pgflinewidth, row sep=-\pgflinewidth] (#1) at (#2) {#4};
+  \node[lbl, left=2mm of #1-2-1] {#3};
 }
 
 % double spaced

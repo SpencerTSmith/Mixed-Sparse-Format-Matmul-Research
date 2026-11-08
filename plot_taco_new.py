@@ -4,8 +4,8 @@
 Expected input: one CSV file per run, with columns
     k,function,time,faults,bytes,flops,memops,cache,branch,alloc
 where `function` is already the format combo (e.g. 'CSR_x_CSC') and `k` is
-the matrix-size exponent (dim = 2^k). Only time/cache/branch/alloc are plotted;
-faults/bytes/flops/memops are read but currently unused -- ignored rather
+the matrix-size exponent (dim = 2^k). Only time/cache/branch/alloc/faults are plotted;
+bytes/flops/memops are read but currently unused -- ignored rather
 than errored on, so files can carry extra columns freely.
 """
 
@@ -29,15 +29,15 @@ from matplotlib.patches import Rectangle
 # Only used in 'overlay' mode.
 LINESTYLES = ['-', '--', ':', '-.']
 
-# Tuple layout used everywhere below: (k, time, cache, branch, alloc, kron_nnz).
-K, TIME, CACHE, BRANCH, ALLOC, KRON = range(6)
+# Tuple layout used everywhere below: (k, time, cache, branch, alloc, kron_nnz, faults).
+K, TIME, CACHE, BRANCH, ALLOC, KRON, FAULTS = range(7)
 
-# Number of panels per row (time, cache, branch, alloc, LLC misses/cycle).
-N_PANELS = 5
+# Number of panels per row (time, cache, branch, page faults, alloc, LLC misses/cycle).
+N_PANELS = 6
 
 
 def load_results(csv_path):
-    """Returns { 'CSR_x_CSC': [(k, time, cache, branch, alloc), ...], ... }, sorted by k.
+    """Returns { 'CSR_x_CSC': [(k, time, cache, branch, alloc, kron_nnz, faults), ...], ... }, sorted by k.
 
     Reads csv_path and groups its rows by the `function` column.
     """
@@ -53,6 +53,7 @@ def load_results(csv_path):
                 int(row['branch']),
                 int(row.get('alloc') or 0),
                 int(row.get('kron_nnz') or 0),
+                int(row.get('faults') or 0),
             ))
 
     for combo in data:
@@ -195,10 +196,12 @@ def plot_overlay(all_datasets, labels, color_map, log_scale):
                 axes[1], log_scale=log_scale, linestyles=linestyles, show_legend=False)
     plot_metric(all_datasets, labels, color_map, BRANCH, 'Branch mispredicts', 'count',
                 axes[2], log_scale=log_scale, linestyles=linestyles, show_legend=False)
-    plot_metric(all_datasets, labels, color_map, ALLOC, 'Total Requested Allocations', 'bytes',
+    plot_metric(all_datasets, labels, color_map, FAULTS, 'Page faults', 'count',
                 axes[3], log_scale=log_scale, linestyles=linestyles, show_legend=False)
-    plot_rate_metric(all_datasets, labels, color_map, CACHE, TIME, 'LLC misses / cycle',
-                      'misses per cycle', axes[4], linestyles=linestyles, show_legend=False)
+    plot_metric(all_datasets, labels, color_map, ALLOC, 'Total Requested Allocations', 'bytes',
+                axes[4], log_scale=log_scale, linestyles=linestyles, show_legend=False)
+    plot_rate_metric(all_datasets, labels, color_map, CACHE, TIME, 'Cache misses / cycle',
+                      'misses per cycle', axes[5], linestyles=linestyles, show_legend=False)
 
     build_shared_legend(fig, color_map, labels)
     fig.tight_layout(rect=[0, 0.06, 1, 1])
@@ -220,10 +223,12 @@ def plot_grid(all_datasets, labels, color_map, log_scale):
                     axes[row][1], log_scale=log_scale)
         plot_metric(d, l, color_map, BRANCH, f'Branch mispredicts — {label}', 'count',
                     axes[row][2], log_scale=log_scale)
-        plot_metric(d, l, color_map, ALLOC, f'Allocations — {label}', 'alloc',
+        plot_metric(d, l, color_map, FAULTS, f'Page faults — {label}', 'count',
                     axes[row][3], log_scale=log_scale)
+        plot_metric(d, l, color_map, ALLOC, f'Allocations — {label}', 'alloc',
+                    axes[row][4], log_scale=log_scale)
         plot_rate_metric(d, l, color_map, CACHE, TIME, f'LLC misses / cycle — {label}',
-                          'misses per cycle', axes[row][4])
+                          'misses per cycle', axes[row][5])
 
     fig.tight_layout()
     return fig
@@ -247,7 +252,7 @@ def aggregate_for_violin(all_datasets):
         for combo, rows in data.items():
             for row in rows:
                 k = row[K]
-                for metric_idx in (TIME, CACHE, BRANCH, ALLOC):
+                for metric_idx in (TIME, CACHE, BRANCH, ALLOC, FAULTS):
                     agg[combo][metric_idx][k].append(row[metric_idx])
     return agg
 
@@ -375,10 +380,11 @@ def plot_violin(all_datasets, color_map, log_scale):
     plot_violin_metric(agg, TIME, 'Time', 'timestamp cycles', axes[0], color_map, log_scale)
     plot_violin_metric(agg, CACHE, 'Cache misses', 'count', axes[1], color_map, log_scale)
     plot_violin_metric(agg, BRANCH, 'Branch mispredicts', 'count', axes[2], color_map, log_scale)
-    plot_violin_metric(agg, ALLOC, 'Allocations', 'alloc', axes[3], color_map, log_scale)
+    plot_violin_metric(agg, FAULTS, 'Page faults', 'count', axes[3], color_map, log_scale)
+    plot_violin_metric(agg, ALLOC, 'Allocations', 'alloc', axes[4], color_map, log_scale)
 
     rate_agg = aggregate_rate_for_violin(all_datasets, CACHE, TIME)
-    plot_violin_rate(rate_agg, 'LLC misses / cycle', 'misses per cycle', axes[4], color_map)
+    plot_violin_rate(rate_agg, 'LLC misses / cycle', 'misses per cycle', axes[5], color_map)
 
     fig.tight_layout()
     return fig

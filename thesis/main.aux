@@ -11,9 +11,10 @@
 \@writefile{toc}{\contentsline {section}{List of Figures}{viii}{}\protected@file@percent }
 \def\@LN@column{1}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{List of Tables}{x}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{Abstract}{xi}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{List of Tables}{xi}{}\protected@file@percent }
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {section}{Abstract}{xii}{}\protected@file@percent }
 \def\@LN@column{1}
 \@writefile{toc}{\contentsline {chapter}{\numberline {1}Introduction}{1}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
@@ -24,91 +25,293 @@
 \@writefile{toc}{\contentsline {chapter}{\numberline {2}Background}{2}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
+\newlabel{ch:background}{{2}{2}{}{chapter.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.0.1}Sparse Matrix Storage Formats}{2}{}\protected@file@percent }
 \abx@aux@cite{0}{spgemm_survey}
 \abx@aux@segm{0}{0}{spgemm_survey}
 \abx@aux@cite{0}{buluc_gilbert}
 \abx@aux@segm{0}{0}{buluc_gilbert}
+\def\@LN@column{1}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.1}{\ignorespaces COO (coordinate) format. Each non-zero is stored as a (\texttt  {row}, \texttt  {col}, \texttt  {value}) triple, so the $k$-th entry of the three arrays describes the $k$-th non-zero.}}{3}{}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:coo}{{2.1}{3}{Sparse Matrix Storage Formats}{figure.2.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.2}{\ignorespaces CSR (compressed sparse row) format. \texttt  {values} and \texttt  {col\_indices} hold the non-zero values and their column indices, row by row. Row $i$ occupies positions \texttt  {row\_ptr[i]} to \texttt  {row\_ptr[i+1]-1}; e.g.\ row 3 spans positions 4 to 6.}}{3}{}\protected@file@percent }
+\newlabel{fig:csr}{{2.2}{3}{Sparse Matrix Storage Formats}{figure.2.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.2}SpGEMM}{3}{}\protected@file@percent }
+\abx@aux@cite{0}{srivastava2020matraptor}
+\abx@aux@segm{0}{0}{srivastava2020matraptor}
+\abx@aux@cite{0}{zhang2020sparch}
+\abx@aux@segm{0}{0}{zhang2020sparch}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.3}{\ignorespaces CSC (compressed sparse column) format. The non-zeros are stored column by column; \texttt  {row\_indices} holds their row indices. Column $j$ occupies positions \texttt  {col\_ptr[j]} to \texttt  {col\_ptr[j+1]-1}; e.g.\ column 2 spans positions 3 to 4.}}{4}{}\protected@file@percent }
+\newlabel{fig:csc}{{2.3}{4}{Sparse Matrix Storage Formats}{figure.2.3}{}}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.3}SpGEMM Dataflows}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Inner product ($i,j,k$).}{4}{}\protected@file@percent }
+\abx@aux@cite{0}{pal2018outerspace}
+\abx@aux@segm{0}{0}{pal2018outerspace}
+\abx@aux@cite{0}{zhang2020sparch}
+\abx@aux@segm{0}{0}{zhang2020sparch}
+\abx@aux@cite{0}{bulucgilbert2008hypersparse}
+\abx@aux@segm{0}{0}{bulucgilbert2008hypersparse}
+\abx@aux@cite{0}{bulucgilbert2010highly}
+\abx@aux@segm{0}{0}{bulucgilbert2010highly}
+\abx@aux@cite{0}{gustavson1978}
+\abx@aux@segm{0}{0}{gustavson1978}
+\abx@aux@cite{0}{zhang2021gamma}
+\abx@aux@segm{0}{0}{zhang2021gamma}
+\abx@aux@cite{0}{gilbert1992matlab}
+\abx@aux@segm{0}{0}{gilbert1992matlab}
+\abx@aux@cite{0}{nagasaka2018highperformance}
+\abx@aux@segm{0}{0}{nagasaka2018highperformance}
+\abx@aux@cite{0}{nagasaka2018highperformance}
+\abx@aux@segm{0}{0}{nagasaka2018highperformance}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {paragraph}{Outer product ($k,i,j$).}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Row-wise product / Gustavson ($i,k,j$).}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Accumulating partial products.}{5}{}\protected@file@percent }
 \abx@aux@cite{0}{blis}
 \abx@aux@segm{0}{0}{blis}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.4}{\ignorespaces Inner-product dataflow. One output element $c_{ij}$ is produced at a time by intersecting row $i$ of $A$ with column $j$ of $B$ and summing the matching products. Each output is complete when it is written, but most intersections are empty for sparse inputs, so effort is spent on index matching.}}{6}{}\protected@file@percent }
+\newlabel{fig:df-inner}{{2.4}{6}{Relevance to format selection.}{figure.2.4}{}}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.2}SpGEMM}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.3}BLIS}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Relevance to format selection.}{6}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2.1}{\ignorespaces SpGEMM dataflows, operand formats chosen by most naturally fitting to indexing order.}}{6}{}\protected@file@percent }
+\newlabel{tab:dataflows}{{2.1}{6}{Relevance to format selection.}{table.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.4}BLIS}{6}{}\protected@file@percent }
 \abx@aux@cite{0}{roofline}
 \abx@aux@segm{0}{0}{roofline}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.5}{\ignorespaces Outer-product dataflow. For each index $k$, column $k$ of $A$ is multiplied with row $k$ of $B$, producing a partial result that touches many positions of $C$. Every input element is read once, but the partial results from different $k$ must be merged.}}{7}{}\protected@file@percent }
+\newlabel{fig:df-outer}{{2.5}{7}{Relevance to format selection.}{figure.2.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.6}{\ignorespaces Row-wise (Gustavson) dataflow. Each non-zero $a_{ik}$ in row $i$ of $A$ selects row $k$ of $B$. The scaled rows are accumulated into row $i$ of $C$. One output row is built at a time, so the accumulator for that row could potentially be kept in cache.}}{7}{}\protected@file@percent }
+\newlabel{fig:df-row}{{2.6}{7}{Relevance to format selection.}{figure.2.6}{}}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.5}Roofline Model}{7}{}\protected@file@percent }
 \abx@aux@cite{0}{taco}
 \abx@aux@segm{0}{0}{taco}
 \abx@aux@cite{0}{kronecker}
 \abx@aux@segm{0}{0}{kronecker}
+\abx@aux@cite{0}{moez}
+\abx@aux@segm{0}{0}{moez}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.4}Roofline Model}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.5}TACO}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.6}Kronecker Graphs}{4}{}\protected@file@percent }
-\abx@aux@cite{0}{pyomo}
-\abx@aux@segm{0}{0}{pyomo}
-\abx@aux@cite{0}{mindtpy}
-\abx@aux@segm{0}{0}{mindtpy}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.6}TACO}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.7}Kronecker Graphs}{8}{}\protected@file@percent }
+\abx@aux@cite{0}{bulucgilbert2008hypersparse}
+\abx@aux@segm{0}{0}{bulucgilbert2008hypersparse}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.7}Optimization}{5}{}\protected@file@percent }
-\def\@LN@column{1}
-\@writefile{toc}{\contentsline {chapter}{\numberline {3}Literature Review}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {3}Literature Review}{9}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
+\newlabel{ch:lit}{{3}{9}{Kronecker Graphs}{chapter.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.1}Outline}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.2}Sparse Formats and Format Selection}{9}{}\protected@file@percent }
+\newlabel{sec:lit-formats}{{3.2}{9}{Sparse Formats and Format Selection}{section.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.1}Formats beyond CSR, CSC, and COO}{9}{}\protected@file@percent }
+\abx@aux@cite{0}{bell2009implementing}
+\abx@aux@segm{0}{0}{bell2009implementing}
+\abx@aux@cite{0}{ellpack}
+\abx@aux@segm{0}{0}{ellpack}
+\abx@aux@cite{0}{unified-format}
+\abx@aux@segm{0}{0}{unified-format}
+\abx@aux@cite{0}{bulucfineman2009csb}
+\abx@aux@segm{0}{0}{bulucfineman2009csb}
+\abx@aux@cite{0}{vuduc2003thesis}
+\abx@aux@segm{0}{0}{vuduc2003thesis}
+\abx@aux@cite{0}{vuduc2005oski}
+\abx@aux@segm{0}{0}{vuduc2005oski}
+\abx@aux@cite{0}{li2013smat}
+\abx@aux@segm{0}{0}{li2013smat}
+\abx@aux@cite{0}{sedaghati2015automatic}
+\abx@aux@segm{0}{0}{sedaghati2015automatic}
+\abx@aux@cite{0}{zhao2018bridging}
+\abx@aux@segm{0}{0}{zhao2018bridging}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}Automated Format Selection}{10}{}\protected@file@percent }
+\abx@aux@cite{0}{taco_formats}
+\abx@aux@segm{0}{0}{taco_formats}
+\abx@aux@cite{0}{taco}
+\abx@aux@segm{0}{0}{taco}
+\abx@aux@cite{0}{taco}
+\abx@aux@segm{0}{0}{taco}
+\abx@aux@cite{0}{taco}
+\abx@aux@segm{0}{0}{taco}
+\abx@aux@cite{0}{taco_formats}
+\abx@aux@segm{0}{0}{taco_formats}
+\abx@aux@cite{0}{taco_formats}
+\abx@aux@segm{0}{0}{taco_formats}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2.1}TACO.}{11}{}\protected@file@percent }
+\abx@aux@cite{0}{taco_formats}
+\abx@aux@segm{0}{0}{taco_formats}
+\abx@aux@cite{0}{taco}
+\abx@aux@segm{0}{0}{taco}
+\abx@aux@cite{0}{taco_formats}
+\abx@aux@segm{0}{0}{taco_formats}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {paragraph}{Matrices as coordinate hierarchies.}{12}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Format to Dataflow.}{12}{}\protected@file@percent }
+\abx@aux@cite{0}{taco_formats}
+\abx@aux@segm{0}{0}{taco_formats}
+\abx@aux@cite{0}{taco_formats}
+\abx@aux@segm{0}{0}{taco_formats}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces One matrix in three formats (indices from zero). In CSR, \texttt  {pos[i]} to \texttt  {pos[i+1]} delimits row $i$ in \texttt  {crd}; row~1 is empty, so \texttt  {pos[1]}$=$\texttt  {pos[2]}. CSC is the same over columns. COO repeats the row coordinate per non-zero and has no \texttt  {pos}.}}{13}{}\protected@file@percent }
+\newlabel{fig:taco-formats}{{3.1}{13}{Matrices as coordinate hierarchies.}{figure.3.1}{}}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {paragraph}{Sparse $\times $ sparse products.}{13}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limits.}{13}{}\protected@file@percent }
+\abx@aux@cite{0}{bell2009implementing}
+\abx@aux@segm{0}{0}{bell2009implementing}
+\abx@aux@cite{0}{vuduc2005vbr}
+\abx@aux@segm{0}{0}{vuduc2005vbr}
+\abx@aux@cite{0}{niu2021tilespmv}
+\abx@aux@segm{0}{0}{niu2021tilespmv}
+\abx@aux@cite{0}{niu2022tilespgemm}
+\abx@aux@segm{0}{0}{niu2022tilespgemm}
+\abx@aux@cite{0}{vuduc2003thesis}
+\abx@aux@segm{0}{0}{vuduc2003thesis}
+\abx@aux@cite{0}{li2013smat}
+\abx@aux@segm{0}{0}{li2013smat}
+\abx@aux@cite{0}{sedaghati2015automatic}
+\abx@aux@segm{0}{0}{sedaghati2015automatic}
+\abx@aux@cite{0}{zhao2018bridging}
+\abx@aux@segm{0}{0}{zhao2018bridging}
+\abx@aux@cite{0}{niu2021tilespmv}
+\abx@aux@segm{0}{0}{niu2021tilespmv}
+\abx@aux@cite{0}{niu2022tilespgemm}
+\abx@aux@segm{0}{0}{niu2022tilespgemm}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}Heterogeneity within a matrix}{14}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}Motivating Flop and Memory-Operation Models}{14}{}\protected@file@percent }
+\newlabel{sec:lit-models}{{3.3}{14}{Motivating Flop and Memory-Operation Models}{section.3.3}{}}
+\abx@aux@cite{0}{roofline}
+\abx@aux@segm{0}{0}{roofline}
+\abx@aux@cite{0}{bulucgilbert2010highly}
+\abx@aux@segm{0}{0}{bulucgilbert2010highly}
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Format-selection approaches compared by kernel, granularity, and selection method.}}{15}{}\protected@file@percent }
+\newlabel{tab:lit-formats}{{3.1}{15}{Heterogeneity within a matrix}{table.3.1}{}}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.1}Operation Counts}{15}{}\protected@file@percent }
+\abx@aux@cite{0}{nagasaka2018highperformance}
+\abx@aux@segm{0}{0}{nagasaka2018highperformance}
+\abx@aux@cite{0}{munoz2023flexagon}
+\abx@aux@segm{0}{0}{munoz2023flexagon}
+\abx@aux@cite{0}{weaver2013nondeterminism}
+\abx@aux@segm{0}{0}{weaver2013nondeterminism}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.2}Using operation counts for prediction}{16}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.3}Limits of operation counts}{16}{}\protected@file@percent }
+\abx@aux@cite{0}{davis2011suitesparse}
+\abx@aux@segm{0}{0}{davis2011suitesparse}
+\abx@aux@cite{0}{kolodziej2019suitesparse}
+\abx@aux@segm{0}{0}{kolodziej2019suitesparse}
+\abx@aux@cite{0}{leskovec2014snap}
+\abx@aux@segm{0}{0}{leskovec2014snap}
+\abx@aux@cite{0}{leskovec2016snaplib}
+\abx@aux@segm{0}{0}{leskovec2016snaplib}
+\abx@aux@cite{0}{li2013smat}
+\abx@aux@segm{0}{0}{li2013smat}
+\abx@aux@cite{0}{niu2022tilespgemm}
+\abx@aux@segm{0}{0}{niu2022tilespgemm}
+\abx@aux@cite{0}{chakrabarti2004rmat}
+\abx@aux@segm{0}{0}{chakrabarti2004rmat}
+\abx@aux@cite{0}{kronecker}
+\abx@aux@segm{0}{0}{kronecker}
+\abx@aux@cite{0}{moez}
+\abx@aux@segm{0}{0}{moez}
+\abx@aux@cite{0}{gustavson1978}
+\abx@aux@segm{0}{0}{gustavson1978}
+\abx@aux@cite{0}{pal2018outerspace}
+\abx@aux@segm{0}{0}{pal2018outerspace}
+\abx@aux@cite{0}{zhang2020sparch}
+\abx@aux@segm{0}{0}{zhang2020sparch}
+\abx@aux@cite{0}{srivastava2020matraptor}
+\abx@aux@segm{0}{0}{srivastava2020matraptor}
+\abx@aux@cite{0}{zhang2021gamma}
+\abx@aux@segm{0}{0}{zhang2021gamma}
+\abx@aux@cite{0}{munoz2023flexagon}
+\abx@aux@segm{0}{0}{munoz2023flexagon}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {section}{\numberline {3.4}Benchmark Inputs for Sparse Kernels}{17}{}\protected@file@percent }
+\newlabel{sec:lit-inputs}{{3.4}{17}{Benchmark Inputs for Sparse Kernels}{section.3.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.1}Collections of real matrices}{17}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.2}Synthetic generators}{17}{}\protected@file@percent }
+\abx@aux@cite{0}{fowers2014fpga}
+\abx@aux@segm{0}{0}{fowers2014fpga}
+\abx@aux@cite{0}{fpga-stream}
+\abx@aux@segm{0}{0}{fpga-stream}
+\abx@aux@cite{0}{overcoming-irreg}
+\abx@aux@segm{0}{0}{overcoming-irreg}
+\abx@aux@cite{0}{hybrid_format}
+\abx@aux@segm{0}{0}{hybrid_format}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {section}{\numberline {3.5}Hardware Acceleration for Sparse Computations}{18}{}\protected@file@percent }
+\newlabel{sec:lit-accelerator}{{3.5}{18}{Hardware Acceleration for Sparse Computations}{section.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}SpGEMM accelerators and dataflows}{18}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}FPGA implementations}{18}{}\protected@file@percent }
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {section}{\numberline {3.6}Gaps Identified}{19}{}\protected@file@percent }
+\newlabel{sec:lit-gaps}{{3.6}{19}{Gaps Identified}{section.3.6}{}}
 \abx@aux@cite{0}{muratori}
 \abx@aux@segm{0}{0}{muratori}
 \abx@aux@cite{0}{perf_2024}
 \abx@aux@segm{0}{0}{perf_2024}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {chapter}{\numberline {4}Repetition Test Library}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {4}Repetition Test Library}{20}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{reptest}{{4}{7}{Optimization}{chapter.4}{}}
+\newlabel{ch:reptest}{{4}{20}{Gaps Identified}{chapter.4}{}}
 \abx@aux@cite{0}{perf_2024}
 \abx@aux@segm{0}{0}{perf_2024}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}Motivation}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Hardware counters for diagnosis.}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Measurement of marked regions, not whole processes.}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Program-owned control flow.}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}Motivation}{21}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hardware counters for diagnosis.}{21}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Measurement of marked regions, not whole processes.}{21}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Program-owned control flow.}{21}{}\protected@file@percent }
 \abx@aux@cite{0}{papi}
 \abx@aux@segm{0}{0}{papi}
+\abx@aux@cite{0}{perf}
+\abx@aux@segm{0}{0}{perf}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {paragraph}{Simplicity.}{9}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Example Usage}{9}{}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {4.1}{\ignorespaces Example usage of Repetition Test Library}}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Simplicity.}{22}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}Specific Measurements}{22}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Time.}{22}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hardware counters.}{22}{}\protected@file@percent }
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {paragraph}{Page faults.}{23}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Allocations.}{23}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}Example Usage}{23}{}\protected@file@percent }
+\def\@LN@column{1}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {4.1}{\ignorespaces Example usage of Repetition Test Library}}{24}{}\protected@file@percent }
 \def\@LN@column{1}
 \def\@LN@column{1}
 \def\@LN@column{1}
 \def\@LN@column{1}
-\def\@LN@column{1}
-\@writefile{toc}{\contentsline {chapter}{\numberline {5}PACT Stuff, title this better.}{14}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}PACT Stuff, title this better.}{28}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{ch:pact}{{5}{14}{Example Usage}{chapter.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.1}Introduction}{14}{}\protected@file@percent }
+\newlabel{ch:pact}{{5}{28}{Example Usage}{chapter.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.1}Introduction}{28}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {paragraph}{Attribution.}{15}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Attribution.}{29}{}\protected@file@percent }
 \abx@aux@cite{0}{muratori}
 \abx@aux@segm{0}{0}{muratori}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{\numberline {5.2}Mechanism / Methodology}{16}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.1}Instrumentation and Benchmarking}{16}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.2}Mechanism / Methodology}{30}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.1}Instrumentation and Benchmarking}{30}{}\protected@file@percent }
 \abx@aux@cite{0}{matplotlib}
 \abx@aux@segm{0}{0}{matplotlib}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {5.1}{\ignorespaces Instrumentation macros}}{17}{}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {5.1}{\ignorespaces Instrumentation macros}}{31}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {5.2}{\ignorespaces Implementation macro example, backslashes ommitted for formatting, STATEMENT expands to a do while(0)}}{18}{}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {5.2}{\ignorespaces Implementation macro example, backslashes ommitted for formatting, STATEMENT expands to a do while(0)}}{32}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.2}Formula Derivations}{19}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.2}Formula Derivations}{33}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {paragraph}{Dense $\times $ CSR}{20}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{COO $\times $ COO}{20}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Dense $\times $ CSR}{34}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{COO $\times $ COO}{34}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{lot}{\contentsline {table}{\numberline {5.1}{\ignorespaces Arithmetic and memory operation count formulae for all sixteen format combinations. $\text  {matches} = L_{NZ} \cdot R_{NZ} / L_{CC}$, $L_S = \min (L_{RC}, L_{NZ})$, $R_S = \min (L_{CC}, R_{NZ})$.}}{22}{}\protected@file@percent }
-\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{tab:formulas}{{5.1}{22}{COO $\times $ COO}{table.5.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.1}{\ignorespaces Arithmetic and memory operation count formulae for all sixteen format combinations. $\text  {matches} = L_{NZ} \cdot R_{NZ} / L_{CC}$, $L_S = \min (L_{RC}, L_{NZ})$, $R_S = \min (L_{CC}, R_{NZ})$.}}{36}{}\protected@file@percent }
+\newlabel{tab:formulas}{{5.1}{36}{COO $\times $ COO}{table.5.1}{}}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.3}Format Selection Optimization}{22}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.3}Format Selection Optimization}{36}{}\protected@file@percent }
 \abx@aux@cite{0}{pyomo}
 \abx@aux@segm{0}{0}{pyomo}
 \abx@aux@cite{0}{mindtpy}
@@ -121,25 +324,25 @@
 \abx@aux@cite{0}{blis}
 \abx@aux@segm{0}{0}{blis}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.4}Sparse with BLIS structure}{24}{}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {5.3}{\ignorespaces Multisparse Matrix struct}}{25}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.4}Sparse with BLIS structure}{38}{}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {5.3}{\ignorespaces Multisparse Matrix struct}}{39}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.5}Kronecker Graphs}{26}{}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {5.4}{\ignorespaces Sparse BLIS Implementation}}{27}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.5}Kronecker Graphs}{40}{}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {5.4}{\ignorespaces Sparse BLIS Implementation}}{41}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{\numberline {5.3}Analysis}{28}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3.1}Format Benchmarking and Instrumentation Results}{28}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.3}Analysis}{42}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3.1}Format Benchmarking and Instrumentation Results}{42}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces Observed and Formula FLOPs. Observed data points fall mostly on the dotted line plotted from formulas.}}{30}{}\protected@file@percent }
-\newlabel{fig:flops}{{5.1}{30}{Format Benchmarking and Instrumentation Results}{figure.5.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces Observed and Formula FLOPs. Observed data points fall mostly on the dotted line plotted from formulas.}}{44}{}\protected@file@percent }
+\newlabel{fig:flops}{{5.1}{44}{Format Benchmarking and Instrumentation Results}{figure.5.1}{}}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3.2}Format Selection Optimization Results}{30}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3.2}Format Selection Optimization Results}{44}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.2.1}Blocking Sensitivity}{31}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.2.1}Blocking Sensitivity}{45}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.2.2}Thread Sensitivity}{32}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3.3}Kronecker Graph Results}{32}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5.4}Summary}{32}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.2.2}Thread Sensitivity}{46}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3.3}Kronecker Graph Results}{46}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.4}Summary}{46}{}\protected@file@percent }
 \abx@aux@cite{0}{blis}
 \abx@aux@segm{0}{0}{blis}
 \abx@aux@cite{0}{pyomo}
@@ -149,130 +352,163 @@
 \abx@aux@cite{0}{kronecker}
 \abx@aux@segm{0}{0}{kronecker}
 \def\@LN@column{1}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.2}{\ignorespaces Observed and Formula memops. Observed data points fall mostly on the dotted line plotted from formulas.}}{34}{}\protected@file@percent }
-\newlabel{fig:memops}{{5.2}{34}{Format Benchmarking and Instrumentation Results}{figure.5.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces FLOPs: Relative error of Formula vs Observed. Very close fit by the formula, and flop count is determined entirely by compression combination.}}{35}{}\protected@file@percent }
-\newlabel{fig:flop_error}{{5.3}{35}{Format Benchmarking and Instrumentation Results}{figure.5.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces memops: Relative error of Formula vs Observed. Close fit by most formulas, variability due to the effect of variability of sparsity patterns.}}{36}{}\protected@file@percent }
-\newlabel{fig:memop_error}{{5.4}{36}{Format Benchmarking and Instrumentation Results}{figure.5.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime Performance: Timestamp Cycles. Crossover points at 0.7\% density when performing a simple dense x dense is better.}}{37}{}\protected@file@percent }
-\newlabel{fig:time}{{5.5}{37}{Format Benchmarking and Instrumentation Results}{figure.5.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces Roofline Model. Sparse formats are entirely memory bound.}}{38}{}\protected@file@percent }
-\newlabel{fig:roofline}{{5.6}{38}{Format Benchmarking and Instrumentation Results}{figure.5.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces Diagonal Matrix Results. Poor performance compared to simple global compression, but optimal micro-format selection wins over naive format selection.}}{39}{}\protected@file@percent }
-\newlabel{fig:diagonal}{{5.7}{39}{Format Selection Optimization Results}{figure.5.7}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.8}{\ignorespaces Block Size Performance Impact. Performance degrades as block sizes increase.}}{40}{}\protected@file@percent }
-\newlabel{fig:block_size}{{5.8}{40}{Blocking Sensitivity}{figure.5.8}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.9}{\ignorespaces Thread Count Performance Impact. At matrix sizes that can be solved, threading provides minimal benefit beyond 2 threads.}}{41}{}\protected@file@percent }
-\newlabel{fig:threads}{{5.9}{41}{Thread Sensitivity}{figure.5.9}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.10}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{42}{}\protected@file@percent }
-\newlabel{fig:kron}{{5.10}{42}{Kronecker Graph Results}{figure.5.10}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.11}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{43}{}\protected@file@percent }
-\newlabel{fig:kron}{{5.11}{43}{Kronecker Graph Results}{figure.5.11}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.12}{\ignorespaces Kronecker Graph k=10 (AS-Newman) block size sweep. Block dispatch overhead generally decreases as block size increases, but not nearly enough to be comparable to simple global compression.}}{44}{}\protected@file@percent }
-\newlabel{fig:kron_blocks}{{5.12}{44}{Kronecker Graph Results}{figure.5.12}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.2}{\ignorespaces Observed and Formula memops. Observed data points fall mostly on the dotted line plotted from formulas.}}{48}{}\protected@file@percent }
+\newlabel{fig:memops}{{5.2}{48}{Format Benchmarking and Instrumentation Results}{figure.5.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces FLOPs: Relative error of Formula vs Observed. Very close fit by the formula, and flop count is determined entirely by compression combination.}}{49}{}\protected@file@percent }
+\newlabel{fig:flop_error}{{5.3}{49}{Format Benchmarking and Instrumentation Results}{figure.5.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces memops: Relative error of Formula vs Observed. Close fit by most formulas, variability due to the effect of variability of sparsity patterns.}}{50}{}\protected@file@percent }
+\newlabel{fig:memop_error}{{5.4}{50}{Format Benchmarking and Instrumentation Results}{figure.5.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime Performance: Timestamp Cycles. Crossover points at 0.7\% density when performing a simple dense x dense is better.}}{51}{}\protected@file@percent }
+\newlabel{fig:time}{{5.5}{51}{Format Benchmarking and Instrumentation Results}{figure.5.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces Roofline Model. Sparse formats are entirely memory bound.}}{52}{}\protected@file@percent }
+\newlabel{fig:roofline}{{5.6}{52}{Format Benchmarking and Instrumentation Results}{figure.5.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces Diagonal Matrix Results. Poor performance compared to simple global compression, but optimal micro-format selection wins over naive format selection.}}{53}{}\protected@file@percent }
+\newlabel{fig:diagonal}{{5.7}{53}{Format Selection Optimization Results}{figure.5.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.8}{\ignorespaces Block Size Performance Impact. Performance degrades as block sizes increase.}}{54}{}\protected@file@percent }
+\newlabel{fig:block_size}{{5.8}{54}{Blocking Sensitivity}{figure.5.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.9}{\ignorespaces Thread Count Performance Impact. At matrix sizes that can be solved, threading provides minimal benefit beyond 2 threads.}}{55}{}\protected@file@percent }
+\newlabel{fig:threads}{{5.9}{55}{Thread Sensitivity}{figure.5.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.10}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{56}{}\protected@file@percent }
+\newlabel{fig:kron}{{5.10}{56}{Kronecker Graph Results}{figure.5.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.11}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{57}{}\protected@file@percent }
+\newlabel{fig:kron}{{5.11}{57}{Kronecker Graph Results}{figure.5.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.12}{\ignorespaces Kronecker Graph k=10 (AS-Newman) block size sweep. Block dispatch overhead generally decreases as block size increases, but not nearly enough to be comparable to simple global compression.}}{58}{}\protected@file@percent }
+\newlabel{fig:kron_blocks}{{5.12}{58}{Kronecker Graph Results}{figure.5.12}{}}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}Recent stuff, title this better.}{45}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Recent stuff, title this better.}{59}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{ch:kron_taco}{{6}{45}{Summary}{chapter.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.1}Introduction}{45}{}\protected@file@percent }
+\newlabel{ch:kron_taco}{{6}{59}{Summary}{chapter.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Introduction}{59}{}\protected@file@percent }
 \abx@aux@cite{0}{kronecker}
 \abx@aux@segm{0}{0}{kronecker}
 \abx@aux@cite{0}{taco}
 \abx@aux@segm{0}{0}{taco}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {paragraph}{Structured inputs.}{46}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Sweeping scale instead of comparing named graphs.}{46}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Explaining performance with hardware counters.}{46}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Compiler-generated kernels.}{46}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Structured inputs.}{60}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Sweeping scale instead of comparing individual graphs.}{60}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Explaining performance with hardware counters.}{60}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{TACO-generated kernels.}{60}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {paragraph}{Scope.}{47}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Blocking.}{47}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6.2}Taco Limitations}{47}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6.3}Results}{47}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {6.1}{\ignorespaces TODO: This needs to be broken up, this is unreadable, probably do the grid based? or perhaps just try letting each sub-figure be its own figure while still having each kronecker to be on the same one... more comparable that way...}}{48}{}\protected@file@percent }
-\newlabel{fig:taco_altogether}{{6.1}{48}{Results}{figure.6.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.2}{\ignorespaces TODO: this one is going to be humongous with all of them. Also need to do this across more than just varying K, again don't want to make the mistake of confounding the difference come from structure when it may just be due to density or size... also need to mention that runner-ups are very, very close in almost all cases.}}{49}{}\protected@file@percent }
-\newlabel{fig:taco_best_for_k}{{6.2}{49}{Results}{figure.6.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Scope.}{61}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Blocking.}{61}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Taco Limitations}{61}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.3}Results}{61}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6.1}{\ignorespaces TODO: this one is going to be humongous with all of them. Also need to do this across more than just varying K, again don't want to make the mistake of confounding the difference come from structure when it may just be due to density or size... also need to mention that runner-ups are very, very close in almost all cases.}}{62}{}\protected@file@percent }
+\newlabel{fig:taco_best_for_k}{{6.1}{62}{Results}{figure.6.1}{}}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {chapter}{\numberline {7}FPGA Stuff, title this better.}{50}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {7}FPGA Stuff, title this better.}{63}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {7.1}Theory}{50}{}\protected@file@percent }
+\newlabel{ch:fpga}{{7}{63}{Results}{chapter.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7.1}Theory}{63}{}\protected@file@percent }
 \abx@aux@cite{0}{overcoming-irreg}
 \abx@aux@segm{0}{0}{overcoming-irreg}
 \abx@aux@cite{0}{xilinx_guide}
 \abx@aux@segm{0}{0}{xilinx_guide}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{\numberline {7.2}Mechanism}{51}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.2.1}Implementation}{51}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {7.1}{\ignorespaces Current Sequential Implementation}}{51}{}\protected@file@percent }
-\newlabel{fig:curr_impl}{{7.1}{51}{Implementation}{figure.7.1}{}}
-\newlabel{lst:block-header}{{7.1}{52}{Implementation}{lstlisting.7.1}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {7.1}{\ignorespaces Block header structure for mixed-format streaming.}}{52}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7.2}Mechanism}{64}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2.1}Implementation}{64}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7.1}{\ignorespaces Current Sequential Implementation}}{64}{}\protected@file@percent }
+\newlabel{fig:curr_impl}{{7.1}{64}{Implementation}{figure.7.1}{}}
+\newlabel{lst:block-header}{{7.1}{65}{Implementation}{lstlisting.7.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {7.1}{\ignorespaces Block header structure for mixed-format streaming.}}{65}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{lof}{\contentsline {figure}{\numberline {7.2}{\ignorespaces Conceptual View of Matrix Stream}}{53}{}\protected@file@percent }
-\newlabel{fig:concept}{{7.2}{53}{Implementation}{figure.7.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7.2}{\ignorespaces Conceptual View of Matrix Stream}}{66}{}\protected@file@percent }
+\newlabel{fig:concept}{{7.2}{66}{Implementation}{figure.7.2}{}}
 \abx@aux@cite{0}{xilinx_guide}
 \abx@aux@segm{0}{0}{xilinx_guide}
 \def\@LN@column{1}
-\@writefile{lot}{\contentsline {table}{\numberline {7.1}{\ignorespaces Stream Memory Layout: fixed-size header followed by format-specific data.}}{54}{}\protected@file@percent }
-\newlabel{tab:stream-layout}{{7.1}{54}{Implementation}{table.7.1}{}}
-\newlabel{lst:processing}{{7.2}{55}{Implementation}{lstlisting.7.2}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {7.2}{\ignorespaces HLS Stream Processing on FPGA}}{55}{}\protected@file@percent }
-\newlabel{lst:coo_compute}{{7.3}{56}{Implementation}{lstlisting.7.3}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {7.3}{\ignorespaces HLS Stream COO Block Compute}}{56}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7.1}{\ignorespaces Stream Memory Layout: fixed-size header followed by format-specific data.}}{67}{}\protected@file@percent }
+\newlabel{tab:stream-layout}{{7.1}{67}{Implementation}{table.7.1}{}}
+\newlabel{lst:processing}{{7.2}{68}{Implementation}{lstlisting.7.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {7.2}{\ignorespaces HLS Stream Processing on FPGA}}{68}{}\protected@file@percent }
+\newlabel{lst:coo_compute}{{7.3}{69}{Implementation}{lstlisting.7.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {7.3}{\ignorespaces HLS Stream COO Block Compute}}{69}{}\protected@file@percent }
 \abx@aux@cite{0}{hybrid_format}
 \abx@aux@segm{0}{0}{hybrid_format}
 \abx@aux@cite{0}{fpga-stream}
 \abx@aux@segm{0}{0}{fpga-stream}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{\numberline {7.3}Analysis}{57}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.1}Preliminary Results}{57}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7.3}Analysis}{70}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.1}Preliminary Results}{70}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{lot}{\contentsline {table}{\numberline {7.2}{\ignorespaces Memory Usage for Matrix Size}}{58}{}\protected@file@percent }
-\newlabel{tab:memory-usage}{{7.2}{58}{Preliminary Results}{table.7.2}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7.3}{\ignorespaces FPGA Synthesis Resource Usage}}{58}{}\protected@file@percent }
-\newlabel{tab:fpga-usage}{{7.3}{58}{Preliminary Results}{table.7.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.2}Future Work}{58}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7.2}{\ignorespaces Memory Usage for Matrix Size}}{71}{}\protected@file@percent }
+\newlabel{tab:memory-usage}{{7.2}{71}{Preliminary Results}{table.7.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7.3}{\ignorespaces FPGA Synthesis Resource Usage}}{71}{}\protected@file@percent }
+\newlabel{tab:fpga-usage}{{7.3}{71}{Preliminary Results}{table.7.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.2}Future Work}{71}{}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{lof}{\contentsline {figure}{\numberline {7.3}{\ignorespaces Future Parallel Implementation}}{59}{}\protected@file@percent }
-\newlabel{fig:reduc_impl}{{7.3}{59}{Future Work}{figure.7.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7.4}Summary}{59}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7.3}{\ignorespaces Future Parallel Implementation}}{72}{}\protected@file@percent }
+\newlabel{fig:reduc_impl}{{7.3}{72}{Future Work}{figure.7.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7.4}Summary}{72}{}\protected@file@percent }
 \def\@LN@column{1}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {chapter}{\numberline {8}Discussion and Future Work}{61}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {8}Discussion and Future Work}{74}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \def\@LN@column{1}
 \def\@LN@column{1}
 \def\@LN@column{1}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {chapter}{\numberline {A}Additional Figures}{65}{}\protected@file@percent }
+\def\@LN@column{1}
+\def\@LN@column{1}
+\def\@LN@column{1}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {chapter}{\numberline {A}Additional Figures}{82}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {A.1}Results}{65}{}\protected@file@percent }
-\newlabel{appendices:results}{{A.1}{65}{Results}{section.1.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {A.1}Results}{82}{}\protected@file@percent }
+\newlabel{appendices:results}{{A.1}{82}{Results}{section.1.1}{}}
 \xdef \mintedoldcachechecksum{\detokenize{\minted@cachechecksum }}
-\abx@aux@read@bbl@mdfivesum{784216D1091BA5AC1C25084CBF349F62}
+\abx@aux@read@bbl@mdfivesum{E7486D659A883D14D09F65F932841919}
 \abx@aux@defaultrefcontext{0}{taco_formats}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{spgemm_survey}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{buluc_gilbert}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{srivastava2020matraptor}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{zhang2020sparch}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{pal2018outerspace}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{bulucgilbert2008hypersparse}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{bulucgilbert2010highly}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{gustavson1978}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{zhang2021gamma}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{gilbert1992matlab}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{nagasaka2018highperformance}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{blis}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{roofline}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{taco}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{kronecker}{none/global//global/global/global}
-\abx@aux@defaultrefcontext{0}{pyomo}{none/global//global/global/global}
-\abx@aux@defaultrefcontext{0}{mindtpy}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{moez}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{bell2009implementing}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{ellpack}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{unified-format}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{bulucfineman2009csb}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{vuduc2003thesis}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{vuduc2005oski}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{li2013smat}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{sedaghati2015automatic}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{zhao2018bridging}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{vuduc2005vbr}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{niu2021tilespmv}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{niu2022tilespgemm}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{munoz2023flexagon}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{weaver2013nondeterminism}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{davis2011suitesparse}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{kolodziej2019suitesparse}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{leskovec2014snap}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{leskovec2016snaplib}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{chakrabarti2004rmat}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{fowers2014fpga}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{fpga-stream}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{overcoming-irreg}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{hybrid_format}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{muratori}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{perf_2024}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{papi}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{matplotlib}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{pyomo}{none/global//global/global/global}
+\abx@aux@defaultrefcontext{0}{mindtpy}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{glpk}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{ipopt}{none/global//global/global/global}
-\abx@aux@defaultrefcontext{0}{overcoming-irreg}{none/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{xilinx_guide}{none/global//global/global/global}
-\abx@aux@defaultrefcontext{0}{hybrid_format}{none/global//global/global/global}
-\abx@aux@defaultrefcontext{0}{fpga-stream}{none/global//global/global/global}
-\gdef \@abspage@last{76}
+\gdef \@abspage@last{94}

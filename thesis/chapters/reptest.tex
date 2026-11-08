@@ -1,5 +1,5 @@
 \chapter{Repetition Test Library}
-\label{reptest}
+\label{ch:reptest}
 
 This chapter discusses the library I created for benchmarking which was used in most experiments excepting any experiments utilizing FPGAs. Though not all
 functionality was present through all experiments using it. It was inspired
@@ -34,18 +34,51 @@ measurements scoped to individual kernels, so the harness had to let the program
 
 \paragraph{Program-owned control flow.}
 Many benchmarking frameworks invert control. Often they require the user to register a
-function and the framework or library decides when and how to call it. This is
+function and the framework or library decides when and how to call it. This can be
 awkward for kernels that need per-experiment setup, such as matrix
-generation at a chosen density, or that are driven from a sweep loop in
-the host program, or that have special blocking transformations that need to be done on input matrices.
-I wanted the program to own its own control flow and simply mark the section to be repeated and measured.
+generation at a chosen density, or that we wish to be driven from a variable-sweep loop in
+the program, or that have special blocking transformations that need to be done on input matrices.
+I wanted the program to own its own control flow and simply mark the section(s) to be repeated and measured.
 
 \paragraph{Simplicity.}
-My code is written in C on top of a small base library of my own. I considered heavier weight libraries like PAPI \cite{papi}, which would have potentially
+All the code for this thesis is written in C on top of a small base layer library of my own.
+I considered heavier weight libraries like PAPI \cite{papi}, which would have potentially
 allowed me to collect even more cross-microarchitecture (TODO: better way to say 'cross-microarchitecture'?) hardware counter events such as
 flop/load/store instructions retired easier. However, I decided against it in the interest of keeping
 benchmarking complexity low. I wanted to save most of my mental complexity budget for dealing with the actual experiments. As well, its always
 more interesting to build your own thing than use a library.
+
+\section{Specific Measurements}
+This section defines the quantities reported in Chapters~\ref{ch:pact} and~\ref{ch:kron_taco}.
+
+\paragraph{Time.}
+Runtime is measured with the x86 timestamp counter (\texttt{RDTSC} instruction) and
+reported in timestamp ``cycles.'' This counter advances at a fixed rate regardless of actual core frequency
+scaling, so these units are ticks of a constant-rate clock, not cycles
+of the core clock. Each kernel is repeated and the minimum observed time is kept, again to minimize scheduling noise, first touch page faults,
+and cold-cache effects. The minimum is therefore a best-case, warm-state estimate.
+
+\paragraph{Hardware counters.}
+Hardware-counted events are read through the Linux \texttt{perf} interface
+\cite{perf}, scoped to the timed region. Two generalized events are used.
+\emph{Cache misses} corresponds to \texttt{PERF\_COUNT\_HW\_CACHE\_MISSES}, which
+usually counts last-level cache misses, i.e., accesses that must go to main memory. \emph{Branch mispredictions} corresponds to
+\texttt{PERF\_COUNT\_HW\_BRANCH\_MISSES}, the number of mispredicted branches.
+
+\paragraph{Page faults.}
+Memory returned by an allocator is often not immediately backed by physical pages.
+The first access to each page raises a \emph{page fault}, which the operating
+system remedies by mapping an actual page. Page faults therefore measure
+first-touch cost: a kernel that writes freshly allocated memory incurs roughly one
+fault per page touched (typically 4~KiB, 2~MiB, or 1~GiB), and each fault costs kernel time that is
+included in the measured runtime. This matters for sparse formats because
+their working-set sizes can scale with both matrix dimension and the number of non-zeros. As well, TACO uses the C standard library allocator malloc and calloc
+which are not known to have the best behaviour regarding pre-faulting.
+
+\paragraph{Allocations.}
+In addition to counters, each run records the total bytes requested from the
+allocators malloc and calloc. This is \emph{requested}, not actually mapped or touched memory,
+so it can exceed what page faults show if memory is allocated but never written, as is often the case with TACO generated code.
 
 \section{Example Usage}
 Below I provide a simple example program demonstrating the library's use. Note that the user is free do define the order and sections of interest.

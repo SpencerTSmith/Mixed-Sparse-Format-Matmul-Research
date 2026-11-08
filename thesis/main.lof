@@ -1,26 +1,32 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces COO (coordinate) format. Each non-zero is stored as a (\texttt {row}, \texttt {col}, \texttt {value}) triple, so the $k$-th entry of the three arrays describes the $k$-th non-zero.}}{3}{}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces CSR (compressed sparse row) format. \texttt {values} and \texttt {col\_indices} hold the non-zero values and their column indices, row by row. Row $i$ occupies positions \texttt {row\_ptr[i]} to \texttt {row\_ptr[i+1]-1}; e.g.\ row 3 spans positions 4 to 6.}}{3}{}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces CSC (compressed sparse column) format. The non-zeros are stored column by column; \texttt {row\_indices} holds their row indices. Column $j$ occupies positions \texttt {col\_ptr[j]} to \texttt {col\_ptr[j+1]-1}; e.g.\ column 2 spans positions 3 to 4.}}{4}{}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Inner-product dataflow. One output element $c_{ij}$ is produced at a time by intersecting row $i$ of $A$ with column $j$ of $B$ and summing the matching products. Each output is complete when it is written, but most intersections are empty for sparse inputs, so effort is spent on index matching.}}{6}{}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Outer-product dataflow. For each index $k$, column $k$ of $A$ is multiplied with row $k$ of $B$, producing a partial result that touches many positions of $C$. Every input element is read once, but the partial results from different $k$ must be merged.}}{7}{}%
+\contentsline {figure}{\numberline {2.6}{\ignorespaces Row-wise (Gustavson) dataflow. Each non-zero $a_{ik}$ in row $i$ of $A$ selects row $k$ of $B$. The scaled rows are accumulated into row $i$ of $C$. One output row is built at a time, so the accumulator for that row could potentially be kept in cache.}}{7}{}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces One matrix in three formats (indices from zero). In CSR, \texttt {pos[i]} to \texttt {pos[i+1]} delimits row $i$ in \texttt {crd}; row~1 is empty, so \texttt {pos[1]}$=$\texttt {pos[2]}. CSC is the same over columns. COO repeats the row coordinate per non-zero and has no \texttt {pos}.}}{13}{}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Observed and Formula FLOPs. Observed data points fall mostly on the dotted line plotted from formulas.}}{44}{}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Observed and Formula memops. Observed data points fall mostly on the dotted line plotted from formulas.}}{48}{}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces FLOPs: Relative error of Formula vs Observed. Very close fit by the formula, and flop count is determined entirely by compression combination.}}{49}{}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces memops: Relative error of Formula vs Observed. Close fit by most formulas, variability due to the effect of variability of sparsity patterns.}}{50}{}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime Performance: Timestamp Cycles. Crossover points at 0.7\% density when performing a simple dense x dense is better.}}{51}{}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Roofline Model. Sparse formats are entirely memory bound.}}{52}{}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Diagonal Matrix Results. Poor performance compared to simple global compression, but optimal micro-format selection wins over naive format selection.}}{53}{}%
+\contentsline {figure}{\numberline {5.8}{\ignorespaces Block Size Performance Impact. Performance degrades as block sizes increase.}}{54}{}%
+\contentsline {figure}{\numberline {5.9}{\ignorespaces Thread Count Performance Impact. At matrix sizes that can be solved, threading provides minimal benefit beyond 2 threads.}}{55}{}%
+\contentsline {figure}{\numberline {5.10}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{56}{}%
+\contentsline {figure}{\numberline {5.11}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{57}{}%
+\contentsline {figure}{\numberline {5.12}{\ignorespaces Kronecker Graph k=10 (AS-Newman) block size sweep. Block dispatch overhead generally decreases as block size increases, but not nearly enough to be comparable to simple global compression.}}{58}{}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Observed and Formula FLOPs. Observed data points fall mostly on the dotted line plotted from formulas.}}{30}{}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Observed and Formula memops. Observed data points fall mostly on the dotted line plotted from formulas.}}{34}{}%
-\contentsline {figure}{\numberline {5.3}{\ignorespaces FLOPs: Relative error of Formula vs Observed. Very close fit by the formula, and flop count is determined entirely by compression combination.}}{35}{}%
-\contentsline {figure}{\numberline {5.4}{\ignorespaces memops: Relative error of Formula vs Observed. Close fit by most formulas, variability due to the effect of variability of sparsity patterns.}}{36}{}%
-\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime Performance: Timestamp Cycles. Crossover points at 0.7\% density when performing a simple dense x dense is better.}}{37}{}%
-\contentsline {figure}{\numberline {5.6}{\ignorespaces Roofline Model. Sparse formats are entirely memory bound.}}{38}{}%
-\contentsline {figure}{\numberline {5.7}{\ignorespaces Diagonal Matrix Results. Poor performance compared to simple global compression, but optimal micro-format selection wins over naive format selection.}}{39}{}%
-\contentsline {figure}{\numberline {5.8}{\ignorespaces Block Size Performance Impact. Performance degrades as block sizes increase.}}{40}{}%
-\contentsline {figure}{\numberline {5.9}{\ignorespaces Thread Count Performance Impact. At matrix sizes that can be solved, threading provides minimal benefit beyond 2 threads.}}{41}{}%
-\contentsline {figure}{\numberline {5.10}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{42}{}%
-\contentsline {figure}{\numberline {5.11}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{43}{}%
-\contentsline {figure}{\numberline {5.12}{\ignorespaces Kronecker Graph k=10 (AS-Newman) block size sweep. Block dispatch overhead generally decreases as block size increases, but not nearly enough to be comparable to simple global compression.}}{44}{}%
+\contentsline {figure}{\numberline {6.1}{\ignorespaces TODO: this one is going to be humongous with all of them. Also need to do this across more than just varying K, again don't want to make the mistake of confounding the difference come from structure when it may just be due to density or size... also need to mention that runner-ups are very, very close in almost all cases.}}{62}{}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {6.1}{\ignorespaces TODO: This needs to be broken up, this is unreadable, probably do the grid based? or perhaps just try letting each sub-figure be its own figure while still having each kronecker to be on the same one... more comparable that way...}}{48}{}%
-\contentsline {figure}{\numberline {6.2}{\ignorespaces TODO: this one is going to be humongous with all of them. Also need to do this across more than just varying K, again don't want to make the mistake of confounding the difference come from structure when it may just be due to density or size... also need to mention that runner-ups are very, very close in almost all cases.}}{49}{}%
-\addvspace {10\p@ }
-\contentsline {figure}{\numberline {7.1}{\ignorespaces Current Sequential Implementation}}{51}{}%
-\contentsline {figure}{\numberline {7.2}{\ignorespaces Conceptual View of Matrix Stream}}{53}{}%
-\contentsline {figure}{\numberline {7.3}{\ignorespaces Future Parallel Implementation}}{59}{}%
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Current Sequential Implementation}}{64}{}%
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Conceptual View of Matrix Stream}}{66}{}%
+\contentsline {figure}{\numberline {7.3}{\ignorespaces Future Parallel Implementation}}{72}{}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }

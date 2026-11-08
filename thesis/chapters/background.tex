@@ -1,41 +1,217 @@
 \chapter{Background}
-
-\note{
-TODO: This is the background section from PACT paper... need look over and revise.
-}
+\label{ch:background}
 
 \subsection{Sparse Matrix Storage Formats}
 The four formats considered in this work represent the standard vocabulary of sparse
-matrix storage. Compressed Sparse Row (CSR) stores non-zeros row by row, with a row
+matrix storage. Compressed Sparse Row (CSR), see Figure~\ref{fig:csr}, stores non-zeros row by row, with a row
 pointer array enabling efficient traversal of row entries.
-Compressed Sparse Column (CSC) is the column-major analog: columns are stored
+Compressed Sparse Column (CSC), see Figure~\ref{fig:csc}, is the column-major analog to CSR; columns are stored
 contiguously, making it efficient for column-wise access patterns. Coordinate format
-(COO) stores each non-zero as an explicit $(\text{row}, \text{col}, \text{value})$
-triple, meaning pointer compression but consuming more memory per entry and
-imposing a scan cost proportional to the total non-zero count during row-wise access.
+(COO), see Figure~\ref{fig:coo}, stores each non-zero as an explicit $(\text{row}, \text{col}, \text{value})$
+triple, meaning more memory per entry and
+imposing a scan cost proportional to the total non-zero count during either row-wise or column-wise access.
 Dense format stores all elements explicitly in a flat row-major array, eliminating
-indexing overhead entirely and exposing maximum memory locality, making it optimal
-when most entries are non-zero, unsurprisingly. Each format encodes the same mathematical
-object but makes different trade-offs between storage overhead,
-access pattern regularity, and the cost of skipping structural zeros.
-The standard reference for these formats in the context of sparse linear algebra
+indexing overhead entirely and making any access pattern possible, making it optimal
+when most entries are non-zero, unsurprisingly. Each format encodes the same matrix
+but makes different trade-offs between storage overhead and the best access pattern.
+A standard reference for these formats in the context of sparse linear algebra
 compilers is \cite{taco_formats}, who provide a unified description of
 format capabilities in terms of per-dimension storage modes.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \densematrix
+    \arr{coorow}{5.2,1.2}{row}{0\&1\&2\&3\&4\&5\&6\\0\&0\&1\&2\&3\&3\&3\\}
+    \arr{coocol}{5.2,0}{col}{0\&1\&2\&3\&4\&5\&6\\0\&3\&1\&2\&0\&2\&3\\}
+    \arr{coodat}{5.2,-1.2}{values}{0\&1\&2\&3\&4\&5\&6\\5\&1\&8\&3\&6\&2\&4\\}
+  \end{tikzpicture}
+  \caption{COO (coordinate) format. Each non-zero is stored as a
+  (\texttt{row}, \texttt{col}, \texttt{value}) triple, so the $k$-th entry of the
+  three arrays describes the $k$-th non-zero.}
+  \label{fig:coo}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \densematrix
+    \arr{csrptr}{5.2,1.2}{row\_ptr}{0\&1\&2\&3\&4\\0\&2\&3\&4\&7\\}
+    \arr{csrind}{5.2,0}{col\_indices}{0\&1\&2\&3\&4\&5\&6\\0\&3\&1\&2\&0\&2\&3\\}
+    \arr{csrdat}{5.2,-1.2}{values}{0\&1\&2\&3\&4\&5\&6\\5\&1\&8\&3\&6\&2\&4\\}
+  \end{tikzpicture}
+  \caption{CSR (compressed sparse row) format. \texttt{values} and
+  \texttt{col\_indices} hold the non-zero values and their column indices, row by
+  row. Row $i$ occupies positions \texttt{row\_ptr[i]} to
+  \texttt{row\_ptr[i+1]-1}; e.g.\ row 3 spans positions 4 to 6.}
+  \label{fig:csr}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \densematrix
+    \arr{cscptr}{5.2,1.2}{col\_ptr}{0\&1\&2\&3\&4\\0\&2\&3\&5\&7\\}
+    \arr{cscind}{5.2,0}{row\_indices}{0\&1\&2\&3\&4\&5\&6\\0\&3\&1\&2\&3\&0\&3\\}
+    \arr{cscdat}{5.2,-1.2}{values}{0\&1\&2\&3\&4\&5\&6\\5\&6\&8\&3\&2\&1\&4\\}
+  \end{tikzpicture}
+  \caption{CSC (compressed sparse column) format. The non-zeros are stored
+  column by column; \texttt{row\_indices} holds their row indices. Column $j$
+  occupies positions \texttt{col\_ptr[j]} to \texttt{col\_ptr[j+1]-1}; e.g.\
+  column 2 spans positions 3 to 4.}
+  \label{fig:csc}
+\end{figure}
 
 \subsection{SpGEMM}
 SpGEMM computes $C = A \times B$ where $A$ and $B$ are sparse matrices. Unlike sparse
 matrix-vector multiplication (SpMV), SpGEMM involves two sparse operands whose
 non-zero structure interacts during multiplication: the output sparsity pattern is not
-known in advance and must be computed symbolically before numeric accumulation can
+known in advance and meaning many implementations compute the output symbolically before any actual numeric accumulation can
 begin. The operation appears as a core subroutine in algebraic multigrid solvers,
 triangle counting, multi-source breadth-first search, and high-dimensional similarity
 search, among many other applications~\cite{spgemm_survey}.
 Buluç and Gilbert~\cite{buluc_gilbert}
 provide foundational parallel algorithms for SpGEMM.
 The most performance-relevant observation for this work is that SpGEMM is overwhelmingly
-memory-bound on current hardware: the irregular, format-dependent access patterns of
-sparse operands generate large numbers of short, unpredictable memory requests, keeping
+memory-bound on current hardware. The irregular, format-dependent access patterns of
+sparse operands generate large numbers of short, hard to predict memory requests, keeping
 arithmetic units underutilized.
+
+\subsection{SpGEMM Dataflows}
+In SpGEMM, only products in which both
+$a_{ik}$ and $b_{kj}$ are non-zero contribute, I will call this quantity \emph{matches}, since only values which 'match up' in both matrices will
+contribute non-zero output values. The three indexing variables $i$, $j$, $k$ naturally give a triple loop nest, and
+which loop is innermost determines the \emph{dataflow}, that is, the order in which
+non-zeros of the inputs are read and results are computed.
+Because a compressed matrix can be traversed efficiently only along its
+storage order, the choice of dataflow and the choice of formats are very tightly
+coupled. Table~\ref{tab:dataflows} summarizes the dataflows of interest to this thesis.
+
+\paragraph{Inner product ($i,j,k$).}
+Each output element is computed as the dot product of a row of $A$ and a column
+of $B$, which is most conducive when one operand is stored row-major and the other
+column-major (best represented as CSR$\times$CSC). The two index lists must be \emph{intersected},
+and depending on density and structure, often most comparisons find no match, so non-zeros are unfortunately fetched and discarded.
+Each $c_{ij}$ is finished in one pass, which gives good output reuse, but input reuse
+is poor and every possible output position must be examined even though the
+result is often sparse \cite{srivastava2020matraptor,zhang2020sparch}.
+
+\paragraph{Outer product ($k,i,j$).}
+This dataflow is expressed as a sum of partial matrix products, $C = \sum_k A_{:,k}B_{k,:}$,
+pairing a column of $A$ with the matching row of $B$ (best represented as CSC$\times$CSR). No index
+matching is required and every non-zero of $A$ and $B$ is read exactly once,
+however each term yields a partial result matrix, and all of them must at some point be
+reduced, giving poor output locality and intermediate storage that grows with the
+number of matches \cite{pal2018outerspace,zhang2020sparch,bulucgilbert2008hypersparse,bulucgilbert2010highly}.
+
+\paragraph{Row-wise product / Gustavson ($i,k,j$).}
+For each row of $A$, every non-zero $a_{ik}$ selects row $k$ of $B$, which is
+scaled and accumulated into a row buffer holding row $i$ of $C$ (best represented as CSR$\times$CSR,
+the column-wise analog as CSC$\times$CSC) \cite{gustavson1978}. It avoids index matching because the row pointer array
+gives direct access to row $k$ of $B$, and it keeps the output row in the
+accumulator, and each element of $A$ is touched only once, but reuse of rows of $B$ across rows of $A$ is irregular
+\cite{zhang2021gamma}.
+
+\paragraph{Accumulating partial products.}
+Row-wise and outer-product algorithms must combine any partial products that
+land on the same output position. Common accumulators include the dense
+\emph{sparse accumulator} (SPA) \cite{gilbert1992matlab}; hash tables; and heaps or sorted
+merges. Of course, their costs and trade-offs differ \cite{nagasaka2018highperformance}.
+Implementations also differ in whether the
+output structure is computed in a separate symbolic phase or
+allocated from an upper bound, which trades extra computation against extra memory
+\cite{nagasaka2018highperformance}. TACO defaults to a symbolic phase and many format combinations require specific
+scheduling commands to utilize any output accumulators. For the most part, this thesis ignores output accumulation.
+Most analysis later in the thesis will assume that accumulation can be done separately as a post processing step.
+
+\paragraph{Relevance to format selection.}
+Format pairs therefore largely determine the dataflow a compiler can reasonably generate,
+so the comparison of format combinations in Chapter~\ref{ch:pact} and Chapter~\ref{ch:kron_taco} are, in part,
+comparisons of dataflows.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lllll}
+\hline
+\textbf{Dataflow} & \textbf{Loop order} & \textbf{$A$ / $B$} &
+\textbf{Input reuse} & \textbf{Output reuse} \\
+\hline
+Inner product & $i,j,k$ & CSR / CSC & poor & good \\
+Outer product & $k,i,j$ & CSC / CSR & good & poor \\
+Row-wise (Gustavson) & $i,k,j$ & CSR / CSR & irregular & good \\
+Column-wise & $j,k,i$ & CSC / CSC & irregular & good \\
+\hline
+\end{tabular}
+\caption{SpGEMM dataflows, operand formats chosen by most naturally fitting to indexing order.}
+\label{tab:dataflows}
+\end{table}
+
+\tikzset{
+  mgrid/.style={draw=black!60, thin, step=0.45cm},
+  hin/.style={fill=blue!35},
+  hout/.style={fill=red!35},
+  lbl/.style={font=\small, inner sep=1pt},
+}
+
+% \dfcell{origin-x}{origin-y}{row}{col}{style}: shade cell (row, col), row 0 at top
+\newcommand{\dfcell}[5]{%
+  \fill[#5] ({#1+#4*0.45},{#2-(#3+1)*0.45}) rectangle ++(0.45,0.45);}
+
+% \dfmat{origin-x}{origin-y}{label}: 5x5 grid with label underneath
+\newcommand{\dfmat}[3]{%
+  \draw[mgrid] (#1,{#2-2.25}) grid ({#1+2.25},#2);
+  \draw[black, thick] (#1,#2) rectangle ++(2.25,-2.25);
+  \node[lbl] at ({#1+1.125},{#2-2.55}) {#3};}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1]
+  \dfcell{0}{0}{1}{0}{hin}\dfcell{0}{0}{1}{1}{hin}\dfcell{0}{0}{1}{2}{hin}\dfcell{0}{0}{1}{3}{hin}\dfcell{0}{0}{1}{4}{hin}
+  \dfcell{3.6}{0}{0}{2}{hin}\dfcell{3.6}{0}{1}{2}{hin}\dfcell{3.6}{0}{2}{2}{hin}\dfcell{3.6}{0}{3}{2}{hin}\dfcell{3.6}{0}{4}{2}{hin}
+  \dfcell{7.2}{0}{1}{2}{hout}
+  \dfmat{0}{0}{$A$ (row $i$)}
+  \dfmat{3.6}{0}{$B$ (column $j$)}
+  \dfmat{7.2}{0}{$C$ (element $c_{ij}$)}
+  \node at (3.0,-1.125) {$\times$};
+  \node at (6.6,-1.125) {$=$};
+\end{tikzpicture}
+\caption{Inner-product dataflow. One output element $c_{ij}$ is produced at a time by intersecting row $i$ of $A$ with column $j$ of $B$ and summing the matching products. Each output is complete when it is written, but most intersections are empty for sparse inputs, so effort is spent on index matching.}
+\label{fig:df-inner}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1]
+  \foreach \r in {0,...,4}{\dfcell{0}{0}{\r}{2}{hin}}
+  \foreach \c in {0,...,4}{\dfcell{3.6}{0}{2}{\c}{hin}}
+  \foreach \r in {0,...,4}{\foreach \c in {0,...,4}{\dfcell{7.2}{0}{\r}{\c}{hout}}}
+  \dfmat{0}{0}{$A$ (column $k$)}
+  \dfmat{3.6}{0}{$B$ (row $k$)}
+  \dfmat{7.2}{0}{$C$ (partial)}
+  \node at (3.0,-1.125) {$\times$};
+  \node at (6.6,-1.125) {$+\!=$};
+\end{tikzpicture}
+\caption{Outer-product dataflow. For each index $k$, column $k$ of $A$ is multiplied with row $k$ of $B$, producing a partial result that touches many positions of $C$. Every input element is read once, but the partial results from different $k$ must be merged.}
+\label{fig:df-outer}
+\end{figure}
+
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1]
+  \dfcell{0}{0}{1}{0}{hin}\dfcell{0}{0}{1}{2}{hin}\dfcell{0}{0}{1}{3}{hin}
+  \foreach \r in {0,2,3}{\foreach \c in {0,...,4}{\dfcell{3.6}{0}{\r}{\c}{hin}}}
+  \foreach \c in {0,...,4}{\dfcell{7.2}{0}{1}{\c}{hout}}
+  \dfmat{0}{0}{$A$ (row $i$)}
+  \dfmat{3.6}{0}{$B$ (selected rows)}
+  \dfmat{7.2}{0}{$C$ (row $i$)}
+  \node at (3.0,-1.125) {$\times$};
+  \node at (6.6,-1.125) {$=$};
+\end{tikzpicture}
+\caption{Row-wise (Gustavson) dataflow. Each non-zero $a_{ik}$ in row $i$ of $A$ selects row $k$ of $B$. The scaled rows are accumulated into row $i$ of $C$. One output row is built at a time, so the accumulator for that row could potentially be kept in cache.}
+\label{fig:df-row}
+\end{figure}
 
 \subsection{BLIS}
 The BLAS-like Library Instantiation Software (BLIS) framework~\cite{blis} provides a
@@ -45,8 +221,8 @@ terms of a small, hardware-specific micro-kernel operating on dense register-siz
 panels, surrounded by a fixed five-loop blocking structure parameterized by cache-level
 constants $m_c$, $n_c$, $k_c$ and micro-kernel block sizes $m_r$ and $n_r$. This
 separation allows the bulk of the framework to be written once in portable C while
-performance-critical sections are tuned per architecture. Our implementation preserves
-this five-loop structure and blocking hierarchy, replacing only the innermost
+performance-critical sections are tuned per architecture. This thesis includes a chapter on an
+implementation which preserves this five-loop structure and blocking hierarchy, replacing only the innermost
 micro-kernel with a dispatch over heterogeneous sparse formats.
 
 \subsection{Roofline Model}
@@ -56,15 +232,15 @@ For a given kernel and machine, the model draws a ``roofline'' as the minimum of
 peak compute throughput and the product of memory bandwidth and arithmetic intensity. A
 kernel is compute-bound if its arithmetic intensity exceeds the machine's
 compute-to-bandwidth ratio, and memory-bound otherwise. SpGEMM kernels consistently
-fall in the memory-bound regime due to low data reuse and irregular access patterns, a
-finding confirmed by our results in Section 4.
+fall in the memory-bound regime due to low data reuse and irregular access patterns, see Chapter~\ref{ch:pact}.
 
 \subsection{TACO}
-The Tensor Algebra Compiler (TACO)~\cite{taco} automatically generates efficient
-kernels for any compound tensor algebra expression over mixed dense and sparse tensors,
-including all format combinations relevant to this work. TACO provides a principled
-formalization of how iteration spaces and index expressions vary across storage formats,
-and its generated kernels served as the starting point and correctness reference for our
+The Tensor Algebra Compiler (TACO)~\cite{taco} automatically generates
+kernels for compound tensor algebra expressions over mixed dense and sparse tensors,
+including most format combinations relevant to this thesis. TACO provides a formalization of how
+iteration spaces and index expressions vary across storage formats,
+and its generated kernels served as the main reference for Chaper~\ref{ch:kron_taco}, as well as the starting
+point and correctness reference for Chapter~\ref{ch:pact}'s
 hand-instrumented implementations.
 
 \subsection{Kronecker Graphs}
@@ -72,11 +248,6 @@ Kronecker graphs~\cite{kronecker} are a family of self-similar synthetic network
 generated by repeated Kronecker product of a small initiator matrix with itself. They
 were introduced as a model for real-world networks because their recursive structure
 naturally produces the heavy-tailed degree distributions and small diameters observed
-in internet topology graphs and social networks. The AS-Newman autonomous systems
-dataset used in our experiments is a standard benchmark graph commonly represented as
-a Kronecker graph instance.
-
-\subsection{Optimization}
-Format selection in this work is formulated as a Mixed Integer Nonlinear Program
-(MINLP) and solved using Pyomo~\cite{pyomo} with MindtPy~\cite{mindtpy} as the MINLP
-solver back-end, using GLPK for MIP subproblems and IPOPT for the NLP relaxations.
+in real-world internet topology graphs and social networks. The datasets described in Section~\ref{sec:kron}
+are standard benchmark graphs which can represented as Kronecker graph instances, and which form the main datasets used for the experiments of this thesis.
+These were all generated using mfit \cite{moez}

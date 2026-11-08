@@ -123,6 +123,7 @@
       \strng{authornamehash}{3c43c1afb78ebc121504041f5011f3f6}
       \strng{authorfullhash}{3c43c1afb78ebc121504041f5011f3f6}
       \strng{authorfullhashraw}{3c43c1afb78ebc121504041f5011f3f6}
+      \field{extraname}{1}
       \field{sortinit}{3}
       \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
@@ -136,6 +137,397 @@
       \range{pages}{-1}
       \verb{doi}
       \verb 10.1137/110848244
+      \endverb
+    \endentry
+    \entry{srivastava2020matraptor}{inproceedings}{}{}
+      \name{author}{5}{}{%
+        {{hash=6a147afa4569ce6cf23c0436e65d8486}{%
+           family={Srivastava},
+           familyi={S\bibinitperiod},
+           given={Nitish},
+           giveni={N\bibinitperiod}}}%
+        {{hash=fc5c9d8c74f5c2e73852abd15337a437}{%
+           family={Jin},
+           familyi={J\bibinitperiod},
+           given={Hanchen},
+           giveni={H\bibinitperiod}}}%
+        {{hash=6ba98b57fe1f95279a7b276f87e11088}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Jie},
+           giveni={J\bibinitperiod}}}%
+        {{hash=a025bdaeb7096205b91d9686455a0596}{%
+           family={Albonesi},
+           familyi={A\bibinitperiod},
+           given={David},
+           giveni={D\bibinitperiod}}}%
+        {{hash=99bb4c2af510fc4a9f4c3fd12a674d92}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Zhiru},
+           giveni={Z\bibinitperiod}}}%
+      }
+      \strng{namehash}{4d6dba595c04c09619c7c1c0038d5b6b}
+      \strng{fullhash}{f4bda565141ea1d78343cc8c8c385753}
+      \strng{fullhashraw}{f4bda565141ea1d78343cc8c8c385753}
+      \strng{bibnamehash}{f4bda565141ea1d78343cc8c8c385753}
+      \strng{authorbibnamehash}{f4bda565141ea1d78343cc8c8c385753}
+      \strng{authornamehash}{4d6dba595c04c09619c7c1c0038d5b6b}
+      \strng{authorfullhash}{f4bda565141ea1d78343cc8c8c385753}
+      \strng{authorfullhashraw}{f4bda565141ea1d78343cc8c8c385753}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{IEEE/ACM International Symposium on Microarchitecture (MICRO)}
+      \field{title}{{MatRaptor}: A Sparse-Sparse Matrix Multiplication Accelerator Based on Row-Wise Product}
+      \field{year}{2020}
+      \field{pages}{766\bibrangedash 780}
+      \range{pages}{15}
+      \verb{doi}
+      \verb 10.1109/MICRO50266.2020.00068
+      \endverb
+    \endentry
+    \entry{zhang2020sparch}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=719dab2a962e155be99c71e799f4b9d5}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Zhekai},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=2f433fe6a0bc850a3ffbcce2ce293ac4}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Hanrui},
+           giveni={H\bibinitperiod}}}%
+        {{hash=873e4e07ff73d563d2651d20ffaf99e0}{%
+           family={Han},
+           familyi={H\bibinitperiod},
+           given={Song},
+           giveni={S\bibinitperiod}}}%
+        {{hash=c4a8df92e1f8e22aa2062da8bcfd402d}{%
+           family={Dally},
+           familyi={D\bibinitperiod},
+           given={William\bibnamedelima J.},
+           giveni={W\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \strng{namehash}{fd96feaffec9db7f2ccbc9570b345c7a}
+      \strng{fullhash}{a97cbb251eb8d09e1435e267c776fadc}
+      \strng{fullhashraw}{a97cbb251eb8d09e1435e267c776fadc}
+      \strng{bibnamehash}{a97cbb251eb8d09e1435e267c776fadc}
+      \strng{authorbibnamehash}{a97cbb251eb8d09e1435e267c776fadc}
+      \strng{authornamehash}{fd96feaffec9db7f2ccbc9570b345c7a}
+      \strng{authorfullhash}{a97cbb251eb8d09e1435e267c776fadc}
+      \strng{authorfullhashraw}{a97cbb251eb8d09e1435e267c776fadc}
+      \field{extraname}{1}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{IEEE International Symposium on High Performance Computer Architecture (HPCA)}
+      \field{title}{{SpArch}: Efficient Architecture for Sparse Matrix Multiplication}
+      \field{year}{2020}
+      \field{pages}{261\bibrangedash 274}
+      \range{pages}{14}
+      \verb{doi}
+      \verb 10.1109/HPCA47549.2020.00030
+      \endverb
+    \endentry
+    \entry{pal2018outerspace}{inproceedings}{}{}
+      \name{author}{10}{}{%
+        {{hash=ad4e28312e51b2a5df5ed1a326b6703e}{%
+           family={Pal},
+           familyi={P\bibinitperiod},
+           given={Subhankar},
+           giveni={S\bibinitperiod}}}%
+        {{hash=939e984ec0bc7eb5e9fb4eeace0016b8}{%
+           family={Beaumont},
+           familyi={B\bibinitperiod},
+           given={Jonathan},
+           giveni={J\bibinitperiod}}}%
+        {{hash=4431746194ebe13ee0885057c36fb818}{%
+           family={Park},
+           familyi={P\bibinitperiod},
+           given={Dong-Hyeon},
+           giveni={D\bibinithyphendelim H\bibinitperiod}}}%
+        {{hash=5b8753dd4b1c136ad069b65bbe44304c}{%
+           family={Amarnath},
+           familyi={A\bibinitperiod},
+           given={Aporva},
+           giveni={A\bibinitperiod}}}%
+        {{hash=6752d22f6197f7b9b1eafaf0f3d44057}{%
+           family={Feng},
+           familyi={F\bibinitperiod},
+           given={Siying},
+           giveni={S\bibinitperiod}}}%
+        {{hash=13fcb2edde0941508eec63b2d1b646fe}{%
+           family={Chakrabarti},
+           familyi={C\bibinitperiod},
+           given={Chaitali},
+           giveni={C\bibinitperiod}}}%
+        {{hash=e84a885aca321d75e4d4117053fb7328}{%
+           family={Kim},
+           familyi={K\bibinitperiod},
+           given={Hun-Seok},
+           giveni={H\bibinithyphendelim S\bibinitperiod}}}%
+        {{hash=e9913454f77499850ecf4d5345674578}{%
+           family={Blaauw},
+           familyi={B\bibinitperiod},
+           given={David},
+           giveni={D\bibinitperiod}}}%
+        {{hash=7915fee88f50d54e66463a458d635a02}{%
+           family={Mudge},
+           familyi={M\bibinitperiod},
+           given={Trevor},
+           giveni={T\bibinitperiod}}}%
+        {{hash=62dd06f11c74ae8198347dc6a54f4b5e}{%
+           family={Dreslinski},
+           familyi={D\bibinitperiod},
+           given={Ronald},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{0841e1adf1338c50874c2bcfe357bf02}
+      \strng{fullhash}{5110779f4556ef1317c61c4f1b4b33d9}
+      \strng{fullhashraw}{5110779f4556ef1317c61c4f1b4b33d9}
+      \strng{bibnamehash}{0841e1adf1338c50874c2bcfe357bf02}
+      \strng{authorbibnamehash}{0841e1adf1338c50874c2bcfe357bf02}
+      \strng{authornamehash}{0841e1adf1338c50874c2bcfe357bf02}
+      \strng{authorfullhash}{5110779f4556ef1317c61c4f1b4b33d9}
+      \strng{authorfullhashraw}{5110779f4556ef1317c61c4f1b4b33d9}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{IEEE International Symposium on High Performance Computer Architecture (HPCA)}
+      \field{title}{{OuterSPACE}: An Outer Product Based Sparse Matrix Multiplication Accelerator}
+      \field{year}{2018}
+      \field{pages}{724\bibrangedash 736}
+      \range{pages}{13}
+    \endentry
+    \entry{bulucgilbert2008hypersparse}{inproceedings}{}{}
+      \name{author}{2}{}{%
+        {{hash=16232b942c0721c1f3f4377923f3c28e}{%
+           family={Buluç},
+           familyi={B\bibinitperiod},
+           given={Ayd{ı}n},
+           giveni={A\bibinitperiod}}}%
+        {{hash=41ca2ba9079ac03c75c9b022cbcb501b}{%
+           family={Gilbert},
+           familyi={G\bibinitperiod},
+           given={John\bibnamedelima R.},
+           giveni={J\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+      }
+      \strng{namehash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{fullhash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{fullhashraw}{f12b1441bacc9f722800815cb73033b6}
+      \strng{bibnamehash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{authorbibnamehash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{authornamehash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{authorfullhash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{authorfullhashraw}{f12b1441bacc9f722800815cb73033b6}
+      \field{extraname}{2}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{IEEE International Symposium on Parallel and Distributed Processing (IPDPS)}
+      \field{title}{On the Representation and Multiplication of Hypersparse Matrices}
+      \field{year}{2008}
+      \field{pages}{1\bibrangedash 11}
+      \range{pages}{11}
+      \verb{doi}
+      \verb 10.1109/IPDPS.2008.4536313
+      \endverb
+    \endentry
+    \entry{bulucgilbert2010highly}{report}{}{}
+      \name{author}{2}{}{%
+        {{hash=16232b942c0721c1f3f4377923f3c28e}{%
+           family={Buluç},
+           familyi={B\bibinitperiod},
+           given={Ayd{ı}n},
+           giveni={A\bibinitperiod}}}%
+        {{hash=41ca2ba9079ac03c75c9b022cbcb501b}{%
+           family={Gilbert},
+           familyi={G\bibinitperiod},
+           given={John\bibnamedelima R.},
+           giveni={J\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+      }
+      \list{institution}{1}{%
+        {University of California, Santa Barbara}%
+      }
+      \strng{namehash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{fullhash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{fullhashraw}{f12b1441bacc9f722800815cb73033b6}
+      \strng{bibnamehash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{authorbibnamehash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{authornamehash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{authorfullhash}{f12b1441bacc9f722800815cb73033b6}
+      \strng{authorfullhashraw}{f12b1441bacc9f722800815cb73033b6}
+      \field{extraname}{3}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{number}{2010-10}
+      \field{title}{Highly Parallel Sparse Matrix-Matrix Multiplication}
+      \field{type}{techreport}
+      \field{year}{2010}
+    \endentry
+    \entry{gustavson1978}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=ec6cd95deab022fce7c257f0216e79a2}{%
+           family={Gustavson},
+           familyi={G\bibinitperiod},
+           given={Fred\bibnamedelima G.},
+           giveni={F\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+      }
+      \strng{namehash}{ec6cd95deab022fce7c257f0216e79a2}
+      \strng{fullhash}{ec6cd95deab022fce7c257f0216e79a2}
+      \strng{fullhashraw}{ec6cd95deab022fce7c257f0216e79a2}
+      \strng{bibnamehash}{ec6cd95deab022fce7c257f0216e79a2}
+      \strng{authorbibnamehash}{ec6cd95deab022fce7c257f0216e79a2}
+      \strng{authornamehash}{ec6cd95deab022fce7c257f0216e79a2}
+      \strng{authorfullhash}{ec6cd95deab022fce7c257f0216e79a2}
+      \strng{authorfullhashraw}{ec6cd95deab022fce7c257f0216e79a2}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{ACM Transactions on Mathematical Software}
+      \field{number}{3}
+      \field{title}{Two Fast Algorithms for Sparse Matrices: Multiplication and Permuted Transposition}
+      \field{volume}{4}
+      \field{year}{1978}
+      \field{pages}{250\bibrangedash 269}
+      \range{pages}{20}
+      \verb{doi}
+      \verb 10.1145/355791.355796
+      \endverb
+    \endentry
+    \entry{zhang2021gamma}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=8f06603211d8f584d69f5e28af469b74}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Guowei},
+           giveni={G\bibinitperiod}}}%
+        {{hash=2f000c5e0336cb86e4c9e582de26b58e}{%
+           family={Attaluri},
+           familyi={A\bibinitperiod},
+           given={Nithya},
+           giveni={N\bibinitperiod}}}%
+        {{hash=914e65be5d46573e29e4fd406d9f8f84}{%
+           family={Emer},
+           familyi={E\bibinitperiod},
+           given={Joel\bibnamedelima S.},
+           giveni={J\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+        {{hash=a2ed106e416f44d8040313df2708f6a9}{%
+           family={Sanchez},
+           familyi={S\bibinitperiod},
+           given={Daniel},
+           giveni={D\bibinitperiod}}}%
+      }
+      \strng{namehash}{f069c402f04f4abe6e513e8134095823}
+      \strng{fullhash}{0b37673f8406dd65c48af329d1fbed8c}
+      \strng{fullhashraw}{0b37673f8406dd65c48af329d1fbed8c}
+      \strng{bibnamehash}{0b37673f8406dd65c48af329d1fbed8c}
+      \strng{authorbibnamehash}{0b37673f8406dd65c48af329d1fbed8c}
+      \strng{authornamehash}{f069c402f04f4abe6e513e8134095823}
+      \strng{authorfullhash}{0b37673f8406dd65c48af329d1fbed8c}
+      \strng{authorfullhashraw}{0b37673f8406dd65c48af329d1fbed8c}
+      \field{extraname}{2}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{ACM International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}
+      \field{title}{Gamma: Leveraging Gustavson's Algorithm to Accelerate Sparse Matrix Multiplication}
+      \field{year}{2021}
+      \verb{doi}
+      \verb 10.1145/3445814.3446702
+      \endverb
+    \endentry
+    \entry{gilbert1992matlab}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=41ca2ba9079ac03c75c9b022cbcb501b}{%
+           family={Gilbert},
+           familyi={G\bibinitperiod},
+           given={John\bibnamedelima R.},
+           giveni={J\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=0eaaa911086b3df76e4c944adec7dd3e}{%
+           family={Moler},
+           familyi={M\bibinitperiod},
+           given={Cleve},
+           giveni={C\bibinitperiod}}}%
+        {{hash=5181fa44fdd8ee18a79752c1723e6c47}{%
+           family={Schreiber},
+           familyi={S\bibinitperiod},
+           given={Robert},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{31764873463990d3a193551c16a2d1c0}
+      \strng{fullhash}{1f708033828fa659ed7a5c5b0626a989}
+      \strng{fullhashraw}{1f708033828fa659ed7a5c5b0626a989}
+      \strng{bibnamehash}{1f708033828fa659ed7a5c5b0626a989}
+      \strng{authorbibnamehash}{1f708033828fa659ed7a5c5b0626a989}
+      \strng{authornamehash}{31764873463990d3a193551c16a2d1c0}
+      \strng{authorfullhash}{1f708033828fa659ed7a5c5b0626a989}
+      \strng{authorfullhashraw}{1f708033828fa659ed7a5c5b0626a989}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{SIAM Journal on Matrix Analysis and Applications}
+      \field{number}{1}
+      \field{title}{Sparse Matrices in {MATLAB}: Design and Implementation}
+      \field{volume}{13}
+      \field{year}{1992}
+      \field{pages}{333\bibrangedash 356}
+      \range{pages}{24}
+      \verb{doi}
+      \verb 10.1137/0613024
+      \endverb
+    \endentry
+    \entry{nagasaka2018highperformance}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=07573a20172c3f645df803d98ee2ab1e}{%
+           family={Nagasaka},
+           familyi={N\bibinitperiod},
+           given={Yusuke},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=2af7d09ee10699b6e1e1d553594fe8d4}{%
+           family={Matsuoka},
+           familyi={M\bibinitperiod},
+           given={Satoshi},
+           giveni={S\bibinitperiod}}}%
+        {{hash=b59530b30d5f5f729445dfca457f0ebb}{%
+           family={Azad},
+           familyi={A\bibinitperiod},
+           given={Ariful},
+           giveni={A\bibinitperiod}}}%
+        {{hash=16232b942c0721c1f3f4377923f3c28e}{%
+           family={Buluç},
+           familyi={B\bibinitperiod},
+           given={Ayd{ı}n},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{3d244b9f0e63b296b84089e65635e85d}
+      \strng{fullhash}{31c558fd08ecc633a30c1b6fc19cea6f}
+      \strng{fullhashraw}{31c558fd08ecc633a30c1b6fc19cea6f}
+      \strng{bibnamehash}{31c558fd08ecc633a30c1b6fc19cea6f}
+      \strng{authorbibnamehash}{31c558fd08ecc633a30c1b6fc19cea6f}
+      \strng{authornamehash}{3d244b9f0e63b296b84089e65635e85d}
+      \strng{authorfullhash}{31c558fd08ecc633a30c1b6fc19cea6f}
+      \strng{authorfullhashraw}{31c558fd08ecc633a30c1b6fc19cea6f}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{47th International Conference on Parallel Processing Workshops (ICPP Workshops)}
+      \field{title}{High-Performance Sparse Matrix-Matrix Products on {Intel KNL} and Multicore Architectures}
+      \field{year}{2018}
+      \verb{doi}
+      \verb 10.1145/3229710.3229720
       \endverb
     \endentry
     \entry{blis}{article}{}{}
@@ -161,8 +553,8 @@
       \strng{authornamehash}{e92cacaeb49f5d2968c9e6de2470e1d1}
       \strng{authorfullhash}{e92cacaeb49f5d2968c9e6de2470e1d1}
       \strng{authorfullhashraw}{e92cacaeb49f5d2968c9e6de2470e1d1}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{ACM Transactions on Mathematical Software}
@@ -200,8 +592,8 @@
       \strng{authornamehash}{2b1eb252e694cfc054031100251b6aec}
       \strng{authorfullhash}{8fbf7ed9bc5abefeb2fdf60a347400ae}
       \strng{authorfullhashraw}{8fbf7ed9bc5abefeb2fdf60a347400ae}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Communications of the ACM}
@@ -251,8 +643,8 @@
       \strng{authornamehash}{4334df51282d2bab5f4c909caf958394}
       \strng{authorfullhash}{46125026bf0627735dc332e0dbb4ae74}
       \strng{authorfullhashraw}{46125026bf0627735dc332e0dbb4ae74}
-      \field{sortinit}{6}
-      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Proceedings of the ACM on Programming Languages}
@@ -300,8 +692,8 @@
       \strng{authornamehash}{59a3e4bbf278a9983985f1d6be6a3e41}
       \strng{authorfullhash}{fdb652a90144c6e96ab004248950fb2d}
       \strng{authorfullhashraw}{fdb652a90144c6e96ab004248950fb2d}
-      \field{sortinit}{7}
-      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Journal of Machine Learning Research}
@@ -310,6 +702,1083 @@
       \field{year}{2010}
       \field{pages}{985\bibrangedash 1042}
       \range{pages}{58}
+    \endentry
+    \entry{moez}{thesis}{}{}
+      \name{author}{1}{}{%
+        {{hash=ea081d779f615038ad2522ee2ae54015}{%
+           family={Durrani},
+           familyi={D\bibinitperiod},
+           given={Moez},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{ea081d779f615038ad2522ee2ae54015}
+      \strng{fullhash}{ea081d779f615038ad2522ee2ae54015}
+      \strng{fullhashraw}{ea081d779f615038ad2522ee2ae54015}
+      \strng{bibnamehash}{ea081d779f615038ad2522ee2ae54015}
+      \strng{authorbibnamehash}{ea081d779f615038ad2522ee2ae54015}
+      \strng{authornamehash}{ea081d779f615038ad2522ee2ae54015}
+      \strng{authorfullhash}{ea081d779f615038ad2522ee2ae54015}
+      \strng{authorfullhashraw}{ea081d779f615038ad2522ee2ae54015}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{GPU-accelerated Kronecker graph fitting and a general framework for Graph Structure Descriptor Language Models}
+      \field{type}{phdthesis}
+      \field{year}{2026}
+    \endentry
+    \entry{bell2009implementing}{inproceedings}{}{}
+      \name{author}{2}{}{%
+        {{hash=885939cb4f51359255a18150439b50f4}{%
+           family={Bell},
+           familyi={B\bibinitperiod},
+           given={Nathan},
+           giveni={N\bibinitperiod}}}%
+        {{hash=b65b1e0d8d79fe6e41bb998ea526b3cd}{%
+           family={Garland},
+           familyi={G\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{9cb386d3a1e72b5c0cbfd77d0c8c1e52}
+      \strng{fullhash}{9cb386d3a1e72b5c0cbfd77d0c8c1e52}
+      \strng{fullhashraw}{9cb386d3a1e72b5c0cbfd77d0c8c1e52}
+      \strng{bibnamehash}{9cb386d3a1e72b5c0cbfd77d0c8c1e52}
+      \strng{authorbibnamehash}{9cb386d3a1e72b5c0cbfd77d0c8c1e52}
+      \strng{authornamehash}{9cb386d3a1e72b5c0cbfd77d0c8c1e52}
+      \strng{authorfullhash}{9cb386d3a1e72b5c0cbfd77d0c8c1e52}
+      \strng{authorfullhashraw}{9cb386d3a1e72b5c0cbfd77d0c8c1e52}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the Conference on High Performance Computing Networking, Storage and Analysis (SC)}
+      \field{title}{Implementing Sparse Matrix-Vector Multiplication on Throughput-Oriented Processors}
+      \field{year}{2009}
+      \field{pages}{1\bibrangedash 11}
+      \range{pages}{11}
+      \verb{doi}
+      \verb 10.1145/1654059.1654078
+      \endverb
+    \endentry
+    \entry{ellpack}{incollection}{}{}
+      \name{author}{1}{}{%
+        {{hash=f6c44d36cae18f341d5431173ac80ee1}{%
+           family={Rice},
+           familyi={R\bibinitperiod},
+           given={John\bibnamedelima R.},
+           giveni={J\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+      }
+      \name{editor}{1}{}{%
+        {{hash=f6c44d36cae18f341d5431173ac80ee1}{%
+           family={Rice},
+           familyi={R\bibinitperiod},
+           given={John\bibnamedelima R.},
+           giveni={J\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Academic Press}%
+      }
+      \strng{namehash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{fullhash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{fullhashraw}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{bibnamehash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{authorbibnamehash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{authornamehash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{authorfullhash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{authorfullhashraw}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{editorbibnamehash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{editornamehash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{editorfullhash}{f6c44d36cae18f341d5431173ac80ee1}
+      \strng{editorfullhashraw}{f6c44d36cae18f341d5431173ac80ee1}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Mathematical Software}
+      \field{isbn}{978-0-12-587260-7}
+      \field{title}{ELLPACK: A Research Tool for Elliptic Partial Differential Equations Software}
+      \field{year}{1977}
+      \field{pages}{319\bibrangedash 341}
+      \range{pages}{23}
+      \verb{doi}
+      \verb https://doi.org/10.1016/B978-0-12-587260-7.50016-9
+      \endverb
+      \verb{urlraw}
+      \verb https://www.sciencedirect.com/science/article/pii/B9780125872607500169
+      \endverb
+      \verb{url}
+      \verb https://www.sciencedirect.com/science/article/pii/B9780125872607500169
+      \endverb
+    \endentry
+    \entry{unified-format}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=231471be9cdc5638d312bde529ac3c8a}{%
+           family={Kreutzer},
+           familyi={K\bibinitperiod},
+           given={Moritz},
+           giveni={M\bibinitperiod}}}%
+        {{hash=9e49d522461c2d5d9e44584ac6102f43}{%
+           family={Hager},
+           familyi={H\bibinitperiod},
+           given={Georg},
+           giveni={G\bibinitperiod}}}%
+        {{hash=0623d76ccb0e0ac76b02be5a26c96d44}{%
+           family={Wellein},
+           familyi={W\bibinitperiod},
+           given={Gerhard},
+           giveni={G\bibinitperiod}}}%
+        {{hash=fe30c0e3043a9a37db7510debc32f9a2}{%
+           family={Fehske},
+           familyi={F\bibinitperiod},
+           given={Holger},
+           giveni={H\bibinitperiod}}}%
+        {{hash=9e5c799ec99245ee2c294174e3f72241}{%
+           family={Bishop},
+           familyi={B\bibinitperiod},
+           given={Alan\bibnamedelima R.},
+           giveni={A\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+      }
+      \strng{namehash}{87628a39805616b296969e42cb19bb3e}
+      \strng{fullhash}{686c99e092a838dce5ae2f1c9fee4684}
+      \strng{fullhashraw}{686c99e092a838dce5ae2f1c9fee4684}
+      \strng{bibnamehash}{686c99e092a838dce5ae2f1c9fee4684}
+      \strng{authorbibnamehash}{686c99e092a838dce5ae2f1c9fee4684}
+      \strng{authornamehash}{87628a39805616b296969e42cb19bb3e}
+      \strng{authorfullhash}{686c99e092a838dce5ae2f1c9fee4684}
+      \strng{authorfullhashraw}{686c99e092a838dce5ae2f1c9fee4684}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{SIAM Journal on Scientific Computing}
+      \field{month}{1}
+      \field{number}{5}
+      \field{title}{{A Unified Sparse Matrix Data Format for Efficient General Sparse Matrix-Vector Multiplication on Modern Processors with Wide SIMD Units}}
+      \field{volume}{36}
+      \field{year}{2014}
+      \field{pages}{C401\bibrangedash C423}
+      \range{pages}{-1}
+    \endentry
+    \entry{bulucfineman2009csb}{inproceedings}{}{}
+      \name{author}{5}{}{%
+        {{hash=16232b942c0721c1f3f4377923f3c28e}{%
+           family={Buluç},
+           familyi={B\bibinitperiod},
+           given={Ayd{ı}n},
+           giveni={A\bibinitperiod}}}%
+        {{hash=d7b4333bb6386d72a4519ce3bca5b6a3}{%
+           family={Fineman},
+           familyi={F\bibinitperiod},
+           given={Jeremy\bibnamedelima T.},
+           giveni={J\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+        {{hash=26a5a1c098bdade790e2ee41c62dd36b}{%
+           family={Frigo},
+           familyi={F\bibinitperiod},
+           given={Matteo},
+           giveni={M\bibinitperiod}}}%
+        {{hash=41ca2ba9079ac03c75c9b022cbcb501b}{%
+           family={Gilbert},
+           familyi={G\bibinitperiod},
+           given={John\bibnamedelima R.},
+           giveni={J\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=a389dea91a76366c4b4af5f52a928a76}{%
+           family={Leiserson},
+           familyi={L\bibinitperiod},
+           given={Charles\bibnamedelima E.},
+           giveni={C\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \strng{namehash}{14f55c8b4344ae4afe8b2de689680978}
+      \strng{fullhash}{bedb41541b6e00de564bb3eae888a5f0}
+      \strng{fullhashraw}{bedb41541b6e00de564bb3eae888a5f0}
+      \strng{bibnamehash}{bedb41541b6e00de564bb3eae888a5f0}
+      \strng{authorbibnamehash}{bedb41541b6e00de564bb3eae888a5f0}
+      \strng{authornamehash}{14f55c8b4344ae4afe8b2de689680978}
+      \strng{authorfullhash}{bedb41541b6e00de564bb3eae888a5f0}
+      \strng{authorfullhashraw}{bedb41541b6e00de564bb3eae888a5f0}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{ACM Symposium on Parallelism in Algorithms and Architectures (SPAA)}
+      \field{title}{Parallel Sparse Matrix-Vector and Matrix-Transpose-Vector Multiplication Using Compressed Sparse Blocks}
+      \field{year}{2009}
+      \field{pages}{233\bibrangedash 244}
+      \range{pages}{12}
+      \verb{doi}
+      \verb 10.1145/1583991.1584053
+      \endverb
+    \endentry
+    \entry{vuduc2003thesis}{thesis}{}{}
+      \name{author}{1}{}{%
+        {{hash=6af2b4af8b552c7eaae71f7968c2b36c}{%
+           family={Vuduc},
+           familyi={V\bibinitperiod},
+           given={Richard\bibnamedelima Wilson},
+           giveni={R\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+      }
+      \list{institution}{1}{%
+        {University of California, Berkeley}%
+      }
+      \strng{namehash}{6af2b4af8b552c7eaae71f7968c2b36c}
+      \strng{fullhash}{6af2b4af8b552c7eaae71f7968c2b36c}
+      \strng{fullhashraw}{6af2b4af8b552c7eaae71f7968c2b36c}
+      \strng{bibnamehash}{6af2b4af8b552c7eaae71f7968c2b36c}
+      \strng{authorbibnamehash}{6af2b4af8b552c7eaae71f7968c2b36c}
+      \strng{authornamehash}{6af2b4af8b552c7eaae71f7968c2b36c}
+      \strng{authorfullhash}{6af2b4af8b552c7eaae71f7968c2b36c}
+      \strng{authorfullhashraw}{6af2b4af8b552c7eaae71f7968c2b36c}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Automatic Performance Tuning of Sparse Matrix Kernels}
+      \field{type}{phdthesis}
+      \field{year}{2003}
+    \endentry
+    \entry{vuduc2005oski}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=787e8f2ad48eef94e6f9761dc8813e4c}{%
+           family={Vuduc},
+           familyi={V\bibinitperiod},
+           given={Richard},
+           giveni={R\bibinitperiod}}}%
+        {{hash=e695aa321898b526ee50457fe1e0e9cc}{%
+           family={Demmel},
+           familyi={D\bibinitperiod},
+           given={James\bibnamedelima W.},
+           giveni={J\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+        {{hash=1b1e734bfc7fb93bc65bcefd26a09bee}{%
+           family={Yelick},
+           familyi={Y\bibinitperiod},
+           given={Katherine\bibnamedelima A.},
+           giveni={K\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+      }
+      \strng{namehash}{94644c5fe595b50db322649a7ff23273}
+      \strng{fullhash}{107ab6fd180a079b188fccd4e9817ade}
+      \strng{fullhashraw}{107ab6fd180a079b188fccd4e9817ade}
+      \strng{bibnamehash}{107ab6fd180a079b188fccd4e9817ade}
+      \strng{authorbibnamehash}{107ab6fd180a079b188fccd4e9817ade}
+      \strng{authornamehash}{94644c5fe595b50db322649a7ff23273}
+      \strng{authorfullhash}{107ab6fd180a079b188fccd4e9817ade}
+      \strng{authorfullhashraw}{107ab6fd180a079b188fccd4e9817ade}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Physics: Conference Series}
+      \field{title}{{OSKI}: A Library of Automatically Tuned Sparse Matrix Kernels}
+      \field{year}{2005}
+    \endentry
+    \entry{li2013smat}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=8cb00ac84a4836d56dd7b9c624e98f03}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Jiajia},
+           giveni={J\bibinitperiod}}}%
+        {{hash=456a0c8dfa79d2ab2336e1f8b1cfbdb6}{%
+           family={Tan},
+           familyi={T\bibinitperiod},
+           given={Guangming},
+           giveni={G\bibinitperiod}}}%
+        {{hash=f7fc63589ea18a8ebae17eb7ddcc0db0}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Mingyu},
+           giveni={M\bibinitperiod}}}%
+        {{hash=65d66c2cabd830e47daf671b3878a518}{%
+           family={Sun},
+           familyi={S\bibinitperiod},
+           given={Ninghui},
+           giveni={N\bibinitperiod}}}%
+      }
+      \strng{namehash}{1d6c170fe6359fad7e6229e80982ac52}
+      \strng{fullhash}{36aade18776ad0d49ef88cec93398480}
+      \strng{fullhashraw}{36aade18776ad0d49ef88cec93398480}
+      \strng{bibnamehash}{36aade18776ad0d49ef88cec93398480}
+      \strng{authorbibnamehash}{36aade18776ad0d49ef88cec93398480}
+      \strng{authornamehash}{1d6c170fe6359fad7e6229e80982ac52}
+      \strng{authorfullhash}{36aade18776ad0d49ef88cec93398480}
+      \strng{authorfullhashraw}{36aade18776ad0d49ef88cec93398480}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI)}
+      \field{title}{{SMAT}: An Input Adaptive Auto-Tuner for Sparse Matrix-Vector Multiplication}
+      \field{year}{2013}
+      \field{pages}{117\bibrangedash 126}
+      \range{pages}{10}
+    \endentry
+    \entry{sedaghati2015automatic}{inproceedings}{}{}
+      \name{author}{5}{}{%
+        {{hash=0f31a9cb4a319b88cb1d3c5333cd5ebd}{%
+           family={Sedaghati},
+           familyi={S\bibinitperiod},
+           given={Naser},
+           giveni={N\bibinitperiod}}}%
+        {{hash=03b9fd5cd155ee6c98609c44f0400164}{%
+           family={Mu},
+           familyi={M\bibinitperiod},
+           given={Te},
+           giveni={T\bibinitperiod}}}%
+        {{hash=67c5db856a107c2e8d50498431979606}{%
+           family={Pouchet},
+           familyi={P\bibinitperiod},
+           given={Louis-Noël},
+           giveni={L\bibinithyphendelim N\bibinitperiod}}}%
+        {{hash=654b806329630516a0cf1b5e08dabddb}{%
+           family={Parthasarathy},
+           familyi={P\bibinitperiod},
+           given={Srinivasan},
+           giveni={S\bibinitperiod}}}%
+        {{hash=678723b7d5fe26c89fef36bdcbec64f2}{%
+           family={Sadayappan},
+           familyi={S\bibinitperiod},
+           given={P.},
+           giveni={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{7f9b13b8ed1d39c2d7a4b97f0b52169e}
+      \strng{fullhash}{04ebd5457f94297b8789e64582cd1e09}
+      \strng{fullhashraw}{04ebd5457f94297b8789e64582cd1e09}
+      \strng{bibnamehash}{04ebd5457f94297b8789e64582cd1e09}
+      \strng{authorbibnamehash}{04ebd5457f94297b8789e64582cd1e09}
+      \strng{authornamehash}{7f9b13b8ed1d39c2d7a4b97f0b52169e}
+      \strng{authorfullhash}{04ebd5457f94297b8789e64582cd1e09}
+      \strng{authorfullhashraw}{04ebd5457f94297b8789e64582cd1e09}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{ACM International Conference on Supercomputing (ICS)}
+      \field{title}{Automatic Selection of Sparse Matrix Representation on {GPUs}}
+      \field{year}{2015}
+      \field{pages}{99\bibrangedash 108}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1145/2751205.2751244
+      \endverb
+    \endentry
+    \entry{zhao2018bridging}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=ba51490fdfee4e053d199f28e82dad4f}{%
+           family={Zhao},
+           familyi={Z\bibinitperiod},
+           given={Yue},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=8cb00ac84a4836d56dd7b9c624e98f03}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Jiajia},
+           giveni={J\bibinitperiod}}}%
+        {{hash=761dad8a28ba088bc16c4f4ac6264281}{%
+           family={Liao},
+           familyi={L\bibinitperiod},
+           given={Chunhua},
+           giveni={C\bibinitperiod}}}%
+        {{hash=e5d894b6d4dcb718532e9d6a05234d08}{%
+           family={Shen},
+           familyi={S\bibinitperiod},
+           given={Xipeng},
+           giveni={X\bibinitperiod}}}%
+      }
+      \strng{namehash}{6e36d0f67a78a8327c01f0bb5d946324}
+      \strng{fullhash}{e7c57d7290bfc2d1edc9d6754611e2c7}
+      \strng{fullhashraw}{e7c57d7290bfc2d1edc9d6754611e2c7}
+      \strng{bibnamehash}{e7c57d7290bfc2d1edc9d6754611e2c7}
+      \strng{authorbibnamehash}{e7c57d7290bfc2d1edc9d6754611e2c7}
+      \strng{authornamehash}{6e36d0f67a78a8327c01f0bb5d946324}
+      \strng{authorfullhash}{e7c57d7290bfc2d1edc9d6754611e2c7}
+      \strng{authorfullhashraw}{e7c57d7290bfc2d1edc9d6754611e2c7}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP)}
+      \field{title}{Bridging the Gap between Deep Learning and Sparse Matrix Format Selection}
+      \field{year}{2018}
+      \field{pages}{94\bibrangedash 108}
+      \range{pages}{15}
+      \verb{doi}
+      \verb 10.1145/3178487.3178495
+      \endverb
+    \endentry
+    \entry{vuduc2005vbr}{inproceedings}{}{}
+      \name{author}{2}{}{%
+        {{hash=6d2fcf123e174eac6e36cbbb9ac0a126}{%
+           family={Vuduc},
+           familyi={V\bibinitperiod},
+           given={Richard\bibnamedelima W.},
+           giveni={R\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+        {{hash=23599529859f12b15917ed7565d2537c}{%
+           family={Moon},
+           familyi={M\bibinitperiod},
+           given={Hyun-Jin},
+           giveni={H\bibinithyphendelim J\bibinitperiod}}}%
+      }
+      \strng{namehash}{45463251892bd988aacf5bba16d27d1f}
+      \strng{fullhash}{45463251892bd988aacf5bba16d27d1f}
+      \strng{fullhashraw}{45463251892bd988aacf5bba16d27d1f}
+      \strng{bibnamehash}{45463251892bd988aacf5bba16d27d1f}
+      \strng{authorbibnamehash}{45463251892bd988aacf5bba16d27d1f}
+      \strng{authornamehash}{45463251892bd988aacf5bba16d27d1f}
+      \strng{authorfullhash}{45463251892bd988aacf5bba16d27d1f}
+      \strng{authorfullhashraw}{45463251892bd988aacf5bba16d27d1f}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{High Performance Computing and Communications (HPCC), Lecture Notes in Computer Science}
+      \field{title}{Fast Sparse Matrix-Vector Multiplication by Exploiting Variable Block Structure}
+      \field{year}{2005}
+      \field{pages}{807\bibrangedash 816}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1007/11557654_91
+      \endverb
+    \endentry
+    \entry{niu2021tilespmv}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=f990bcabe5aff3970e4f92b6399a2bb5}{%
+           family={Niu},
+           familyi={N\bibinitperiod},
+           given={Yuyao},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=454c659d91e9c5411f38e4b898689cb4}{%
+           family={Lu},
+           familyi={L\bibinitperiod},
+           given={Zhengyang},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=e095317f6367bcd3d7b431b8a428a1d5}{%
+           family={Dong},
+           familyi={D\bibinitperiod},
+           given={Meichen},
+           giveni={M\bibinitperiod}}}%
+        {{hash=9448af175aa2f5d26669c6c323d3fe8d}{%
+           family={Jin},
+           familyi={J\bibinitperiod},
+           given={Zhou},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=c344d10ce6b007a1dbecac83a37a69a6}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Weifeng},
+           giveni={W\bibinitperiod}}}%
+        {{hash=456a0c8dfa79d2ab2336e1f8b1cfbdb6}{%
+           family={Tan},
+           familyi={T\bibinitperiod},
+           given={Guangming},
+           giveni={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{e49a14de8d0614eb5cee785de234c061}
+      \strng{fullhash}{50e3e5243ea41d33b9a15f6d560a610c}
+      \strng{fullhashraw}{50e3e5243ea41d33b9a15f6d560a610c}
+      \strng{bibnamehash}{50e3e5243ea41d33b9a15f6d560a610c}
+      \strng{authorbibnamehash}{50e3e5243ea41d33b9a15f6d560a610c}
+      \strng{authornamehash}{e49a14de8d0614eb5cee785de234c061}
+      \strng{authorfullhash}{50e3e5243ea41d33b9a15f6d560a610c}
+      \strng{authorfullhashraw}{50e3e5243ea41d33b9a15f6d560a610c}
+      \field{extraname}{1}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{IEEE International Parallel and Distributed Processing Symposium (IPDPS)}
+      \field{title}{{TileSpMV}: A Tiled Algorithm for Sparse Matrix-Vector Multiplication on {GPUs}}
+      \field{year}{2021}
+      \field{pages}{68\bibrangedash 78}
+      \range{pages}{11}
+      \verb{doi}
+      \verb 10.1109/IPDPS49936.2021.00016
+      \endverb
+    \endentry
+    \entry{niu2022tilespgemm}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=f990bcabe5aff3970e4f92b6399a2bb5}{%
+           family={Niu},
+           familyi={N\bibinitperiod},
+           given={Yuyao},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=454c659d91e9c5411f38e4b898689cb4}{%
+           family={Lu},
+           familyi={L\bibinitperiod},
+           given={Zhengyang},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=57c7e8d7d94d444c80f664aabb10b55e}{%
+           family={Ji},
+           familyi={J\bibinitperiod},
+           given={Haonan},
+           giveni={H\bibinitperiod}}}%
+        {{hash=b95151985fc64c05648b7af74fdcd41f}{%
+           family={Song},
+           familyi={S\bibinitperiod},
+           given={Shuhui},
+           giveni={S\bibinitperiod}}}%
+        {{hash=9448af175aa2f5d26669c6c323d3fe8d}{%
+           family={Jin},
+           familyi={J\bibinitperiod},
+           given={Zhou},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=c344d10ce6b007a1dbecac83a37a69a6}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Weifeng},
+           giveni={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{e49a14de8d0614eb5cee785de234c061}
+      \strng{fullhash}{b5688eefc93b1a7968dcb56776b534b5}
+      \strng{fullhashraw}{b5688eefc93b1a7968dcb56776b534b5}
+      \strng{bibnamehash}{b5688eefc93b1a7968dcb56776b534b5}
+      \strng{authorbibnamehash}{b5688eefc93b1a7968dcb56776b534b5}
+      \strng{authornamehash}{e49a14de8d0614eb5cee785de234c061}
+      \strng{authorfullhash}{b5688eefc93b1a7968dcb56776b534b5}
+      \strng{authorfullhashraw}{b5688eefc93b1a7968dcb56776b534b5}
+      \field{extraname}{2}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP)}
+      \field{title}{{TileSpGEMM}: A Tiled Algorithm for Parallel Sparse General Matrix-Matrix Multiplication on {GPUs}}
+      \field{year}{2022}
+      \field{pages}{90\bibrangedash 106}
+      \range{pages}{17}
+      \verb{doi}
+      \verb 10.1145/3503221.3508431
+      \endverb
+    \endentry
+    \entry{munoz2023flexagon}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=e204c1c000a094b90ef93cb5b177a30a}{%
+           family={Muñoz-Martínez},
+           familyi={M\bibinithyphendelim M\bibinitperiod},
+           given={Francisco},
+           giveni={F\bibinitperiod}}}%
+        {{hash=6a4d90c6cfd68bd5c6c0471ed54af142}{%
+           family={Garg},
+           familyi={G\bibinitperiod},
+           given={Raveesh},
+           giveni={R\bibinitperiod}}}%
+        {{hash=563b17869ed8708d2b550508fcfd5e2b}{%
+           family={Abellán},
+           familyi={A\bibinitperiod},
+           given={José\bibnamedelima L.},
+           giveni={J\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=8cae065f115427e2c76979278456505d}{%
+           family={Pellauer},
+           familyi={P\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=574435c69f498260d7d7bb9a7e31e5e9}{%
+           family={Acacio},
+           familyi={A\bibinitperiod},
+           given={Manuel\bibnamedelima E.},
+           giveni={M\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=e1ce26b15a886cbd409e6a8c2254dd49}{%
+           family={Krishna},
+           familyi={K\bibinitperiod},
+           given={Tushar},
+           giveni={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{965f6bd0aa98d3e354a68b89df7cee1b}
+      \strng{fullhash}{d177b0cba5a629ecf98dc827957d9d80}
+      \strng{fullhashraw}{d177b0cba5a629ecf98dc827957d9d80}
+      \strng{bibnamehash}{d177b0cba5a629ecf98dc827957d9d80}
+      \strng{authorbibnamehash}{d177b0cba5a629ecf98dc827957d9d80}
+      \strng{authornamehash}{965f6bd0aa98d3e354a68b89df7cee1b}
+      \strng{authorfullhash}{d177b0cba5a629ecf98dc827957d9d80}
+      \strng{authorfullhashraw}{d177b0cba5a629ecf98dc827957d9d80}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{ACM International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}
+      \field{title}{Flexagon: A Multi-Dataflow Sparse-Sparse Matrix Multiplication Accelerator for Efficient {DNN} Processing}
+      \field{year}{2023}
+      \field{pages}{252\bibrangedash 265}
+      \range{pages}{14}
+      \verb{doi}
+      \verb 10.1145/3582016.3582069
+      \endverb
+    \endentry
+    \entry{weaver2013nondeterminism}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=acfada5551d5f902a19b7e3972bffaa0}{%
+           family={Weaver},
+           familyi={W\bibinitperiod},
+           given={Vincent\bibnamedelima M.},
+           giveni={V\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=174c16e56c32dc3012d9fe669f50b1f0}{%
+           family={Terpstra},
+           familyi={T\bibinitperiod},
+           given={Dan},
+           giveni={D\bibinitperiod}}}%
+        {{hash=b99af7ab7068e097b22610362ea2ea0a}{%
+           family={Moore},
+           familyi={M\bibinitperiod},
+           given={Shirley},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{2f80f7c8b7273d5c34b392dec9d153a5}
+      \strng{fullhash}{e11e8c3f016bbc307fd57828a7c36785}
+      \strng{fullhashraw}{e11e8c3f016bbc307fd57828a7c36785}
+      \strng{bibnamehash}{e11e8c3f016bbc307fd57828a7c36785}
+      \strng{authorbibnamehash}{e11e8c3f016bbc307fd57828a7c36785}
+      \strng{authornamehash}{2f80f7c8b7273d5c34b392dec9d153a5}
+      \strng{authorfullhash}{e11e8c3f016bbc307fd57828a7c36785}
+      \strng{authorfullhashraw}{e11e8c3f016bbc307fd57828a7c36785}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS)}
+      \field{title}{Non-Determinism and Overcount on Modern Hardware Performance Counter Implementations}
+      \field{year}{2013}
+      \field{pages}{215\bibrangedash 224}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1109/ISPASS.2013.6557172
+      \endverb
+    \endentry
+    \entry{davis2011suitesparse}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=65d91744b06296f07cba0205480151ba}{%
+           family={Davis},
+           familyi={D\bibinitperiod},
+           given={Timothy\bibnamedelima A.},
+           giveni={T\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=855f3b81b4485b5f0dcd527f5803bb66}{%
+           family={Hu},
+           familyi={H\bibinitperiod},
+           given={Yifan},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{fullhash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{fullhashraw}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{bibnamehash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{authorbibnamehash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{authornamehash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{authorfullhash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{authorfullhashraw}{7bc47d8c25cee5d3937590eb9894f295}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{ACM Transactions on Mathematical Software}
+      \field{number}{1}
+      \field{title}{The {University of Florida} Sparse Matrix Collection}
+      \field{volume}{38}
+      \field{year}{2011}
+      \field{pages}{1:1\bibrangedash 1:25}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1145/2049662.2049663
+      \endverb
+    \endentry
+    \entry{kolodziej2019suitesparse}{article}{}{}
+      \name{author}{8}{}{%
+        {{hash=34124599ac0940180b0080bc22fa652d}{%
+           family={Kolodziej},
+           familyi={K\bibinitperiod},
+           given={Scott\bibnamedelima P.},
+           giveni={S\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=316f66ad7a4acc94962e9cf62d927db0}{%
+           family={Aznaveh},
+           familyi={A\bibinitperiod},
+           given={Mohsen},
+           giveni={M\bibinitperiod}}}%
+        {{hash=2f2fe9ad4d8c8cdba8499ccc17757d65}{%
+           family={Bullock},
+           familyi={B\bibinitperiod},
+           given={Matthew},
+           giveni={M\bibinitperiod}}}%
+        {{hash=93bcc21ed8a07c9fa1223375d7cf5fcc}{%
+           family={David},
+           familyi={D\bibinitperiod},
+           given={Jarrett},
+           giveni={J\bibinitperiod}}}%
+        {{hash=65d91744b06296f07cba0205480151ba}{%
+           family={Davis},
+           familyi={D\bibinitperiod},
+           given={Timothy\bibnamedelima A.},
+           giveni={T\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=fb006047ebc1f743248cab3e7fb0827c}{%
+           family={Henderson},
+           familyi={H\bibinitperiod},
+           given={Matthew},
+           giveni={M\bibinitperiod}}}%
+        {{hash=855f3b81b4485b5f0dcd527f5803bb66}{%
+           family={Hu},
+           familyi={H\bibinitperiod},
+           given={Yifan},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=941c54c3535cf865c6785ceb556f7c5e}{%
+           family={Sandstrom},
+           familyi={S\bibinitperiod},
+           given={Read},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{05ed17583a0de9fb03db6ab5a073d9fe}
+      \strng{fullhash}{9d15f1fc0929b9c8b17d10d6bcefe46c}
+      \strng{fullhashraw}{9d15f1fc0929b9c8b17d10d6bcefe46c}
+      \strng{bibnamehash}{05ed17583a0de9fb03db6ab5a073d9fe}
+      \strng{authorbibnamehash}{05ed17583a0de9fb03db6ab5a073d9fe}
+      \strng{authornamehash}{05ed17583a0de9fb03db6ab5a073d9fe}
+      \strng{authorfullhash}{9d15f1fc0929b9c8b17d10d6bcefe46c}
+      \strng{authorfullhashraw}{9d15f1fc0929b9c8b17d10d6bcefe46c}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Open Source Software}
+      \field{number}{35}
+      \field{title}{The {SuiteSparse} Matrix Collection Website Interface}
+      \field{volume}{4}
+      \field{year}{2019}
+      \field{pages}{1244}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.21105/joss.01244
+      \endverb
+    \endentry
+    \entry{leskovec2014snap}{misc}{}{}
+      \name{author}{2}{}{%
+        {{hash=900d107125ff0ca84698cb909e4f6c51}{%
+           family={Leskovec},
+           familyi={L\bibinitperiod},
+           given={Jure},
+           giveni={J\bibinitperiod}}}%
+        {{hash=767ff42ec330eeedea785558d350f6fa}{%
+           family={Krevl},
+           familyi={K\bibinitperiod},
+           given={Andrej},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{fullhash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{fullhashraw}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{bibnamehash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{authorbibnamehash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{authornamehash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{authorfullhash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{authorfullhashraw}{8b6c59a3c7880c51055cf3864633578b}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{\url{http://snap.stanford.edu/data}}
+      \field{title}{{SNAP Datasets}: {Stanford} Large Network Dataset Collection}
+      \field{year}{2014}
+    \endentry
+    \entry{leskovec2016snaplib}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=900d107125ff0ca84698cb909e4f6c51}{%
+           family={Leskovec},
+           familyi={L\bibinitperiod},
+           given={Jure},
+           giveni={J\bibinitperiod}}}%
+        {{hash=32072f330a38b4a716897a0144a7d0ec}{%
+           family={Sosič},
+           familyi={S\bibinitperiod},
+           given={Rok},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{f9d5b2ffb20aea1bc71018204838ef80}
+      \strng{fullhash}{f9d5b2ffb20aea1bc71018204838ef80}
+      \strng{fullhashraw}{f9d5b2ffb20aea1bc71018204838ef80}
+      \strng{bibnamehash}{f9d5b2ffb20aea1bc71018204838ef80}
+      \strng{authorbibnamehash}{f9d5b2ffb20aea1bc71018204838ef80}
+      \strng{authornamehash}{f9d5b2ffb20aea1bc71018204838ef80}
+      \strng{authorfullhash}{f9d5b2ffb20aea1bc71018204838ef80}
+      \strng{authorfullhashraw}{f9d5b2ffb20aea1bc71018204838ef80}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{ACM Transactions on Intelligent Systems and Technology}
+      \field{number}{1}
+      \field{title}{{SNAP}: A General-Purpose Network Analysis and Graph-Mining Library}
+      \field{volume}{8}
+      \field{year}{2016}
+    \endentry
+    \entry{chakrabarti2004rmat}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=1995e37eb2dfe4651f28297cbdc3f466}{%
+           family={Chakrabarti},
+           familyi={C\bibinitperiod},
+           given={Deepayan},
+           giveni={D\bibinitperiod}}}%
+        {{hash=08d645215ccd73a5325f3539a65f736f}{%
+           family={Zhan},
+           familyi={Z\bibinitperiod},
+           given={Yiping},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=976e034dd29cfc47640ae45c16d21a9d}{%
+           family={Faloutsos},
+           familyi={F\bibinitperiod},
+           given={Christos},
+           giveni={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{839fe1f2305ade2a67331ec12bf13035}
+      \strng{fullhash}{b76a1c8c82368da9d415909d8618e9da}
+      \strng{fullhashraw}{b76a1c8c82368da9d415909d8618e9da}
+      \strng{bibnamehash}{b76a1c8c82368da9d415909d8618e9da}
+      \strng{authorbibnamehash}{b76a1c8c82368da9d415909d8618e9da}
+      \strng{authornamehash}{839fe1f2305ade2a67331ec12bf13035}
+      \strng{authorfullhash}{b76a1c8c82368da9d415909d8618e9da}
+      \strng{authorfullhashraw}{b76a1c8c82368da9d415909d8618e9da}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{SIAM International Conference on Data Mining (SDM)}
+      \field{title}{{R-MAT}: A Recursive Model for Graph Mining}
+      \field{year}{2004}
+      \field{pages}{442\bibrangedash 446}
+      \range{pages}{5}
+      \verb{doi}
+      \verb 10.1137/1.9781611972740.43
+      \endverb
+    \endentry
+    \entry{fowers2014fpga}{inproceedings}{}{}
+      \name{author}{5}{}{%
+        {{hash=2c61d2a419499c731f23018efa46bc7a}{%
+           family={Fowers},
+           familyi={F\bibinitperiod},
+           given={Jeremy},
+           giveni={J\bibinitperiod}}}%
+        {{hash=a25cdee4258b53b9c5b6a29f906cb58d}{%
+           family={Ovtcharov},
+           familyi={O\bibinitperiod},
+           given={Kalin},
+           giveni={K\bibinitperiod}}}%
+        {{hash=4f07eb948e8eb9f85eec8e0644098764}{%
+           family={Strauss},
+           familyi={S\bibinitperiod},
+           given={Karin},
+           giveni={K\bibinitperiod}}}%
+        {{hash=c2b2ef94f5274dc5c1f78179e98d89d0}{%
+           family={Chung},
+           familyi={C\bibinitperiod},
+           given={Eric\bibnamedelima S.},
+           giveni={E\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+        {{hash=03c15a159e37a4d4c9aa6a1a25c62261}{%
+           family={Stitt},
+           familyi={S\bibinitperiod},
+           given={Greg},
+           giveni={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{85896f3fcd11b9b379584df90ae21c93}
+      \strng{fullhash}{da33926d7bd77340c11dfef286dbbbf5}
+      \strng{fullhashraw}{da33926d7bd77340c11dfef286dbbbf5}
+      \strng{bibnamehash}{da33926d7bd77340c11dfef286dbbbf5}
+      \strng{authorbibnamehash}{da33926d7bd77340c11dfef286dbbbf5}
+      \strng{authornamehash}{85896f3fcd11b9b379584df90ae21c93}
+      \strng{authorfullhash}{da33926d7bd77340c11dfef286dbbbf5}
+      \strng{authorfullhashraw}{da33926d7bd77340c11dfef286dbbbf5}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{IEEE Annual International Symposium on Field-Programmable Custom Computing Machines (FCCM)}
+      \field{title}{A High Memory Bandwidth {FPGA} Accelerator for Sparse Matrix-Vector Multiplication}
+      \field{year}{2014}
+      \field{pages}{36\bibrangedash 43}
+      \range{pages}{8}
+      \verb{doi}
+      \verb 10.1109/FCCM.2014.23
+      \endverb
+    \endentry
+    \entry{fpga-stream}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=4c9226d4670603471974a8a72d7ead25}{%
+           family={Hosseinabady},
+           familyi={H\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod}}}%
+        {{hash=0289648a10a3ddef38acdc0aafeb0666}{%
+           family={Nunez-Yanez},
+           familyi={N\bibinithyphendelim Y\bibinitperiod},
+           given={J.},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{551ae885a233dfc9edbefbf58d118da7}
+      \strng{fullhash}{551ae885a233dfc9edbefbf58d118da7}
+      \strng{fullhashraw}{551ae885a233dfc9edbefbf58d118da7}
+      \strng{bibnamehash}{551ae885a233dfc9edbefbf58d118da7}
+      \strng{authorbibnamehash}{551ae885a233dfc9edbefbf58d118da7}
+      \strng{authornamehash}{551ae885a233dfc9edbefbf58d118da7}
+      \strng{authorfullhash}{551ae885a233dfc9edbefbf58d118da7}
+      \strng{authorfullhashraw}{551ae885a233dfc9edbefbf58d118da7}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems}
+      \field{month}{6}
+      \field{number}{6}
+      \field{title}{{A Streaming Dataflow Engine for Sparse Matrix-Vector Multiplication Using High-Level Synthesis}}
+      \field{volume}{39}
+      \field{year}{2020}
+      \field{pages}{1272\bibrangedash 1285}
+      \range{pages}{14}
+      \verb{doi}
+      \verb 10.1109/tcad.2019.2912923
+      \endverb
+    \endentry
+    \entry{overcoming-irreg}{misc}{}{}
+      \name{author}{2}{}{%
+        {{hash=b11d54648d40383cf9139e574d30f65a}{%
+           family={Flegar},
+           familyi={F\bibinitperiod},
+           given={Goran},
+           giveni={G\bibinitperiod}}}%
+        {{hash=7cc7f0879fba9f5376716d9dd24e5ae4}{%
+           family={Anzt},
+           familyi={A\bibinitperiod},
+           given={Hartwig},
+           giveni={H\bibinitperiod}}}%
+      }
+      \strng{namehash}{63f31fae80e1c8128b546a029202d7bc}
+      \strng{fullhash}{63f31fae80e1c8128b546a029202d7bc}
+      \strng{fullhashraw}{63f31fae80e1c8128b546a029202d7bc}
+      \strng{bibnamehash}{63f31fae80e1c8128b546a029202d7bc}
+      \strng{authorbibnamehash}{63f31fae80e1c8128b546a029202d7bc}
+      \strng{authornamehash}{63f31fae80e1c8128b546a029202d7bc}
+      \strng{authorfullhash}{63f31fae80e1c8128b546a029202d7bc}
+      \strng{authorfullhashraw}{63f31fae80e1c8128b546a029202d7bc}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{Zenodo}
+      \field{month}{11}
+      \field{title}{{Overcoming Load Imbalance for Irregular Sparse Matrices}}
+      \field{year}{2017}
+    \endentry
+    \entry{hybrid_format}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=ed4e688b3a13c815213f1ff2acb5d92b}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={S.},
+           giveni={S\bibinitperiod}}}%
+        {{hash=04aaff0b31eb3a461679ccee78e975ff}{%
+           family={Fang},
+           familyi={F\bibinitperiod},
+           given={J.},
+           giveni={J\bibinitperiod}}}%
+        {{hash=9e3f5382bd82f58980e0e9c0368f63fc}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={C.},
+           giveni={C\bibinitperiod}}}%
+        {{hash=cc4aadc875d7abdbaf96dfa4a83d8b77}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Z.},
+           giveni={Z\bibinitperiod}}}%
+      }
+      \strng{namehash}{df65d7a9923c8b7c2661202e49439a0f}
+      \strng{fullhash}{a3a5288294a2f3253f715c2041bfdf93}
+      \strng{fullhashraw}{a3a5288294a2f3253f715c2041bfdf93}
+      \strng{bibnamehash}{a3a5288294a2f3253f715c2041bfdf93}
+      \strng{authorbibnamehash}{a3a5288294a2f3253f715c2041bfdf93}
+      \strng{authornamehash}{df65d7a9923c8b7c2661202e49439a0f}
+      \strng{authorfullhash}{a3a5288294a2f3253f715c2041bfdf93}
+      \strng{authorfullhashraw}{a3a5288294a2f3253f715c2041bfdf93}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Applied Sciences}
+      \field{number}{19}
+      \field{title}{{Adaptive Hybrid Storage Format for Sparse Matrix--Vector Multiplication on Multi-Core SIMD CPUs}}
+      \field{volume}{12}
+      \field{year}{2022}
+      \field{pages}{9812}
+      \range{pages}{1}
+    \endentry
+    \entry{muratori}{misc}{}{}
+      \name{author}{1}{}{%
+        {{hash=6dbc2de89556381dc782ea13fa60af55}{%
+           family={Muratori},
+           familyi={M\bibinitperiod},
+           given={Casey},
+           giveni={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{6dbc2de89556381dc782ea13fa60af55}
+      \strng{fullhash}{6dbc2de89556381dc782ea13fa60af55}
+      \strng{fullhashraw}{6dbc2de89556381dc782ea13fa60af55}
+      \strng{bibnamehash}{6dbc2de89556381dc782ea13fa60af55}
+      \strng{authorbibnamehash}{6dbc2de89556381dc782ea13fa60af55}
+      \strng{authornamehash}{6dbc2de89556381dc782ea13fa60af55}
+      \strng{authorfullhash}{6dbc2de89556381dc782ea13fa60af55}
+      \strng{authorfullhashraw}{6dbc2de89556381dc782ea13fa60af55}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{Computer, Enhance! (online course), \url{https://www.computerenhance.com}}
+      \field{title}{Performance-Aware Programming}
+      \field{year}{2023}
+    \endentry
+    \entry{perf_2024}{misc}{}{}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{journaltitle}{perf}
+      \field{month}{12}
+      \field{year}{2024}
+      \verb{urlraw}
+      \verb https://perfwiki.github.io/main/
+      \endverb
+      \verb{url}
+      \verb https://perfwiki.github.io/main/
+      \endverb
+    \endentry
+    \entry{papi}{misc}{}{}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{journaltitle}{Innovative Computing Laboratory}
+      \verb{urlraw}
+      \verb https://icl.utk.edu/papi/
+      \endverb
+      \verb{url}
+      \verb https://icl.utk.edu/papi/
+      \endverb
+    \endentry
+    \entry{matplotlib}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=a2f53dcc6bb05a06b8ad94176f80fe26}{%
+           family={Hunter},
+           familyi={H\bibinitperiod},
+           given={John\bibnamedelima D.},
+           giveni={J\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+      }
+      \strng{namehash}{a2f53dcc6bb05a06b8ad94176f80fe26}
+      \strng{fullhash}{a2f53dcc6bb05a06b8ad94176f80fe26}
+      \strng{fullhashraw}{a2f53dcc6bb05a06b8ad94176f80fe26}
+      \strng{bibnamehash}{a2f53dcc6bb05a06b8ad94176f80fe26}
+      \strng{authorbibnamehash}{a2f53dcc6bb05a06b8ad94176f80fe26}
+      \strng{authornamehash}{a2f53dcc6bb05a06b8ad94176f80fe26}
+      \strng{authorfullhash}{a2f53dcc6bb05a06b8ad94176f80fe26}
+      \strng{authorfullhashraw}{a2f53dcc6bb05a06b8ad94176f80fe26}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Computing in Science \& Engineering}
+      \field{number}{3}
+      \field{title}{Matplotlib: A {2D} Graphics Environment}
+      \field{volume}{9}
+      \field{year}{2007}
+      \field{pages}{90\bibrangedash 95}
+      \range{pages}{6}
+      \verb{doi}
+      \verb 10.1109/MCSE.2007.55
+      \endverb
     \endentry
     \entry{pyomo}{book}{}{}
       \name{author}{7}{}{%
@@ -360,8 +1829,8 @@
       \strng{authornamehash}{4c0f8dae4a8e1c82e7bf10ddfa5c0478}
       \strng{authorfullhash}{d6ce893d67c114ad51bd0baa63dfb5f3}
       \strng{authorfullhashraw}{d6ce893d67c114ad51bd0baa63dfb5f3}
-      \field{sortinit}{8}
-      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{edition}{2nd}
@@ -402,8 +1871,8 @@
       \strng{authornamehash}{9fce6affead8c0206eef4bde0c5ee1ad}
       \strng{authorfullhash}{3716c53b17f65ecf6b240282477201b9}
       \strng{authorfullhashraw}{3716c53b17f65ecf6b240282477201b9}
-      \field{sortinit}{9}
-      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the 13th International Symposium on Process Systems Engineering}
@@ -415,85 +1884,6 @@
       \range{pages}{6}
       \verb{doi}
       \verb 10.1016/B978-0-444-64241-7.50144-0
-      \endverb
-    \endentry
-    \entry{muratori}{misc}{}{}
-      \name{author}{1}{}{%
-        {{hash=6dbc2de89556381dc782ea13fa60af55}{%
-           family={Muratori},
-           familyi={M\bibinitperiod},
-           given={Casey},
-           giveni={C\bibinitperiod}}}%
-      }
-      \strng{namehash}{6dbc2de89556381dc782ea13fa60af55}
-      \strng{fullhash}{6dbc2de89556381dc782ea13fa60af55}
-      \strng{fullhashraw}{6dbc2de89556381dc782ea13fa60af55}
-      \strng{bibnamehash}{6dbc2de89556381dc782ea13fa60af55}
-      \strng{authorbibnamehash}{6dbc2de89556381dc782ea13fa60af55}
-      \strng{authornamehash}{6dbc2de89556381dc782ea13fa60af55}
-      \strng{authorfullhash}{6dbc2de89556381dc782ea13fa60af55}
-      \strng{authorfullhashraw}{6dbc2de89556381dc782ea13fa60af55}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{howpublished}{Computer, Enhance! (online course), \url{https://www.computerenhance.com}}
-      \field{title}{Performance-Aware Programming}
-      \field{year}{2023}
-    \endentry
-    \entry{perf_2024}{misc}{}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{journaltitle}{perf}
-      \field{month}{12}
-      \field{year}{2024}
-      \verb{urlraw}
-      \verb https://perfwiki.github.io/main/
-      \endverb
-      \verb{url}
-      \verb https://perfwiki.github.io/main/
-      \endverb
-    \endentry
-    \entry{papi}{misc}{}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{journaltitle}{Innovative Computing Laboratory}
-      \verb{urlraw}
-      \verb https://icl.utk.edu/papi/
-      \endverb
-      \verb{url}
-      \verb https://icl.utk.edu/papi/
-      \endverb
-    \endentry
-    \entry{matplotlib}{article}{}{}
-      \name{author}{1}{}{%
-        {{hash=a2f53dcc6bb05a06b8ad94176f80fe26}{%
-           family={Hunter},
-           familyi={H\bibinitperiod},
-           given={John\bibnamedelima D.},
-           giveni={J\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
-      }
-      \strng{namehash}{a2f53dcc6bb05a06b8ad94176f80fe26}
-      \strng{fullhash}{a2f53dcc6bb05a06b8ad94176f80fe26}
-      \strng{fullhashraw}{a2f53dcc6bb05a06b8ad94176f80fe26}
-      \strng{bibnamehash}{a2f53dcc6bb05a06b8ad94176f80fe26}
-      \strng{authorbibnamehash}{a2f53dcc6bb05a06b8ad94176f80fe26}
-      \strng{authornamehash}{a2f53dcc6bb05a06b8ad94176f80fe26}
-      \strng{authorfullhash}{a2f53dcc6bb05a06b8ad94176f80fe26}
-      \strng{authorfullhashraw}{a2f53dcc6bb05a06b8ad94176f80fe26}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{journaltitle}{Computing in Science \& Engineering}
-      \field{number}{3}
-      \field{title}{Matplotlib: A {2D} Graphics Environment}
-      \field{volume}{9}
-      \field{year}{2007}
-      \field{pages}{90\bibrangedash 95}
-      \range{pages}{6}
-      \verb{doi}
-      \verb 10.1109/MCSE.2007.55
       \endverb
     \endentry
     \entry{glpk}{misc}{}{}
@@ -510,8 +1900,8 @@
       \strng{authornamehash}{cb96118d65be9f05ad10bd5cfdaf0f6d}
       \strng{authorfullhash}{cb96118d65be9f05ad10bd5cfdaf0f6d}
       \strng{authorfullhashraw}{cb96118d65be9f05ad10bd5cfdaf0f6d}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{{GNU} Linear Programming Kit ({GLPK})}
@@ -544,8 +1934,8 @@
       \strng{authornamehash}{842d46b1a24346d113a0e8274fa09dd0}
       \strng{authorfullhash}{842d46b1a24346d113a0e8274fa09dd0}
       \strng{authorfullhashraw}{842d46b1a24346d113a0e8274fa09dd0}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Mathematical Programming}
@@ -558,36 +1948,6 @@
       \verb{doi}
       \verb 10.1007/s10107-004-0559-y
       \endverb
-    \endentry
-    \entry{overcoming-irreg}{misc}{}{}
-      \name{author}{2}{}{%
-        {{hash=b11d54648d40383cf9139e574d30f65a}{%
-           family={Flegar},
-           familyi={F\bibinitperiod},
-           given={Goran},
-           giveni={G\bibinitperiod}}}%
-        {{hash=7cc7f0879fba9f5376716d9dd24e5ae4}{%
-           family={Anzt},
-           familyi={A\bibinitperiod},
-           given={Hartwig},
-           giveni={H\bibinitperiod}}}%
-      }
-      \strng{namehash}{63f31fae80e1c8128b546a029202d7bc}
-      \strng{fullhash}{63f31fae80e1c8128b546a029202d7bc}
-      \strng{fullhashraw}{63f31fae80e1c8128b546a029202d7bc}
-      \strng{bibnamehash}{63f31fae80e1c8128b546a029202d7bc}
-      \strng{authorbibnamehash}{63f31fae80e1c8128b546a029202d7bc}
-      \strng{authornamehash}{63f31fae80e1c8128b546a029202d7bc}
-      \strng{authorfullhash}{63f31fae80e1c8128b546a029202d7bc}
-      \strng{authorfullhashraw}{63f31fae80e1c8128b546a029202d7bc}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{howpublished}{Zenodo}
-      \field{month}{11}
-      \field{title}{{Overcoming Load Imbalance for Irregular Sparse Matrices}}
-      \field{year}{2017}
     \endentry
     \entry{xilinx_guide}{manual}{}{}
       \name{author}{1}{}{%
@@ -603,8 +1963,8 @@
       \strng{authornamehash}{3b08f6c4d66b14684e6713b90b9f8dc7}
       \strng{authorfullhash}{3b08f6c4d66b14684e6713b90b9f8dc7}
       \strng{authorfullhashraw}{3b08f6c4d66b14684e6713b90b9f8dc7}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{note}{[Online]. Available}
@@ -617,87 +1977,8 @@
       \verb https://docs.amd.com/r/en-US/ug1399-vitis-hls
       \endverb
     \endentry
-    \entry{hybrid_format}{article}{}{}
-      \name{author}{4}{}{%
-        {{hash=ed4e688b3a13c815213f1ff2acb5d92b}{%
-           family={Chen},
-           familyi={C\bibinitperiod},
-           given={S.},
-           giveni={S\bibinitperiod}}}%
-        {{hash=04aaff0b31eb3a461679ccee78e975ff}{%
-           family={Fang},
-           familyi={F\bibinitperiod},
-           given={J.},
-           giveni={J\bibinitperiod}}}%
-        {{hash=9e3f5382bd82f58980e0e9c0368f63fc}{%
-           family={Xu},
-           familyi={X\bibinitperiod},
-           given={C.},
-           giveni={C\bibinitperiod}}}%
-        {{hash=cc4aadc875d7abdbaf96dfa4a83d8b77}{%
-           family={Wang},
-           familyi={W\bibinitperiod},
-           given={Z.},
-           giveni={Z\bibinitperiod}}}%
-      }
-      \strng{namehash}{df65d7a9923c8b7c2661202e49439a0f}
-      \strng{fullhash}{a3a5288294a2f3253f715c2041bfdf93}
-      \strng{fullhashraw}{a3a5288294a2f3253f715c2041bfdf93}
-      \strng{bibnamehash}{a3a5288294a2f3253f715c2041bfdf93}
-      \strng{authorbibnamehash}{a3a5288294a2f3253f715c2041bfdf93}
-      \strng{authornamehash}{df65d7a9923c8b7c2661202e49439a0f}
-      \strng{authorfullhash}{a3a5288294a2f3253f715c2041bfdf93}
-      \strng{authorfullhashraw}{a3a5288294a2f3253f715c2041bfdf93}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{journaltitle}{Applied Sciences}
-      \field{number}{19}
-      \field{title}{{Adaptive Hybrid Storage Format for Sparse Matrix--Vector Multiplication on Multi-Core SIMD CPUs}}
-      \field{volume}{12}
-      \field{year}{2022}
-      \field{pages}{9812}
-      \range{pages}{1}
-    \endentry
-    \entry{fpga-stream}{article}{}{}
-      \name{author}{2}{}{%
-        {{hash=4c9226d4670603471974a8a72d7ead25}{%
-           family={Hosseinabady},
-           familyi={H\bibinitperiod},
-           given={M.},
-           giveni={M\bibinitperiod}}}%
-        {{hash=0289648a10a3ddef38acdc0aafeb0666}{%
-           family={Nunez-Yanez},
-           familyi={N\bibinithyphendelim Y\bibinitperiod},
-           given={J.},
-           giveni={J\bibinitperiod}}}%
-      }
-      \strng{namehash}{551ae885a233dfc9edbefbf58d118da7}
-      \strng{fullhash}{551ae885a233dfc9edbefbf58d118da7}
-      \strng{fullhashraw}{551ae885a233dfc9edbefbf58d118da7}
-      \strng{bibnamehash}{551ae885a233dfc9edbefbf58d118da7}
-      \strng{authorbibnamehash}{551ae885a233dfc9edbefbf58d118da7}
-      \strng{authornamehash}{551ae885a233dfc9edbefbf58d118da7}
-      \strng{authorfullhash}{551ae885a233dfc9edbefbf58d118da7}
-      \strng{authorfullhashraw}{551ae885a233dfc9edbefbf58d118da7}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{journaltitle}{IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems}
-      \field{month}{6}
-      \field{number}{6}
-      \field{title}{{A Streaming Dataflow Engine for Sparse Matrix-Vector Multiplication Using High-Level Synthesis}}
-      \field{volume}{39}
-      \field{year}{2020}
-      \field{pages}{1272\bibrangedash 1285}
-      \range{pages}{14}
-      \verb{doi}
-      \verb 10.1109/tcad.2019.2912923
-      \endverb
-    \endentry
   \enddatalist
+  \missing{perf}
 \endrefsection
 \endinput
 
