@@ -25,6 +25,26 @@ struct Taco_COO
   int    dimensions[2];
 };
 
+typedef struct Taco_Mode_Info Taco_Mode_Info;
+struct Taco_Mode_Info
+{
+  // Max 4 dims.
+  int ordering[4];
+  taco_mode_t types[4];
+};
+
+typedef struct Blocked_COO Blocked_COO;
+struct Blocked_COO
+{
+  int    pos[2];
+  int    *crd1;
+  int    *crd2;
+  int    *crd3;
+  int    *crd4;
+  double *vals;
+  int    dimensions[4]; // {grid_size, grid_size, block_size, block_size}
+};
+
 // Rigamarole round trip because c std sucks.
 typedef struct COO_Element COO_Element;
 struct COO_Element
@@ -33,6 +53,39 @@ struct COO_Element
   int    col;
   double val;
 };
+
+typedef struct Block_Element Block_Element;
+struct Block_Element
+{
+  u64    key; // Lexicographic thingy
+  double val;
+};
+
+// Great, fucking incompetents.
+void free_taco_tensor(taco_tensor_t *tensor)
+{
+  if (tensor->vals && tensor->vals != (uint8_t *)fake_buffer)
+  {
+    free(tensor->vals);
+  }
+
+  for (size_t i = 0; i < tensor->order; i++)
+  {
+    if (tensor->mode_types[i] != taco_mode_dense)
+    {
+      if (tensor->indices[i][0])
+      {
+        free(tensor->indices[i][0]);
+      }
+      if (tensor->indices[i][1])
+      {
+        free(tensor->indices[i][1]);
+      }
+    }
+  }
+
+  deinit_taco_tensor_t(tensor);
+}
 
 int kron_compare(const void *a, const void *b)
 {
@@ -66,6 +119,13 @@ int kron_compare(const void *a, const void *b)
   }
 
   return result;
+}
+
+int block_element_compare(const void *a, const void *b)
+{
+  u64 x = ((const Block_Element *)a)->key;
+  u64 y = ((const Block_Element *)b)->key;
+  return (x > y) - (x < y);
 }
 
 static
@@ -202,6 +262,53 @@ Taco_COO load_kron(Arena *arena, String filename, u64 k_min, u64 k_max, u64 samp
   return result;
 }
 
+static
+Blocked_COO blocked_coo_from_coo(Arena *arena, Taco_COO *src, usize block_size)
+{
+  Blocked_COO out = {0};
+  int N = src->dimensions[0]; // NOTE: Square matrices!
+  int grid_size = N / block_size;
+  int nnz = src->pos[1];
+
+  out.pos[1]        = nnz;
+  out.dimensions[0] = grid_size;
+  out.dimensions[1] = grid_size;
+  out.dimensions[2] = block_size;
+  out.dimensions[3] = block_size;
+  out.crd1 = arena_calloc(arena, nnz, int);
+  out.crd2 = arena_calloc(arena, nnz, int);
+  out.crd3 = arena_calloc(arena, nnz, int);
+  out.crd4 = arena_calloc(arena, nnz, int);
+  out.vals = arena_calloc(arena, nnz, double);
+
+  // NOTE: Claude helped me with pointing out you can do this cool lexicographic key thing.
+  Scratch scratch = scratch_begin(arena);
+    Block_Element *e = arena_calloc(scratch.arena, nnz, Block_Element);
+    for (usize i = 0; i < nnz; i++)
+    {
+      u64 r = src->crd1[i], c = src->crd2[i];
+      e[i].key = (((r / block_size) * grid_size + (c / block_size)) * block_size + (r % block_size)) * block_size + (c % block_size);
+      e[i].val = src->vals[i];
+    }
+    qsort(e, nnz, sizeof(e[0]), block_element_compare);
+
+    for (usize i = 0; i < nnz; i++)
+    {
+      u64 key = e[i].key;
+      out.crd4[i] = key % block_size;
+      key /= block_size;
+      out.crd3[i] = key % block_size;
+      key /= block_size;
+      out.crd2[i] = key % grid_size;
+      key /= grid_size;
+      out.crd1[i] = key;
+      out.vals[i] = e[i].val;
+    }
+  scratch_close(&scratch);
+
+  return out;
+}
+
 typedef int Compute_Function(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B);
 typedef int Pack_Function(taco_tensor_t *A, int* pos, int* crd1, int* crd2, double* vals);
 typedef int Assemble_Function(taco_tensor_t *C, taco_tensor_t *A, taco_tensor_t *B);
@@ -240,6 +347,47 @@ Operation_Entry test_entries[] =
   COMBOS(TEST_ENTRY)
 };
 
+// NOTE: Not x-macroing this since its just a couple.
+typedef int Pack_Function_4D(taco_tensor_t *T, int *pos, int *c1, int *c2, int *c3, int *c4, double *vals);
+
+typedef struct Blocking_Entry Blocking_Entry;
+struct Blocking_Entry
+{
+  const char    *name;
+  Taco_Mode_Info a_mode;
+  Taco_Mode_Info b_mode;
+  Taco_Mode_Info c_mode;
+
+  Compute_Function  *compute;
+  Pack_Function_4D  *pack_a;
+  Pack_Function_4D  *pack_b;
+  Assemble_Function *assemble;
+};
+
+Blocking_Entry blocking_entries[] =
+{
+  {
+    .name     = "Blocked_CSR_x_CSR",
+    .a_mode   = {.ordering = {0,1,2,3}, .types = {taco_mode_dense, taco_mode_dense, taco_mode_dense, taco_mode_sparse} },
+    .b_mode   = {.ordering = {0,1,2,3}, .types = {taco_mode_dense, taco_mode_dense, taco_mode_dense, taco_mode_sparse} },
+    .c_mode   = {.ordering = {0,1,2,3}, .types = {taco_mode_sparse, taco_mode_sparse, taco_mode_sparse, taco_mode_sparse} }, // Always blocked coo
+    .compute  = blocked_CSR_x_CSR_compute,
+    .pack_a   = blocked_CSR_x_CSR_pack_A,
+    .pack_b   = blocked_CSR_x_CSR_pack_B,
+    .assemble = blocked_CSR_x_CSR_assemble,
+  },
+  {
+    .name     = "Blocked_CSC_x_CSR",
+    .a_mode   = {.ordering = {0,1,3,2}, .types = {taco_mode_dense, taco_mode_dense, taco_mode_dense, taco_mode_sparse} },
+    .b_mode   = {.ordering = {0,1,2,3}, .types = {taco_mode_dense, taco_mode_dense, taco_mode_dense, taco_mode_sparse} },
+    .c_mode   = {.ordering = {0,1,2,3}, .types = {taco_mode_sparse, taco_mode_sparse, taco_mode_sparse, taco_mode_sparse} }, // Always blocked coo
+    .compute  = blocked_CSC_x_CSR_compute,
+    .pack_a   = blocked_CSC_x_CSR_pack_A,
+    .pack_b   = blocked_CSC_x_CSR_pack_B,
+    .assemble = blocked_CSC_x_CSR_assemble,
+  },
+};
+
 typedef struct TACO_Memory_Alloc TACO_Memory_Alloc;
 struct TACO_Memory_Alloc
 {
@@ -252,7 +400,7 @@ struct TACO_Memory_Log
 {
   String function_prefix;
   usize  memory_usage;
-  TACO_Memory_Alloc allocs[64]; // Max pool should be sufficient.
+  TACO_Memory_Alloc allocs[512]; // Max pool should be sufficient.
 };
 
 TACO_Memory_Log taco_mem_logs[STATIC_COUNT(test_entries)] = {0};
@@ -383,13 +531,6 @@ TACO_Memory_Log *memory_log_from_name(const char *name)
   return log;
 }
 
-typedef struct Taco_Mode_Info Taco_Mode_Info;
-struct Taco_Mode_Info
-{
-  int ordering[2];
-  taco_mode_t types[2];
-};
-
 Taco_Mode_Info taco_mode_info_from_format(Matrix_Format format)
 {
   Taco_Mode_Info result = {0};
@@ -426,7 +567,6 @@ Taco_Mode_Info taco_mode_info_from_format(Matrix_Format format)
   return result;
 }
 
-
 int main(int argc, char **argv)
 {
   Arena arena = arena_make(.reserve_size = GB(64));
@@ -441,6 +581,15 @@ int main(int argc, char **argv)
     setvbuf(stdout, NULL, _IONBF, 0);
   }
 
+  String out_dir = args_get_string_value(&args, STR("out_dir"), STR("taco_kron_results"));
+  String kron_dir = args_get_string_value(&args, STR("kron_dir"), STR("krons/AS-Newman"));
+
+  u64 sample = args_get_integer_value(&args, STR("s"), 2);
+  u64 k_max = args_get_integer_value(&args, STR("k_max"), 20);
+  u64 k_min = args_get_integer_value(&args, STR("k_min"), 0);
+
+  b32 blocking_mode = args_has_flag(&args, STR("blocking"));
+
   String node_name = args_get_string_value(&args, STR("node_name"), STR(""));
 
   String output_formats = args_get_string_value(&args, STR("output_format"), STR("coo"));
@@ -448,25 +597,18 @@ int main(int argc, char **argv)
   b32 use_csr_output = string_find_substring(output_formats, 0, STR("csr")) != output_formats.count;
   b32 use_csc_output = string_find_substring(output_formats, 0, STR("csc")) != output_formats.count;
 
-  String out_dir = args_get_string_value(&args, STR("out_dir"), STR("taco_kron_results"));
-  String kron_dir = args_get_string_value(&args, STR("kron_dir"), STR("krons/AS-Newman"));
-  u64 sample = args_get_integer_value(&args, STR("s"), 2);
-  u64 k_max = args_get_integer_value(&args, STR("k_max"), 20);
-  u64 k_min = args_get_integer_value(&args, STR("k_min"), 0);
-
   String timestamp = string_timestamp(&arena);
-  String out_filename  = string_formatted(&arena, "%.*s/%.*s_s%lu_%.*s_%.*s.csv",
+  String out_filename  = string_formatted(&arena, "%.*s/%.*s_s%lu_%s_%.*s_%.*s.csv",
                                           STRF(out_dir),
-                                          STRF(file_basename(kron_dir)), sample,
+                                          STRF(file_basename(kron_dir)), sample, blocking_mode ? "blocking" : "",
                                           STRF(timestamp), STRF(node_name));
 
   mkdir(string_to_c_string(&arena, out_dir), 0755);
 
   String_List krons = folder_children(&arena, kron_dir);
 
-  // Max 30 k.
-  Repetition_Series *series = repetition_series_make(30 * STATIC_COUNT(test_entries),
-                                                     ((const char *[]){"k", "function", "alloc", "kron_nnz"}));
+  Repetition_Series *series = repetition_series_make(128 * STATIC_COUNT(test_entries),
+                                                     ((const char *[]){"k", "function", "alloc", "kron_nnz", "block_size", "grid_size"}));
 
   u64 cpu_timer_frequency = estimate_cpu_timer_freq();
 
@@ -474,17 +616,16 @@ int main(int argc, char **argv)
   {
     Scratch scratch = scratch_begin(&arena);
 
-    // LOG_INFO("Loading kron: %.*s.", STRF(kron_file->value));
     Taco_COO kron_coo = load_kron(scratch.arena, kron_file->value, k_min, k_max, sample);
     if (!kron_coo.valid)
     {
-      // LOG_INFO("Kron determined invalid: %.*s.", STRF(kron_file->value));
       scratch_close(&scratch);
       continue;
     }
-    LOG_INFO("Loaded, k=%lu s=%lu nnz=%d.", kron_coo.k, kron_coo.s, kron_coo.pos[1]);
-
     u64 k = kron_coo.k;
+    u64 nnz = kron_coo.pos[1];
+    LOG_INFO("Loaded, k=%lu s=%lu nnz=%d.", k, kron_coo.s, nnz);
+
 
     if (k > k_max || k < k_min || kron_coo.s != sample)
     {
@@ -492,91 +633,174 @@ int main(int argc, char **argv)
       continue;
     }
 
-    for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
+    // No blocking? -> do the normal reptest loop.
+    if (!blocking_mode)
     {
-      Operation_Entry *entry = test_entries + func_idx;
-
-      if ((entry->c_format == MAT_COO && !use_coo_output)
-      ||  (entry->c_format == MAT_CSR && !use_csr_output)
-      ||  (entry->c_format == MAT_CSC && !use_csc_output))
+      for (usize func_idx = 0; func_idx < STATIC_COUNT(test_entries); func_idx++)
       {
-        continue;
-      }
+        Operation_Entry *entry = test_entries + func_idx;
 
-      Taco_Mode_Info a_info = taco_mode_info_from_format(entry->a_format);
-      taco_tensor_t *A = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, a_info.ordering,
-                                            a_info.types);
-
-      Taco_Mode_Info b_info = taco_mode_info_from_format(entry->b_format);
-      taco_tensor_t *B = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, b_info.ordering,
-                                            b_info.types);
-
-      Taco_Mode_Info c_info = taco_mode_info_from_format(entry->c_format);
-      taco_tensor_t *C = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, c_info.ordering,
-                                            c_info.types);
-
-      if (entry->c_format == MAT_COO && use_coo_output)
-      {
-        // Simply too large for these combos
-        if (k > 15)
+        if ((entry->c_format == MAT_COO && !use_coo_output)
+            ||  (entry->c_format == MAT_CSR && !use_csr_output)
+            ||  (entry->c_format == MAT_CSC && !use_csc_output))
         {
-          if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC ||
-              entry->a_format == MAT_CSR && entry->b_format == MAT_COO ||
-              entry->a_format == MAT_COO && entry->b_format == MAT_CSC ||
-              entry->a_format == MAT_COO && entry->b_format == MAT_COO)
+          continue;
+        }
+
+        Taco_Mode_Info a_info = taco_mode_info_from_format(entry->a_format);
+        taco_tensor_t *A = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, a_info.ordering,
+                                              a_info.types);
+
+        Taco_Mode_Info b_info = taco_mode_info_from_format(entry->b_format);
+        taco_tensor_t *B = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, b_info.ordering,
+                                              b_info.types);
+
+        Taco_Mode_Info c_info = taco_mode_info_from_format(entry->c_format);
+        taco_tensor_t *C = init_taco_tensor_t(2, sizeof(double), kron_coo.dimensions, c_info.ordering,
+                                              c_info.types);
+
+        if (entry->c_format == MAT_COO && use_coo_output)
+        {
+          // Simply too large for these combos
+          if (k > 15)
           {
-            continue;
+            if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC ||
+                entry->a_format == MAT_CSR && entry->b_format == MAT_COO ||
+                entry->a_format == MAT_COO && entry->b_format == MAT_CSC ||
+                entry->a_format == MAT_COO && entry->b_format == MAT_COO)
+            {
+              continue;
+            }
           }
         }
-      }
-      else if (entry->c_format == MAT_CSR && use_csr_output)
-      {
-        if (k > 18)
+        else if (entry->c_format == MAT_CSR && use_csr_output)
         {
-          if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC ||
-              entry->a_format == MAT_CSR && entry->b_format == MAT_COO ||
-              entry->a_format == MAT_COO && entry->b_format == MAT_CSR)
+          if (k > 18)
           {
-            continue;
+            if (entry->a_format == MAT_CSR && entry->b_format == MAT_CSC ||
+                entry->a_format == MAT_CSR && entry->b_format == MAT_COO ||
+                entry->a_format == MAT_COO && entry->b_format == MAT_CSR)
+            {
+              continue;
+            }
           }
         }
+
+        entry->pack_a(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        entry->pack_b(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
+        entry->assemble(C, A, B);
+
+        // Should have our memory log now after running our pack and assemble funcs.
+        TACO_Memory_Log *memory_log = memory_log_from_name(entry->name);
+
+        Repetition_Tester tester =
+          repetition_series_new_tester(series, 0,
+                                       cpu_timer_frequency,
+                                       seconds_to_try_for_min,
+                                       "--- %.*s %.*s, %s (%d C nnz) ---",
+                                       STRF(file_basename(kron_dir)),
+                                       STRF(kron_coo.name),
+                                       entry->name, C->vals_size);
+
+
+        repetition_series_set_field(series, "k", "%lu", k);
+        repetition_series_set_field(series, "function", entry->name);
+        repetition_series_set_field(series, "alloc", "%lu", memory_log->memory_usage);
+        repetition_series_set_field(series, "kron_nnz", "%lu", nnz);
+
+        // Zero out any logs now.
+        if (memory_log != &nil_log)
+        {
+          ZERO_SIZE(memory_log->allocs, sizeof(memory_log->allocs));
+        }
+
+        while (repetition_series_is_testing(series, &tester))
+        {
+          repetition_tester_begin_time(&tester);
+          entry->compute(C, A, B);
+          repetition_tester_close_time(&tester);
+        }
+
+        free_taco_tensor(C);
+        free_taco_tensor(A);
+        free_taco_tensor(B);
       }
+    }
 
-      entry->pack_a(A, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-      entry->pack_b(B, kron_coo.pos, kron_coo.crd1, kron_coo.crd2, kron_coo.vals);
-      entry->assemble(C, A, B);
-
-      // Should have our memory log now after running our pack and assemble funcs.
-      TACO_Memory_Log *memory_log = memory_log_from_name(entry->name);
-
-      Repetition_Tester tester =
-        repetition_series_new_tester(series, 0,
-                                     cpu_timer_frequency,
-                                     seconds_to_try_for_min,
-                                     "--- %.*s %.*s, %s (%d C nnz) ---",
-                                     STRF(file_basename(kron_dir)),
-                                     STRF(kron_coo.name),
-                                     entry->name, C->vals_size);
-
-
-      repetition_series_set_field(series, "k", "%lu", k);
-      repetition_series_set_field(series, "function", entry->name);
-      repetition_series_set_field(series, "alloc", "%lu", memory_log->memory_usage);
-      repetition_series_set_field(series, "kron_nnz", "%lu", kron_coo.pos[1]);
-
-      // Zero out any logs now.
-      ZERO_SIZE(memory_log->allocs, sizeof(memory_log->allocs));
-
-      while (repetition_series_is_testing(series, &tester))
+    // Blocking mode will do one more loop nesting level.
+    else
+    {
+      // Max 32x32 blocks
+      for (usize grid_size = 1; grid_size <= 32; grid_size *= 2)
       {
-        repetition_tester_begin_time(&tester);
-        entry->compute(C, A, B);
-        repetition_tester_close_time(&tester);
-      }
+        usize block_size = kron_coo.dimensions[0] / grid_size;
 
-      free_taco_tensor(C);
-      free_taco_tensor(A);
-      free_taco_tensor(B);
+        // If grid will actually fit.
+        if (block_size)
+        {
+          Scratch scratch2 = scratch_begin(scratch.arena);
+
+          Blocked_COO blocked_coo = blocked_coo_from_coo(scratch2.arena, &kron_coo, block_size);
+
+          for (usize func_idx = 0; func_idx < STATIC_COUNT(blocking_entries); func_idx++)
+          {
+            Blocking_Entry *entry = blocking_entries + func_idx;
+
+            Taco_Mode_Info a_info = entry->a_mode;
+            taco_tensor_t *A = init_taco_tensor_t(4, sizeof(double), blocked_coo.dimensions, a_info.ordering,
+                                                  a_info.types);
+
+            Taco_Mode_Info b_info = entry->b_mode;
+            taco_tensor_t *B = init_taco_tensor_t(4, sizeof(double), blocked_coo.dimensions, b_info.ordering,
+                                                  b_info.types);
+
+            Taco_Mode_Info c_info = entry->c_mode;
+            taco_tensor_t *C = init_taco_tensor_t(4, sizeof(double), blocked_coo.dimensions, c_info.ordering,
+                                                  c_info.types);
+            entry->pack_a(A, blocked_coo.pos, blocked_coo.crd1, blocked_coo.crd2, blocked_coo.crd3, blocked_coo.crd4, blocked_coo.vals);
+            entry->pack_b(B, blocked_coo.pos, blocked_coo.crd1, blocked_coo.crd2, blocked_coo.crd3, blocked_coo.crd4, blocked_coo.vals);
+            entry->assemble(C, A, B);
+
+            Repetition_Tester tester =
+              repetition_series_new_tester(series, 0,
+                                          cpu_timer_frequency,
+                                          seconds_to_try_for_min,
+                                          "--- %.*s %.*s, %s (%lu x %lu Block Size) ---",
+                                          STRF(file_basename(kron_dir)),
+                                          STRF(kron_coo.name),
+                                          entry->name, block_size, block_size);
+
+            // NOTE: No allocation logging, too many allocations going on due to blocking... and don't have enough time to
+            // fix it.
+            // TACO_Memory_Log *memory_log = memory_log_from_name(entry->name);
+
+            repetition_series_set_field(series, "k", "%lu", k);
+            repetition_series_set_field(series, "function", entry->name);
+            repetition_series_set_field(series, "kron_nnz", "%lu", nnz);
+            // repetition_series_set_field(series, "alloc", "%lu", memory_log->memory_usage);
+            repetition_series_set_field(series, "grid_size", "%lu", grid_size);
+            repetition_series_set_field(series, "block_size", "%lu", block_size);
+
+            // if (memory_log != &nil_log)
+            // {
+            //   ZERO_SIZE(memory_log->allocs, sizeof(memory_log->allocs));
+            // }
+
+            while (repetition_series_is_testing(series, &tester))
+            {
+              repetition_tester_begin_time(&tester);
+              entry->compute(C, A, B);
+              repetition_tester_close_time(&tester);
+            }
+
+            free_taco_tensor(C);
+            free_taco_tensor(A);
+            free_taco_tensor(B);
+          }
+
+          scratch_close(&scratch2);
+        }
+      }
     }
 
     scratch_close(&scratch);
