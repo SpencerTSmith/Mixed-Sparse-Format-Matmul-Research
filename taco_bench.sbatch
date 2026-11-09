@@ -26,7 +26,7 @@ cd "$COREDIR"
 
 NODE_NAME=$(hostname -s)
 
-SAMPLE=$2
+SAMPLE=$1
 
 BLOCKING="--blocking"
 
