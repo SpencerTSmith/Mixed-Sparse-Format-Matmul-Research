@@ -2,6 +2,10 @@
 \cleardoublepage
 \addcontentsline{toc}{section}{Abstract}\chapter*{Abstract}
 
-\note{
-Put your abstract here.
-}
+Sparse matrix-matrix multiplication (SpGEMM) is a core kernel in graph analytics, scientific computing and machine learning, and how fast it runs depends heavily on how the input matrices are stored. This thesis asks how the best pairing of storage formats changes with the size and structure of the input, and what the hardware is doing when it does.
+
+I first built a benchmarking library that records timing and hardware counters (cache misses, branch mispredictions, page faults) around marked regions of code. I then derived floating point and memory operation formulae for all sixteen pairings of four formats, which matched measured counts for fourteen of them, but operation counts turned out to be a poor predictor of runtime. A pipeline that picks a format for every block of a matrix and runs the multiply through a BLIS-style loop structure did not beat a single global format, because dispatch overhead dominated.
+
+I then swept TACO-generated kernels over Kronecker graphs of increasing scale. The family of format pair matters by orders of magnitude, but among the good pairs a single good fixed choice is within a few percent of the best. The remaining crossovers, from row-wise to outer-product kernels at a few thousand nonzeros and from CSC$\times$CSR to CSC$\times$COO at fewer than about two and a half nonzeros per row, line up with quantities known before the multiply runs. The thesis also includes an earlier FPGA design for streaming multi-format sparse matrix-vector multiplication, which motivated these questions.
+
+This thesis therefore argues that, for sparse matrix-matrix multiplication, choosing among storage formats is mostly a simple decision. The family of the format pair matters by orders of magnitude, and within the good pairs a fixed choice is within a few percent of the best. However, where the best pair does change follows quantities such as Number of Non-zeroes(nnz) or size, known before the multiply runs.

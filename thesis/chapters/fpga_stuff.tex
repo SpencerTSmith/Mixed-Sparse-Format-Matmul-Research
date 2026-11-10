@@ -1,13 +1,16 @@
-\chapter{FPGA Stuff, title this better.}
+\chapter{Streaming SpMV for FPGA}
 \label{ch:fpga}
 
-\note{
-  Need to clean this up for thesis...
-  Need to put refs from here into the .bib
-}
+\section{Introduction}
+This chapter is based on a very early paper from my first graduate semester, way before my reptest library in Chapter~\ref{ch:reptest} or the format exploration experiments of Chapter~\ref{ch:pact} and Chaper~\ref{ch:kron_taco}. It describes a streaming sparse-matrix vector multiplication kernel for an FPGA, storing
+blocks of that matrix in more than just one format. It allows both dense and coo formats as baseline blocks.
+
+I include this chapter again not because of particularly good results, but because it was the impetus for the other questions driving this thesis. During the writing of the paper that forms the foundation of this chapter, I realized more questions needed to be answered before trying to commit anything to hardware. Questions such as
+what formats are even worth implementing kernels for? How do you even decide that? What measurements ought to decide that? Can this be generalized to other operations like SpGEMM? How does the actual input matrix and its shape inform these choices? The rest of this thesis hoped to answer these questions on CPU where exploring
+this problem space is much easier. This chapter should therefore serve more as motivation for the rest of the thesis, and as a glimpse into possible future work now that more of these questions have been answered.
 
 \section{Theory}
-To take full advantage of the unique characteristics of highly irregular SpMV operations, this chapter a new streaming multi-format structure. Where single-format matrices may succeed in general or uniform cases, there are others where the sparsity is not uniform. In these cases it may be beneficial to store parts of the larger matrix in the most efficient format. As well, because each value in a matrix for matrix-vector multiplication is read from only once, a streaming data structure may be particularly suited to the task. Furthermore, because of the heterogeneous logic involved in the different algorithms tailored to the different formats, current GPU hardware accelerators may not be sufficient, should any type of parallelism be pursued. Therefore, to address this unique challenge, this chapter proposes implementing this structure on FPGA. In summary, this chapter will discuss a multi-format matrix block stream, in which block sizes may be of arbitrary granularity and of arbitrary format to best exploit the data layout on a matrix by matrix basis.
+To take full advantage of the unique characteristics of highly irregular SpMV operations, this chapter present a new streaming multi-format structure. Where single-format matrices may succeed in general or uniform cases, there are others where the sparsity is not uniform. In these cases it may be beneficial to store parts of the larger matrix in the most efficient format. As well, because each value in a matrix for matrix-vector multiplication is read from only once, a streaming data structure may be particularly suited to the task. Furthermore, because of the heterogeneous logic involved in the different algorithms tailored to the different formats, current GPU hardware accelerators may not be sufficient, should any type of parallelism be pursued. Therefore, to address this unique challenge, this chapter proposes implementing this structure on FPGA. In summary, this chapter will discuss a multi-format matrix block stream, in which block sizes may be of arbitrary granularity and of arbitrary format to best exploit the data layout on a matrix by matrix basis.
 
 \section{Mechanism}
 \subsection{Implementation}

@@ -1,32 +1,94 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces COO (coordinate) format. Each non-zero is stored as a (\texttt {row}, \texttt {col}, \texttt {value}) triple, so the $k$-th entry of the three arrays describes the $k$-th non-zero.}}{3}{}%
-\contentsline {figure}{\numberline {2.2}{\ignorespaces CSR (compressed sparse row) format. \texttt {values} and \texttt {col\_indices} hold the non-zero values and their column indices, row by row. Row $i$ occupies positions \texttt {row\_ptr[i]} to \texttt {row\_ptr[i+1]-1}; e.g.\ row 3 spans positions 4 to 6.}}{3}{}%
-\contentsline {figure}{\numberline {2.3}{\ignorespaces CSC (compressed sparse column) format. The non-zeros are stored column by column; \texttt {row\_indices} holds their row indices. Column $j$ occupies positions \texttt {col\_ptr[j]} to \texttt {col\_ptr[j+1]-1}; e.g.\ column 2 spans positions 3 to 4.}}{4}{}%
-\contentsline {figure}{\numberline {2.4}{\ignorespaces Inner-product dataflow. One output element $c_{ij}$ is produced at a time by intersecting row $i$ of $A$ with column $j$ of $B$ and summing the matching products. Each output is complete when it is written, but most intersections are empty for sparse inputs, so effort is spent on index matching.}}{6}{}%
-\contentsline {figure}{\numberline {2.5}{\ignorespaces Outer-product dataflow. For each index $k$, column $k$ of $A$ is multiplied with row $k$ of $B$, producing a partial result that touches many positions of $C$. Every input element is read once, but the partial results from different $k$ must be merged.}}{7}{}%
-\contentsline {figure}{\numberline {2.6}{\ignorespaces Row-wise (Gustavson) dataflow. Each non-zero $a_{ik}$ in row $i$ of $A$ selects row $k$ of $B$. The scaled rows are accumulated into row $i$ of $C$. One output row is built at a time, so the accumulator for that row could potentially be kept in cache.}}{7}{}%
+\contentsline {figure}{\numberline {2.1}{\ignorespaces COO (coordinate) format. Each non-zero is stored as a (\texttt {row}, \texttt {col}, \texttt {value}) triple, so the $k$-th entry of the three arrays describes the $k$-th non-zero.}}{5}{}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces CSR (compressed sparse row) format. \texttt {values} and \texttt {col\_indices} hold the non-zero values and their column indices, row by row. Row $i$ occupies positions \texttt {row\_ptr[i]} to \texttt {row\_ptr[i+1]-1}; e.g.\ row 3 spans positions 4 to 6.}}{5}{}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces CSC (compressed sparse column) format. The non-zeros are stored column by column; \texttt {row\_indices} holds their row indices. Column $j$ occupies positions \texttt {col\_ptr[j]} to \texttt {col\_ptr[j+1]-1}; e.g.\ column 2 spans positions 3 to 4.}}{6}{}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Inner-product dataflow. One output element $c_{ij}$ is produced at a time by intersecting row $i$ of $A$ with column $j$ of $B$ and summing the matching products. Each output is complete when it is written, but most intersections are empty for sparse inputs, so effort is spent on index matching.}}{8}{}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Outer-product dataflow. For each index $k$, column $k$ of $A$ is multiplied with row $k$ of $B$, producing a partial result that touches many positions of $C$. Every input element is read once, but the partial results from different $k$ must be merged.}}{9}{}%
+\contentsline {figure}{\numberline {2.6}{\ignorespaces Row-wise (Gustavson) dataflow. Each non-zero $a_{ik}$ in row $i$ of $A$ selects row $k$ of $B$. The scaled rows are accumulated into row $i$ of $C$. One output row is built at a time, so the accumulator for that row could potentially be kept in cache.}}{9}{}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {3.1}{\ignorespaces One matrix in three formats (indices from zero). In CSR, \texttt {pos[i]} to \texttt {pos[i+1]} delimits row $i$ in \texttt {crd}; row~1 is empty, so \texttt {pos[1]}$=$\texttt {pos[2]}. CSC is the same over columns. COO repeats the row coordinate per non-zero and has no \texttt {pos}.}}{13}{}%
-\addvspace {10\p@ }
-\addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Observed and Formula FLOPs. Observed data points fall mostly on the dotted line plotted from formulas.}}{44}{}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Observed and Formula memops. Observed data points fall mostly on the dotted line plotted from formulas.}}{48}{}%
-\contentsline {figure}{\numberline {5.3}{\ignorespaces FLOPs: Relative error of Formula vs Observed. Very close fit by the formula, and flop count is determined entirely by compression combination.}}{49}{}%
-\contentsline {figure}{\numberline {5.4}{\ignorespaces memops: Relative error of Formula vs Observed. Close fit by most formulas, variability due to the effect of variability of sparsity patterns.}}{50}{}%
-\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime Performance: Timestamp Cycles. Crossover points at 0.7\% density when performing a simple dense x dense is better.}}{51}{}%
-\contentsline {figure}{\numberline {5.6}{\ignorespaces Roofline Model. Sparse formats are entirely memory bound.}}{52}{}%
-\contentsline {figure}{\numberline {5.7}{\ignorespaces Diagonal Matrix Results. Poor performance compared to simple global compression, but optimal micro-format selection wins over naive format selection.}}{53}{}%
-\contentsline {figure}{\numberline {5.8}{\ignorespaces Block Size Performance Impact. Performance degrades as block sizes increase.}}{54}{}%
-\contentsline {figure}{\numberline {5.9}{\ignorespaces Thread Count Performance Impact. At matrix sizes that can be solved, threading provides minimal benefit beyond 2 threads.}}{55}{}%
-\contentsline {figure}{\numberline {5.10}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{56}{}%
-\contentsline {figure}{\numberline {5.11}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{57}{}%
-\contentsline {figure}{\numberline {5.12}{\ignorespaces Kronecker Graph k=10 (AS-Newman) block size sweep. Block dispatch overhead generally decreases as block size increases, but not nearly enough to be comparable to simple global compression.}}{58}{}%
-\addvspace {10\p@ }
-\contentsline {figure}{\numberline {6.1}{\ignorespaces TODO: this one is going to be humongous with all of them. Also need to do this across more than just varying K, again don't want to make the mistake of confounding the difference come from structure when it may just be due to density or size... also need to mention that runner-ups are very, very close in almost all cases.}}{62}{}%
-\addvspace {10\p@ }
-\contentsline {figure}{\numberline {7.1}{\ignorespaces Current Sequential Implementation}}{64}{}%
-\contentsline {figure}{\numberline {7.2}{\ignorespaces Conceptual View of Matrix Stream}}{66}{}%
-\contentsline {figure}{\numberline {7.3}{\ignorespaces Future Parallel Implementation}}{72}{}%
+\contentsline {figure}{\numberline {3.1}{\ignorespaces One matrix in three formats (indices from zero). In CSR, \texttt {pos[i]} to \texttt {pos[i+1]} delimits row $i$ in \texttt {crd}; row~1 is empty, so \texttt {pos[1]}$=$\texttt {pos[2]}. CSC is the same over columns. COO repeats the row coordinate per non-zero and has no \texttt {pos}.}}{15}{}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Observed and Formula FLOPs. Observed data points fall mostly on the dotted line plotted from formulas.}}{42}{}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Observed and Formula memops. Observed data points fall mostly on the dotted line plotted from formulas.}}{46}{}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces FLOPs: Relative error of Formula vs Observed. Very close fit by the formula, and flop count is determined entirely by compression combination.}}{47}{}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces memops: Relative error of Formula vs Observed. Close fit by most formulas, variability due to the effect of variability of sparsity patterns.}}{48}{}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime Performance: Timestamp Cycles. Crossover points at 0.7\% density when performing a simple dense x dense is better.}}{49}{}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Roofline Model. Sparse formats are entirely memory bound.}}{50}{}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Diagonal Matrix Results. Poor performance compared to simple global compression, but optimal micro-format selection wins over naive format selection.}}{51}{}%
+\contentsline {figure}{\numberline {5.8}{\ignorespaces Block Size Performance Impact. Performance degrades as block sizes increase.}}{52}{}%
+\contentsline {figure}{\numberline {5.9}{\ignorespaces Thread Count Performance Impact. At matrix sizes that can be solved, threading provides minimal benefit beyond 2 threads.}}{53}{}%
+\contentsline {figure}{\numberline {5.10}{\ignorespaces Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}}{54}{}%
+\contentsline {figure}{\numberline {5.11}{\ignorespaces Kronecker Graph k=10 (AS-Newman) block size sweep. Block dispatch overhead generally decreases as block size increases, but not nearly enough to be comparable to simple global compression.}}{55}{}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces This figure shows the best performing format combo for each of the studied graphs at each K. Each square is also labeled with a speedup over runner up (e.g. 1.1x). There is a broad trend of the best being CSR $\times $ CSR at smaller K, then transitioning to CSC $\times $ CSR or CSC $\times $ COO at larger K. In most cases the difference between CSC $\times $ CSR beating CSC $\times $ COO or vice versa could potentially be contributed to noise as often they are runner ups of each other within 1.1x. 1 Outlier exists with ATP-GR-QC where CSC $\times $ COO beats CSC $\times $ CSR by an average 1.5x. }}{64}{}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces This figure shows the best performing format combo for each of the studied graphs at increasing density buckets. Each bucket collects densities in a range 0.5 decade wide. Again, there is a broad trend of the best being CSR $\times $ CSR at higher density, then transitioning to CSC $\times $ CSR or CSC $\times $ COO for sparser matrices. That this fits pretty well with K makes sense since Kroneckers become increasingly sparse as K increases. }}{67}{}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces This figure shows the best performing format combo for each of the studied graphs at increasing nnz. Here the broad transition from CSC $\times $ CSR, to the other formats is much starker. Around ~$10^3$ non-zeroes CSR $\times $ CSR stops being the best for nearly all datasets. }}{68}{}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces Cost of always using one pair, relative to the per-point best, all graphs together.}}{68}{}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces Size of block plotted against $k$. Almost always, the best tiling is a single tile at the matrix dimensions, or in other words, no tiling at all.}}{69}{}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Current Sequential Implementation}}{72}{}%
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Conceptual View of Matrix Stream}}{74}{}%
+\contentsline {figure}{\numberline {7.3}{\ignorespaces Future Parallel Implementation}}{80}{}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {B.1}{\ignorespaces AS-Newman Sample 2 comparison.}}{97}{}%
+\contentsline {figure}{\numberline {B.2}{\ignorespaces AS-Newman Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{98}{}%
+\contentsline {figure}{\numberline {B.3}{\ignorespaces AS-RouteViews Sample 2 comparison.}}{99}{}%
+\contentsline {figure}{\numberline {B.4}{\ignorespaces AS-RouteViews Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{100}{}%
+\contentsline {figure}{\numberline {B.5}{\ignorespaces ATP-GR-QC Sample 2 comparison.}}{101}{}%
+\contentsline {figure}{\numberline {B.6}{\ignorespaces ATP-GR-QC Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{102}{}%
+\contentsline {figure}{\numberline {B.7}{\ignorespaces Answers Sample 2 comparison.}}{103}{}%
+\contentsline {figure}{\numberline {B.8}{\ignorespaces Answers Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{104}{}%
+\contentsline {figure}{\numberline {B.9}{\ignorespaces Bio-Proteins Sample 2 comparison.}}{105}{}%
+\contentsline {figure}{\numberline {B.10}{\ignorespaces Bio-Proteins Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{106}{}%
+\contentsline {figure}{\numberline {B.11}{\ignorespaces Blog-Nat05-6m Sample 2 comparison.}}{107}{}%
+\contentsline {figure}{\numberline {B.12}{\ignorespaces Blog-Nat05-6m Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{108}{}%
+\contentsline {figure}{\numberline {B.13}{\ignorespaces Blog-Nat06all Sample 2 comparison.}}{109}{}%
+\contentsline {figure}{\numberline {B.14}{\ignorespaces Blog-Nat06all Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{110}{}%
+\contentsline {figure}{\numberline {B.15}{\ignorespaces CA-DBLP Sample 2 comparison.}}{111}{}%
+\contentsline {figure}{\numberline {B.16}{\ignorespaces CA-DBLP Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{112}{}%
+\contentsline {figure}{\numberline {B.17}{\ignorespaces CA-GR-QC Sample 2 comparison.}}{113}{}%
+\contentsline {figure}{\numberline {B.18}{\ignorespaces CA-GR-QC Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{114}{}%
+\contentsline {figure}{\numberline {B.19}{\ignorespaces CA-Hep-Ph Sample 2 comparison.}}{115}{}%
+\contentsline {figure}{\numberline {B.20}{\ignorespaces CA-Hep-Ph Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{116}{}%
+\contentsline {figure}{\numberline {B.21}{\ignorespaces CA-Hep-Th Sample 2 comparison.}}{117}{}%
+\contentsline {figure}{\numberline {B.22}{\ignorespaces CA-Hep-Th Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{118}{}%
+\contentsline {figure}{\numberline {B.23}{\ignorespaces Cit-Hep-Ph Sample 2 comparison.}}{119}{}%
+\contentsline {figure}{\numberline {B.24}{\ignorespaces Cit-Hep-Ph Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{120}{}%
+\contentsline {figure}{\numberline {B.25}{\ignorespaces Cit-Hep-Th Sample 2 comparison.}}{121}{}%
+\contentsline {figure}{\numberline {B.26}{\ignorespaces Cit-Hep-Th Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{122}{}%
+\contentsline {figure}{\numberline {B.27}{\ignorespaces Delicious Sample 2 comparison.}}{123}{}%
+\contentsline {figure}{\numberline {B.28}{\ignorespaces Delicious Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{124}{}%
+\contentsline {figure}{\numberline {B.29}{\ignorespaces Epinions Sample 2 comparison.}}{125}{}%
+\contentsline {figure}{\numberline {B.30}{\ignorespaces Epinions Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{126}{}%
+\contentsline {figure}{\numberline {B.31}{\ignorespaces Flickr Sample 2 comparison.}}{127}{}%
+\contentsline {figure}{\numberline {B.32}{\ignorespaces Flickr Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{128}{}%
+\contentsline {figure}{\numberline {B.33}{\ignorespaces Gnutella-25 Sample 2 comparison.}}{129}{}%
+\contentsline {figure}{\numberline {B.34}{\ignorespaces Gnutella-25 Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{130}{}%
+\contentsline {figure}{\numberline {B.35}{\ignorespaces Gnutella-30 Sample 2 comparison.}}{131}{}%
+\contentsline {figure}{\numberline {B.36}{\ignorespaces Gnutella-30 Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{132}{}%
+\contentsline {figure}{\numberline {B.37}{\ignorespaces Web-Notredame Sample 2 comparison.}}{133}{}%
+\contentsline {figure}{\numberline {B.38}{\ignorespaces Web-Notredame Sample 2: format pairs ranked at each $k$. Brighter cells are faster; each number is the slowdown relative to the fastest pair at that $k$.}}{134}{}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {C.1}{\ignorespaces AS-Newman Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{136}{}%
+\contentsline {figure}{\numberline {C.2}{\ignorespaces AS-RouteViews Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{137}{}%
+\contentsline {figure}{\numberline {C.3}{\ignorespaces ATP-GR-QC Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{138}{}%
+\contentsline {figure}{\numberline {C.4}{\ignorespaces Answers Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{139}{}%
+\contentsline {figure}{\numberline {C.5}{\ignorespaces Bio-Proteins Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{140}{}%
+\contentsline {figure}{\numberline {C.6}{\ignorespaces Blog-Nat05-6m Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{141}{}%
+\contentsline {figure}{\numberline {C.7}{\ignorespaces Blog-Nat06all Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{142}{}%
+\contentsline {figure}{\numberline {C.8}{\ignorespaces CA-DBLP Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{143}{}%
+\contentsline {figure}{\numberline {C.9}{\ignorespaces CA-GR-QC Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{144}{}%
+\contentsline {figure}{\numberline {C.10}{\ignorespaces CA-Hep-Ph Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{145}{}%
+\contentsline {figure}{\numberline {C.11}{\ignorespaces CA-Hep-Th Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{146}{}%
+\contentsline {figure}{\numberline {C.12}{\ignorespaces Cit-Hep-Ph Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{147}{}%
+\contentsline {figure}{\numberline {C.13}{\ignorespaces Cit-Hep-Th Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{148}{}%
+\contentsline {figure}{\numberline {C.14}{\ignorespaces Delicious Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{149}{}%
+\contentsline {figure}{\numberline {C.15}{\ignorespaces Epinions Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{150}{}%
+\contentsline {figure}{\numberline {C.16}{\ignorespaces Flickr Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{151}{}%
+\contentsline {figure}{\numberline {C.17}{\ignorespaces Gnutella-25 Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{152}{}%
+\contentsline {figure}{\numberline {C.18}{\ignorespaces Gnutella-30 Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{153}{}%
+\contentsline {figure}{\numberline {C.19}{\ignorespaces Web-Notredame Sample 2 tiled block-size sweep. Colour is time relative to the best block size at each $k$ (1 is best); stars mark the best block size.}}{154}{}%

@@ -1,11 +1,6 @@
-\chapter{PACT Stuff, title this better.}
+\chapter{Analytical Models and Sparse BLIS}
 \label{ch:pact}
 
-\note{
-  Need to clean this up for thesis...
-  This might need to be split up a bit...
-  Big listing is a little ugly...
-}
 \section{Introduction}
 SpGEMM is a important kernel in graph analytics, scientific computing, and machine learning, and its performance
 can depend heavily on how the input matrices are stored. Dense, CSR, CSC, and COO each exploit different sparsity patterns. Usually a single format is chosen
@@ -55,7 +50,7 @@ plus a bit of bookkeeping to record memory and floating point operation activity
 Each \texttt{FMADD} increments a floating point operation counter by two, while
 each \texttt{LOAD} and \texttt{STORE} increments both a memory operation counter and a
 byte counter. In their benchmarking mode the macros expand to only the base operations with
-no book-keeping overhead, allowing accurate runtime measurement. We observed the bookkeeping
+no book-keeping overhead, allowing accurate runtime measurement. I observed the bookkeeping
 had a measurable and noticeable negative impact on performance.
 
 \begin{lstlisting}[float, language=C, caption={Instrumentation macros}]
@@ -75,7 +70,7 @@ had a measurable and noticeable negative impact on performance.
 
 Runtime performance is measured using a repetition testing framework inspired by Casey Muratori's Computer Enhance material \cite{muratori}. For each kernel, the framework repeatedly executes the multiplication over a fixed time window and records the minimum observed cycle count, using the x86 hardware timestamp counter, \_RDTSC. Taking the minimum rather than the mean reduces the effect of OS scheduling noise as well as cold cache effects.
 
-By sweeping input matrices across a range of densities, both the counters and the runtime measurements can be collected. Of course one at a time to eliminate any noise from the instrumentation on performance. We then obtain enough information for a direct comparison between predicted and observed operation counts as a function of sparsity. This sweep also provides the data required to plot a roofline model. The roofline performance bounds of peak floating point throughput and peak memory bandwidth were measured directly by running hand-written assembly loops designed to fully saturate the FMA and memory load ports of the target CPU. All results are visualized using a Python script built using Matplotlib \cite{matplotlib}.
+By sweeping input matrices across a range of densities, both the counters and the runtime measurements can be collected. Of course one at a time to eliminate any noise from the instrumentation on performance. We can then obtain enough information for a direct comparison between predicted and observed operation counts as a function of sparsity. This sweep also provides the data required to plot a roofline model. The roofline performance bounds of peak floating point throughput and peak memory bandwidth were measured directly by running hand-written assembly loops designed to fully saturate the FMA and memory load ports of the target CPU. All results are visualized using a Python script built using Matplotlib \cite{matplotlib}.
 
 The instrumentation macros actually ended up serving a dual purpose during development: beyond the data collection, their presence as visual markers in the kernel source made it straightforward to reason about which operations contributed to each term in the cost formula derivations described in the following subsection.
 
@@ -112,13 +107,11 @@ The instrumentation macros actually ended up serving a dual purpose during devel
 \end{lstlisting}
 
 \subsection{Formula Derivations}
-To enable format selection without runtime measurement, we derive analytical formulae for the floating point and memory operation counts of each kernel as a function of matrix dimensions and sparsity. For each kernel, the derivation follows a consistent procedure: we walk the loop nest from outermost to innermost, identify every \texttt{LOAD}, \texttt{STORE}, and \texttt{FMADD} site, and multiply each by the number of times its enclosing loop body executes. The instrumentation macros serve as explicit markers during this process, making each counted operation visually identifiable in the source code. We also note that we assume a uniform sparsity.
+To enable format selection without runtime measurement, I derive analytical formulae for the floating point and memory operation counts of each kernel as a function of matrix dimensions and sparsity. For each kernel, the derivation follows a consistent procedure: we walk the loop nest from outermost to innermost, identify every \texttt{LOAD}, \texttt{STORE}, and \texttt{FMADD} site, and multiply each by the number of times its enclosing loop body executes. The instrumentation macros serve as explicit markers during this process, making each counted operation visually identifiable in the source code. We also note that we assume a uniform sparsity.
 
 In some cases the loop bounds are not immediately obvious. For instance a loop iterating from a sparse row pointer start to end appears to iterate over a single row, but summing across all rows reveals the total iterations equal the non-zero count of that matrix. Recognising these collapsed bounds where nested loops together amount to a single pass over all non-zeros was an important step in several of the derivations.
 
-We adopt a more descriptive subscript notation in place of the conventional $M, N, K$.
-
-We define the following notation throughout:
+We'll adopt a more descriptive subscript notation in place of the conventional $M, N, K$.
 \begin{itemize}
     \item $L_{RC}, L_{CC}$ --- row and column count of the left matrix
     \item $R_{CC}$ --- column count of the right matrix (inner dimension is shared: $L_{CC} = R_{RC}$)
@@ -126,7 +119,7 @@ We define the following notation throughout:
     \item $\text{matches} = L_{NZ} \cdot R_{NZ} / L_{CC}$ --- expected number of multiply-accumulate operations under uniform sparsity with 2 sparse formats
 \end{itemize}
 \subsubsection*{Representative Derivations}
-We will present a few full derivations which we find representative of the whole process.
+I will present a few full derivations which I find representative of the whole process.
 
 \paragraph{Dense $\times$ CSR}
 The outer loop iterates over $L_{RC}$ rows of the left matrix. Within each row, the middle
@@ -211,7 +204,7 @@ COO & COO   & $2 \cdot \text{matches}$ & $3 L_{NZ} + R_{NZ} L_S + 4 \cdot \text{
 
 \subsection{Format Selection Optimization}
 
-Given the cost formulae derived in the previous subsection, we formulate the problem of
+Given the cost formulae derived in the previous subsection, we can formulate the problem of
 selecting an optimal storage format for each micro-block as an integer optimization program.
 Since in matrix multiplication one block may actually be multiplied against many other blocks.
 The objective is to minimise the total estimated cost across all block multiplications
@@ -220,7 +213,7 @@ required to compute the full matrix product
 Each input matrix $A$ and $B$ is partitioned into micro-blocks of fixed size
 $L_{RC} \times L_{CC}$ and $L_{CC} \times R_{CC}$ respectively. The dimensions can also be viewed as those usually found at the $M_r$ and $N_r$ size found in BLIS. The density of each
 block is computed by simply counting its non-zeros, and put into one of
-our density buckets. A cost table is then computed for all combinations of left format,
+the density buckets. A cost table is then computed for all combinations of left format,
 right format, and density bucket pair using the above derived formulae, treating flops and
 memory operations as a combined cost weighted by an assumed memory access penalty.
 
@@ -262,7 +255,7 @@ variables grows as $O(B_{row} \cdot B_{inner} \cdot B_{col} \cdot |Formats|)$
 where $|Formats| = 4$ is the number of
 formats, and the bilinear objective compounds this as problem size increases. In
 practice the solver becomes intractable for matrix sizes beyond approximately
-$512 \times 512$ with the micro-block sizes used in our experiments. One direction may be
+$512 \times 512$ with the micro-block sizes used in the experiments. One direction may be
 increasing the micro-block size to alleviate the rapid growth of the
 number of decision variables.
 
@@ -378,7 +371,7 @@ Kronecker graphs were selected as an experimental dataset for two reasons.
 First, their recursive self-similar structure produces adjacency matrices with a
 hierarchical sparsity pattern, the same block density distribution repeats at every scale
 which we hypothesized might align naturally with the block-level format assignment
-of our approach, potentially allowing denser sub-blocks to be stored in dense or
+of the approach, potentially allowing denser sub-blocks to be stored in dense or
 CSR format while sparser sub-blocks use COO. Second, the recursive structure of
 the cost model meant that format assignments computed at a smaller scale might
 be reusable at larger scales, potentially reducing solver cost.
@@ -496,7 +489,7 @@ assignments produced using empirically measured cycle counts from the density sw
 the cost function. This suggests that operation count alone is an insufficient proxy for
 runtime at this block size, likely because cache effects and branch misprediction dominate
 over raw arithmetic and memory operation counts for 32×32 blocks. In essence,
-our formulas mistakenly treat flops and memops as being comparable on their face, when
+the formulas mistakenly treat flops and memops as being comparable on their face, when
 they are not. The formulas could perhaps become more predictive at larger block sizes
 where compute cost dominates over fixed per-block overheads.
 
@@ -552,13 +545,6 @@ workload is too small and too irregular to benefit from parallelism at this scal
   \label{fig:kron}
 \end{figure}
 
-\begin{figure}[b]
-  \centering
-  \includegraphics[width=\linewidth]{figures/kronecker_scaling.png}
-  \caption{Kronecker Graph Sweep (AS-Newman). Sparse BLIS performs very poorly compared to a global compression strategy, this worsens as matrix size increases.}
-  \label{fig:kron}
-\end{figure}
-
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/kron_block_scaling.png}
@@ -580,12 +566,12 @@ Figure \ref{fig:kron_blocks} presents a sweep over progressively larger block si
 
 \section{Summary}
 
-We presented a study of SpGEMM across all sixteen pairings of four sparse matrix
+This chapter presented a study of SpGEMM across all sixteen pairings of four sparse matrix
 storage formats, deriving analytical formulas for floating-point and memory operation
 counts that show strong agreement with empirically measured values for fourteen of the
 sixteen combinations.
 
-Building on these formulas, we implemented a BLIS-inspired~\cite{blis} sparse matrix
+Building on these formulas, I implemented a BLIS-inspired~\cite{blis} sparse matrix
 multiplication pipeline that assigns storage formats independently to each micro-block
 and dispatches to the corresponding kernel at runtime. Format selection is formulated
 as a MINLP and solved using Pyomo~\cite{pyomo} with MindtPy~\cite{mindtpy}. Evaluation

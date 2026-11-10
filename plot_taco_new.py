@@ -1,51 +1,68 @@
 # NOTE: Claude generated this.
-"""Plot TACO sparse-format benchmark results.
+"""Plot TACO sparse-format benchmark results, one image per CSV.
 
-Expected input: one CSV file per run, with columns
-    k,function,time,faults,bytes,flops,memops,cache,branch,alloc
-where `function` is already the format combo (e.g. 'CSR_x_CSC') and `k` is
-the matrix-size exponent (dim = 2^k). Only time/cache/branch/alloc/faults are plotted;
-bytes/flops/memops are read but currently unused -- ignored rather
-than errored on, so files can carry extra columns freely.
+Usage:
+    python3 plot_taco_new.py [--mode separate] [--linear] [-o OUT.png] FILE1.csv FILE2.csv ...
+
+Input: one CSV per run (e.g. one per Kronecker graph) with columns
+    k,function,time,faults,bytes,flops,memops,cache,branch,alloc,kron_nnz
+`function` is the format combo (e.g. 'CSR_x_CSC'); `k` is the size exponent
+(dim = 2^k). Extra columns are ignored.
+
+Output (OUT = taco_bench.png by default):
+    OUT_<name>.png        one image per CSV: six panels (time, cache misses, branch
+                          mispredicts, page faults, allocations, cache misses/cycle)
+    OUT_ranks_<name>.png  one image per CSV: all pairs ranked at every k, with slowdown vs the fastest
+    OUT_best.png          fastest format pair per k, one row per CSV
+    OUT_best_by_density.png, OUT_best_by_nnz_per_row.png, OUT_best_by_nnz.png
+                          same, but x = density / nnz per row / input nnz
+    OUT_slowdown_vs_scalar.png   all CSVs pooled: slowdown vs the best pair, against
+                          density and against nnz per row
+    OUT_fixed_pair_cost.png      all CSVs pooled: cost of always using one pair
+
+--mode tiled (CSVs with k,function,alloc,kron_nnz,block_size,grid_size,time,...):
+    OUT_tiled_<name>.png      per CSV: one heatmap per function, x = k, y = block size,
+                              colour = time / best block at that k, star = best block
+    OUT_tiled_best_block.png  best block size against k, one panel per function, one line per CSV
+    OUT_tiled_relative.png    pooled: slowdown vs the best block size, against block size
+    plus a printed table (best fixed block size and each block size's median slowdown)
+<name> is the CSV filename with timestamps and node names (like
+2026-11-4_0:6:36_c953) removed. Every figure is checked for overlapping text and
+a warning is printed if any is found.
 """
 
 import argparse
 import csv
+import math
 import os
+import re
 from collections import defaultdict
+from statistics import median
 
 import matplotlib
 matplotlib.use('Agg')
+import matplotlib.colors
+import matplotlib.lines
+import matplotlib.ticker
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
-from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
+import numpy as np
+from matplotlib.patches import Patch, Rectangle
+from matplotlib.ticker import FuncFormatter, MaxNLocator, NullFormatter
 
-from statistics import median
-from matplotlib.patches import Rectangle
-
-# Cycle through these for each input file, in order given on the CLI.
-# Only used in 'overlay' mode.
-LINESTYLES = ['-', '--', ':', '-.']
-
-# Tuple layout used everywhere below: (k, time, cache, branch, alloc, kron_nnz, faults).
+# Row layout used everywhere: (k, time, cache, branch, alloc, kron_nnz, faults).
 K, TIME, CACHE, BRANCH, ALLOC, KRON, FAULTS = range(7)
 
-# Number of panels per row (time, cache, branch, page faults, alloc, LLC misses/cycle).
-N_PANELS = 6
 
+# ---------------------------------------------------------------------------
+# Loading and labels
+# ---------------------------------------------------------------------------
 
 def load_results(csv_path):
-    """Returns { 'CSR_x_CSC': [(k, time, cache, branch, alloc, kron_nnz, faults), ...], ... }, sorted by k.
-
-    Reads csv_path and groups its rows by the `function` column.
-    """
+    """{ 'CSR_x_CSC': [(k, time, cache, branch, alloc, kron_nnz, faults), ...] }, sorted by k."""
     data = defaultdict(list)
-
     with open(csv_path, newline='') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
+        for row in csv.DictReader(f):
             data[row['function']].append((
                 int(row['k']),
                 int(row['time']),
@@ -55,440 +72,199 @@ def load_results(csv_path):
                 int(row.get('kron_nnz') or 0),
                 int(row.get('faults') or 0),
             ))
-
     for combo in data:
         data[combo].sort(key=lambda r: r[K])
-
     return data
 
 
+# Timestamps and node names that end up in result filenames, e.g.
+# AS-Newman_s2_2026-11-4_0:14:4_c953.csv  (unpadded date/time, then node name).
+_TIMESTAMP_PATTERNS = [
+    r'(?<!\d)\d{10,13}(?!\d)',                                              # unix epoch
+    r'\d{4}-\d{1,2}-\d{1,2}(?:[T_ ]\d{1,2}[-:]\d{1,2}(?:[-:]\d{1,2})?)?',   # 2026-11-4 or 2026-11-4_0:6:36
+    r'\d{8}(?:[_-]?\d{4,6})?',                                              # 20261108 or 20261108_143012
+    r'(?<!\d)\d{1,2}[-:]\d{1,2}[-:]\d{1,2}(?!\d)',                          # 0:6:36 or 14-30-12
+    r'(?<![A-Za-z0-9])c\d+(?![A-Za-z0-9])',                                 # node name like c953
+]
+
+
+def strip_timestamps(name):
+    """Drops the extension, timestamps and node names. 'AS-Newman_s2_2026-11-4_0:14:4_c953.csv'
+    becomes 'AS-Newman_s2'. If nothing is left, returns 'run'."""
+    base, ext = os.path.splitext(name)
+    if ext.lower() not in ('.csv', '.txt'):
+        base = name
+    for pat in _TIMESTAMP_PATTERNS:
+        base = re.sub(pat, '', base)
+    base = re.sub(r'[_\-\s]{2,}', '_', base).strip('_- .')
+    return base if re.search(r'[A-Za-z0-9]', base) else 'run'
+
+
+def clean_labels(names):
+    """strip_timestamps on every name; numbers duplicates ('run #1', 'run #2')."""
+    cleaned = [strip_timestamps(n) for n in names]
+    seen = {}
+    out = []
+    for c in cleaned:
+        if cleaned.count(c) > 1:
+            seen[c] = seen.get(c, 0) + 1
+            out.append(f'{c} #{seen[c]}')
+        else:
+            out.append(c)
+    return out
+
+
+def slug(label):
+    return re.sub(r'[^A-Za-z0-9._-]+', '_', label).strip('_')
+
+
 def build_color_map(all_datasets):
-    """Assign a consistent color per combo across all runs, so e.g.
-    CSR_x_CSC is the same color in every panel/row regardless of which
-    file it came from."""
+    """One color per format combo, the same in every figure."""
     combos = sorted({combo for data in all_datasets for combo in data})
     cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
     return {combo: cycle[i % len(cycle)] for i, combo in enumerate(combos)}
 
 
-def plot_metric(datasets, labels, color_map, metric_idx, title, ylabel, ax,
-                 log_scale=True, linestyles=None, show_legend=True):
-    """Plots one metric for one or more (dataset, label) pairs onto a single
-    axes. linestyles=None means all datasets use a solid line (grid mode,
-    where each dataset already has its own axes); pass a list to
-    differentiate datasets sharing one axes (overlay mode)."""
-    if linestyles is None:
-        linestyles = ['-'] * len(datasets)
+# ---------------------------------------------------------------------------
+# Overlap check: every figure is checked before it is saved
+# ---------------------------------------------------------------------------
 
-    all_vals = []
-    all_ks = set()
+def _text_boxes(fig):
+    """(description, bbox) for every title, axis label, visible tick label and
+    in-axes annotation. Legends are not included: they sit on top of data by design."""
+    renderer = fig.canvas.get_renderer()
+    items = []
 
-    for data, label, ls in zip(datasets, labels, linestyles):
-        for combo, rows in sorted(data.items()):
-            ks = [r[K] for r in rows]
-            vals = [r[metric_idx] for r in rows]
-            all_vals.extend(vals)
-            all_ks.update(ks)
+    def add(desc, artist):
+        if artist.get_visible() and artist.get_text().strip():
+            items.append((desc, artist.get_window_extent(renderer)))
 
-            line_vals = [v if v > 0 else float('nan') for v in vals]
-            color = color_map[combo]
-            legend_label = combo if len(datasets) == 1 else f'{combo} ({label})'
-            ax.plot(ks, line_vals, label=legend_label, color=color, linestyle=ls)
+    for i, ax in enumerate(fig.axes):
+        name = f'panel {i + 1}'
+        add(f'{name} title', ax.title)
+        add(f'{name} x label', ax.xaxis.label)
+        add(f'{name} y label', ax.yaxis.label)
+        for t in ax.texts:
+            add(f'{name} annotation "{t.get_text()[:15]}"', t)
+        for axis, lim, kind in ((ax.xaxis, ax.get_xlim(), 'x'), (ax.yaxis, ax.get_ylim(), 'y')):
+            lo, hi = sorted(lim)
+            for ticks in (axis.get_major_ticks(), axis.get_minor_ticks()):
+                for tick in ticks:
+                    if lo <= tick.get_loc() <= hi:
+                        add(f'{name} {kind} tick "{tick.label1.get_text()}"', tick.label1)
+    return items
 
-            nz_ks = [k for k, v in zip(ks, vals) if v > 0]
-            nz_vals = [v for v in vals if v > 0]
-            ax.scatter(nz_ks, nz_vals, s=10, color=color, zorder=3)
 
-    ax.set_xlabel('k  (matrix dim = 2^k)')
-    ax.set_ylabel(ylabel)
+def warn_if_text_overlaps(fig, name):
+    """Prints a warning for any two pieces of text whose boxes overlap."""
+    fig.canvas.draw()
+    items = _text_boxes(fig)
+    problems = []
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            a, b = items[i][1], items[j][1]
+            if a.x0 < b.x1 - 1 and b.x0 < a.x1 - 1 and a.y0 < b.y1 - 1 and b.y0 < a.y1 - 1:
+                problems.append((items[i][0], items[j][0]))
+    if problems:
+        print(f'WARNING: text overlaps in {name}:')
+        for a, b in problems[:8]:
+            print(f'    {a}  <->  {b}')
+        if len(problems) > 8:
+            print(f'    ... and {len(problems) - 8} more')
+    return problems
+
+
+def save(fig, path):
+    warn_if_text_overlaps(fig, path)
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+    print(f'Saved {path}')
+
+
+def figure_legend(fig, color_map, combos):
+    handles = [Patch(facecolor=color_map[c], label=c) for c in sorted(combos)]
+    try:
+        fig.legend(handles=handles, loc='outside lower center',
+                   ncol=min(len(handles), 3), fontsize='small')
+    except ValueError:  # older matplotlib without 'outside' placement
+        fig.axes[0].legend(handles=handles, fontsize='small')
+
+
+# ---------------------------------------------------------------------------
+# One image per CSV
+# ---------------------------------------------------------------------------
+
+def _finish_axes(ax, title, ylabel):
     ax.set_title(title)
-
-    if log_scale:
-        positive_vals = [v for v in all_vals if v > 0]
-        linthresh = min(positive_vals) if positive_vals else 1
-        ax.set_yscale('symlog', linthresh=max(linthresh, 1e-9), linscale=0.3)
-        ax.set_ylim(bottom=0)
-
-    if all_ks:
-        ax.set_xticks(sorted(all_ks))
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-
+    ax.set_xlabel('k  (dim = 2^k)')
+    ax.set_ylabel(ylabel)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
+    ax.yaxis.set_minor_formatter(NullFormatter())  # minor log labels crowd each other
     ax.grid(True, alpha=0.3)
-    if show_legend:
-        ax.legend(fontsize='small')
 
 
-def plot_rate_metric(datasets, labels, color_map, numerator_idx, denominator_idx,
-                      title, ylabel, ax, linestyles=None, show_legend=True):
-    """Plots a derived per-point ratio (e.g. cache misses / cycle) vs k.
+def draw_metric(ax, data, color_map, idx, title, ylabel, log_scale):
+    any_positive = False
+    for combo, rows in sorted(data.items()):
+        ks = [r[K] for r in rows]
+        vals = [r[idx] if (r[idx] > 0 or not log_scale) else float('nan') for r in rows]
+        any_positive = any_positive or any(v > 0 for v in vals if v == v)
+        ax.plot(ks, vals, color=color_map[combo], linewidth=1.5)
+        ax.scatter(ks, vals, s=10, color=color_map[combo], zorder=3)
+    if log_scale and any_positive:
+        ax.set_yscale('log')
+    _finish_axes(ax, title, ylabel)
 
-    Floor is fixed at 0 (0 misses/cycle is a real, meaningful minimum);
-    ceiling is left to auto-scale based on whatever the data actually
-    shows, since that's effectively bounded by DRAM bandwidth rather than
-    anything we'd want to clip or log-scale.
-    """
-    if linestyles is None:
-        linestyles = ['-'] * len(datasets)
 
-    all_ks = set()
-
-    for data, label, ls in zip(datasets, labels, linestyles):
-        for combo, rows in sorted(data.items()):
-            ks, rates = [], []
-            for r in rows:
-                k, denom = r[K], r[denominator_idx]
-                if denom > 0:  # skip points with 0 cycles measured -- undefined rate
-                    ks.append(k)
-                    rates.append(r[numerator_idx] / denom)
-
-            all_ks.update(r[K] for r in rows)
-
-            color = color_map[combo]
-            legend_label = combo if len(datasets) == 1 else f'{combo} ({label})'
-            ax.plot(ks, rates, label=legend_label, color=color, linestyle=ls)
-            ax.scatter(ks, rates, s=10, color=color, zorder=3)
-
-    ax.set_xlabel('k  (matrix dim = 2^k)')
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
+def draw_rate(ax, data, color_map, title, ylabel):
+    """Cache misses per timestamp cycle."""
+    for combo, rows in sorted(data.items()):
+        pts = [(r[K], r[CACHE] / r[TIME]) for r in rows if r[TIME] > 0]
+        if pts:
+            ks, rates = zip(*pts)
+            ax.plot(ks, rates, color=color_map[combo], linewidth=1.5)
+            ax.scatter(ks, rates, s=10, color=color_map[combo], zorder=3)
     ax.set_ylim(bottom=0)
-
-    if all_ks:
-        ax.set_xticks(sorted(all_ks))
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-
-    ax.grid(True, alpha=0.3)
-    if show_legend:
-        ax.legend(fontsize='small')
+    _finish_axes(ax, title, ylabel)
 
 
-def build_shared_legend(fig, color_map, labels):
-    """Two-part legend for overlay mode: one entry per combo (color) and one
-    per file (linestyle), instead of a combinatorial 'combo (label)'
-    entry per line repeated in every panel."""
-    combo_handles = [
-        Line2D([0], [0], color=color, lw=2, label=combo)
-        for combo, color in sorted(color_map.items())
-    ]
-    style_handles = [
-        Line2D([0], [0], color='black', lw=2, linestyle=ls, label=label)
-        for label, ls in zip(labels, LINESTYLES)
-    ]
-    fig.legend(
-        handles=combo_handles + style_handles,
-        loc='lower center',
-        ncol=min(len(combo_handles) + len(style_handles), 8),
-        fontsize='small',
-        bbox_to_anchor=(0.5, -0.02),
-    )
-
-
-def plot_overlay(all_datasets, labels, color_map, log_scale):
-    """One row of 5 panels; each dataset overlaid with a distinct linestyle,
-    color shared per combo across datasets. Best for a small number of
-    files where you want direct point-by-point comparison."""
-    fig, axes = plt.subplots(1, N_PANELS, figsize=(6 * N_PANELS, 5))
-    linestyles = LINESTYLES[:len(all_datasets)]
-
-    plot_metric(all_datasets, labels, color_map, TIME, 'Time', 'timestamp cycles',
-                axes[0], log_scale=log_scale, linestyles=linestyles, show_legend=False)
-    plot_metric(all_datasets, labels, color_map, CACHE, 'Cache misses', 'count',
-                axes[1], log_scale=log_scale, linestyles=linestyles, show_legend=False)
-    plot_metric(all_datasets, labels, color_map, BRANCH, 'Branch mispredicts', 'count',
-                axes[2], log_scale=log_scale, linestyles=linestyles, show_legend=False)
-    plot_metric(all_datasets, labels, color_map, FAULTS, 'Page faults', 'count',
-                axes[3], log_scale=log_scale, linestyles=linestyles, show_legend=False)
-    plot_metric(all_datasets, labels, color_map, ALLOC, 'Total Requested Allocations', 'bytes',
-                axes[4], log_scale=log_scale, linestyles=linestyles, show_legend=False)
-    plot_rate_metric(all_datasets, labels, color_map, CACHE, TIME, 'Cache misses / cycle',
-                      'misses per cycle', axes[5], linestyles=linestyles, show_legend=False)
-
-    build_shared_legend(fig, color_map, labels)
-    fig.tight_layout(rect=[0, 0.06, 1, 1])
-    return fig
-
-
-def plot_grid(all_datasets, labels, color_map, log_scale):
-    """One row per dataset, 5 metric columns. Each row is exactly the
-    original single-run plot; easier to read when comparing more than 2-3
-    files or when overlaid lines get too cluttered."""
-    n = len(all_datasets)
-    fig, axes = plt.subplots(n, N_PANELS, figsize=(6 * N_PANELS, 5 * n), squeeze=False)
-
-    for row, (data, label) in enumerate(zip(all_datasets, labels)):
-        d, l = [data], [label]
-        plot_metric(d, l, color_map, TIME, f'Time — {label}', 'timestamp cycles',
-                    axes[row][0], log_scale=log_scale)
-        plot_metric(d, l, color_map, CACHE, f'Cache misses — {label}', 'count',
-                    axes[row][1], log_scale=log_scale)
-        plot_metric(d, l, color_map, BRANCH, f'Branch mispredicts — {label}', 'count',
-                    axes[row][2], log_scale=log_scale)
-        plot_metric(d, l, color_map, FAULTS, f'Page faults — {label}', 'count',
-                    axes[row][3], log_scale=log_scale)
-        plot_metric(d, l, color_map, ALLOC, f'Allocations — {label}', 'alloc',
-                    axes[row][4], log_scale=log_scale)
-        plot_rate_metric(d, l, color_map, CACHE, TIME, f'LLC misses / cycle — {label}',
-                          'misses per cycle', axes[row][5])
-
-    fig.tight_layout()
+def plot_one(data, color_map, log_scale):
+    """Six panels for one CSV. Titles are just the metric names (the file name
+    is in the image's file name and your LaTeX caption), so they stay short."""
+    fig, axes = plt.subplots(3, 2, figsize=(7.0, 8.8), layout='constrained')
+    flat = axes.ravel()
+    panels = [(TIME, 'Time', 'timestamp cycles'),
+              (CACHE, 'Cache misses', 'count'),
+              (BRANCH, 'Branch mispredicts', 'count'),
+              (FAULTS, 'Page faults', 'count'),
+              (ALLOC, 'Allocations', 'bytes')]
+    for ax, (idx, title, ylabel) in zip(flat, panels):
+        draw_metric(ax, data, color_map, idx, title, ylabel, log_scale)
+    draw_rate(flat[5], data, color_map, 'Cache misses / cycle', 'misses per cycle')
+    figure_legend(fig, color_map, data.keys())
     return fig
 
 
 # ---------------------------------------------------------------------------
-# Violin mode: unlike overlay/grid, this treats every input file as a repeated
-# *sample* of the same underlying dataset (e.g. the same benchmark re-run
-# N times), not as a distinct dataset to compare side by side. Points that
-# share a (combo, k) are pooled across all csv_files into one distribution,
-# and each (combo, k) gets a single violin showing that spread. There's no
-# per-file row/column and no --labels — the files are just
-# replicates.
+# Fastest pair per k (one row per CSV)
 # ---------------------------------------------------------------------------
 
-def aggregate_for_violin(all_datasets):
-    """Pools raw metric values across all csv_files, keyed by combo then
-    metric index then k. { combo: { metric_idx: { k: [values, ...] } } }"""
-    agg = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    for data in all_datasets:
-        for combo, rows in data.items():
-            for row in rows:
-                k = row[K]
-                for metric_idx in (TIME, CACHE, BRANCH, ALLOC, FAULTS):
-                    agg[combo][metric_idx][k].append(row[metric_idx])
-    return agg
-
-
-def aggregate_rate_for_violin(all_datasets, numerator_idx, denominator_idx):
-    """Pools a derived per-point ratio across all csv_files, keyed by combo
-    then k. { combo: { k: [rates, ...] } }"""
-    agg = defaultdict(lambda: defaultdict(list))
-    for data in all_datasets:
-        for combo, rows in data.items():
-            for row in rows:
-                k, denom = row[K], row[denominator_idx]
-                if denom > 0:  # skip points with 0 cycles measured -- undefined rate
-                    agg[combo][k].append(row[numerator_idx] / denom)
-    return agg
-
-
-# How far apart adjacent k groups are placed on the x-axis, in "k units".
-# 1.0 reproduces the old behavior (groups exactly 1 apart); raise it to give
-# wide violins more breathing room between k values.
-K_SPACING = 2.5
-
-
-def _draw_violins(ax, combo_to_k_vals, color_map, all_vals_out):
-    """Shared drawing logic: one violin per (combo, k), combos side-by-side
-    at each k position so they don't overlap."""
-    combos = sorted(combo_to_k_vals.keys())
-    n_combos = len(combos)
-    all_ks = sorted({k for combo in combos for k in combo_to_k_vals[combo]})
-    if not all_ks:
-        return combos
-
-    # Violin widths scale with K_SPACING too, so they still comfortably fill
-    # the (now-wider) gap between k groups instead of staying pinned to the
-    # old 1-unit-wide spacing.
-    width = 0.8 * K_SPACING / max(n_combos, 1)
-
-    for i, combo in enumerate(combos):
-        k_to_vals = combo_to_k_vals[combo]
-        ks = sorted(k for k, vals in k_to_vals.items() if vals)
-        if not ks:
-            continue
-        offset = (i - (n_combos - 1) / 2) * width
-        positions = [k * K_SPACING + offset for k in ks]
-        datasets = [k_to_vals[k] for k in ks]
-        all_vals_out.extend(v for vals in datasets for v in vals)
-
-        # violinplot chokes on a group with a single point (needs variance),
-        # so those fall back to a plain scatter marker instead.
-        multi_pos = [p for p, vals in zip(positions, datasets) if len(vals) > 1]
-        multi_data = [vals for vals in datasets if len(vals) > 1]
-        single_pos = [p for p, vals in zip(positions, datasets) if len(vals) == 1]
-        single_vals = [vals[0] for vals in datasets if len(vals) == 1]
-
-        color = color_map[combo]
-
-        if multi_data:
-            parts = ax.violinplot(multi_data, positions=multi_pos, widths=width * 3.0,
-                                   showmeans=True, showextrema=True)
-            for pc in parts['bodies']:
-                pc.set_facecolor(color)
-                pc.set_alpha(0.6)
-                pc.set_edgecolor(color)
-            for key in ('cmeans', 'cmins', 'cmaxes', 'cbars'):
-                if key in parts:
-                    parts[key].set_color(color)
-
-        if single_vals:
-            ax.scatter(single_pos, single_vals, s=14, color=color, zorder=3)
-
-    if all_ks:
-        # Ticks sit at the scaled positions, but labels still show the real
-        # k values -- so the axis reads normally despite the wider spacing.
-        ax.set_xticks([k * K_SPACING for k in all_ks])
-        ax.set_xticklabels([str(k) for k in all_ks])
-    return combos
-
-
-def plot_violin_metric(agg, metric_idx, title, ylabel, ax, color_map, log_scale=True):
-    combo_to_k_vals = {combo: agg[combo][metric_idx] for combo in agg}
-    all_vals = []
-    combos = _draw_violins(ax, combo_to_k_vals, color_map, all_vals)
-
-    ax.set_xlabel('k  (matrix dim = 2^k)')
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
-
-    if log_scale:
-        positive_vals = [v for v in all_vals if v > 0]
-        linthresh = min(positive_vals) if positive_vals else 1
-        ax.set_yscale('symlog', linthresh=max(linthresh, 1e-9), linscale=0.3)
-        ax.set_ylim(bottom=0)
-
-    ax.grid(True, alpha=0.3)
-    handles = [Patch(facecolor=color_map[c], edgecolor=color_map[c], alpha=0.6, label=c)
-               for c in combos]
-    if handles:
-        ax.legend(handles=handles, fontsize='small')
-
-
-def plot_violin_rate(agg, title, ylabel, ax, color_map):
-    all_vals = []
-    combos = _draw_violins(ax, agg, color_map, all_vals)
-
-    ax.set_xlabel('k  (matrix dim = 2^k)')
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
-    ax.set_ylim(bottom=0)
-
-    ax.grid(True, alpha=0.3)
-    handles = [Patch(facecolor=color_map[c], edgecolor=color_map[c], alpha=0.6, label=c)
-               for c in combos]
-    if handles:
-        ax.legend(handles=handles, fontsize='small')
-
-
-def plot_violin(all_datasets, color_map, log_scale):
-    """One row of 5 panels, same layout as overlay mode, but every input file
-    is pooled as a replicate of the same dataset instead of being kept
-    distinct -- so each (combo, k) becomes a distribution rather than a
-    single line."""
-    fig, axes = plt.subplots(1, N_PANELS, figsize=(6 * N_PANELS, 5))
-
-    agg = aggregate_for_violin(all_datasets)
-    plot_violin_metric(agg, TIME, 'Time', 'timestamp cycles', axes[0], color_map, log_scale)
-    plot_violin_metric(agg, CACHE, 'Cache misses', 'count', axes[1], color_map, log_scale)
-    plot_violin_metric(agg, BRANCH, 'Branch mispredicts', 'count', axes[2], color_map, log_scale)
-    plot_violin_metric(agg, FAULTS, 'Page faults', 'count', axes[3], color_map, log_scale)
-    plot_violin_metric(agg, ALLOC, 'Allocations', 'alloc', axes[4], color_map, log_scale)
-
-    rate_agg = aggregate_rate_for_violin(all_datasets, CACHE, TIME)
-    plot_violin_rate(rate_agg, 'LLC misses / cycle', 'misses per cycle', axes[5], color_map)
-
-    fig.tight_layout()
-    return fig
-
-def best_by(datasets, key_fn):
-    """Ranks combos by median time for each key returned by key_fn(row).
-    Rows where key_fn returns None, or time <= 0, are skipped.
-    Returns { key: [(combo, time), ...] } fastest-first, keys sorted."""
+def best_per_k(dataset):
+    """{ k: [(combo, median time), ...] } fastest first, for one CSV."""
     pooled = defaultdict(lambda: defaultdict(list))
-    for data in datasets:
-        for combo, rows in data.items():
-            for r in rows:
-                if r[TIME] > 0:
-                    key = key_fn(r)
-                    if key is not None:
-                        pooled[key][combo].append(r[TIME])
-    return {
-        key: sorted(((c, median(v)) for c, v in combos.items()), key=lambda x: x[1])
-        for key, combos in sorted(pooled.items())
-    }
+    for combo, rows in dataset.items():
+        for r in rows:
+            if r[TIME] > 0:
+                pooled[r[K]][combo].append(r[TIME])
+    return {k: sorted(((c, median(v)) for c, v in combos.items()), key=lambda x: x[1])
+            for k, combos in sorted(pooled.items())}
 
 
-def best_per_k(datasets):
-    return best_by(datasets, lambda r: r[K])
-
-
-def _density(k, nnz):
-    return nnz / float(4 ** k)   # nnz / (2^k * 2^k)
-
-
-def plot_best_kron(groups, color_map):
-    """Winner strip ordered by kron_nnz. One cell per (kron_nnz, k) point;
-    cell text = runner-up slowdown. Tick labels show nnz and k."""
-    rankings = [(label, best_by(ds, lambda r: (r[KRON], r[K]) if r[KRON] > 0 else None))
-                for label, ds in groups]
-    all_keys = sorted({key for _, r in rankings for key in r})
-    if not all_keys:
-        print('No kron_nnz data found; skipping kron_nnz plot.')
-        return None
-    idx = {key: i for i, key in enumerate(all_keys)}
-
-    fig, ax = plt.subplots(figsize=(max(8, 0.6 * len(all_keys) + 3),
-                                    0.9 * len(rankings) + 2.5))
-    used = set()
-    for row, (label, ranking) in enumerate(rankings):
-        for key, ranked in ranking.items():
-            combo, t = ranked[0]
-            used.add(combo)
-            x = idx[key]
-            ax.add_patch(Rectangle((x, row), 1, 1, facecolor=color_map[combo],
-                                   edgecolor='white', alpha=0.85))
-            note = f'{ranked[1][1] / t:.1f}x' if len(ranked) > 1 else ''
-            ax.text(x + 0.5, row + 0.5, note, ha='center', va='center', fontsize=7)
-
-    ax.set_xlim(0, len(all_keys))
-    ax.set_ylim(len(rankings), 0)
-    ax.set_xticks([i + 0.5 for i in range(len(all_keys))])
-    ax.set_xticklabels([f'{nnz:,}\n(k={k})' for nnz, k in all_keys],
-                       rotation=60, ha='right', fontsize=7)
-    ax.set_yticks([i + 0.5 for i in range(len(rankings))])
-    ax.set_yticklabels([label for label, _ in rankings])
-    ax.set_xlabel('kron_nnz  (k = matrix exponent, dim = 2^k)')
-    ax.set_title('Fastest function per kron_nnz (label = runner-up slowdown)')
-    ax.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
-              fontsize='small', loc='upper left', bbox_to_anchor=(1.01, 1))
-    fig.tight_layout()
-    return fig
-
-
-def plot_best_density(groups, color_map):
-    """Winner scatter: x = density (log), y = k, color = fastest combo.
-    If the winner depends only on density, colors form vertical bands;
-    mixed colors at the same density mean size/structure matters too."""
-    fig, axes = plt.subplots(len(groups), 1, figsize=(9, 3.5 * len(groups)),
-                             squeeze=False)
-    used = set()
-    for ax, (label, ds) in zip(axes[:, 0], groups):
-        ranking = best_by(ds, lambda r: (r[K], r[KRON]) if r[KRON] > 0 else None)
-        for (k, nnz), ranked in ranking.items():
-            combo, t = ranked[0]
-            used.add(combo)
-            ax.scatter(_density(k, nnz), k, s=60, marker='s',
-                       color=color_map[combo], edgecolor='black', linewidth=0.3)
-        ax.set_xscale('log')
-        ax.set_xlabel('density = kron_nnz / 4^k')
-        ax.set_ylabel('k  (dim = 2^k)')
-        ax.set_title(f'Fastest function by density and size: {label}')
-        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.grid(True, alpha=0.3)
-    if not used:
-        plt.close(fig)
-        return None
-    fig.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
-               fontsize='small', loc='center left', bbox_to_anchor=(1.0, 0.5))
-    fig.tight_layout()
-    return fig
-
-def print_best_table(groups):
-    """groups: list of (label, [datasets]). Prints one table per group."""
-    for label, datasets in groups:
-        ranking = best_per_k(datasets)
+def print_best_table(labels, datasets):
+    for label, ds in zip(labels, datasets):
         print(f'\n== Fastest function per k: {label} ==')
         print(f'{"k":>3}  {"best":<16} {"time":>14}  {"runner-up":<16} {"slower by":>10}')
-        for k, ranked in ranking.items():
+        for k, ranked in best_per_k(ds).items():
             best, t = ranked[0]
             if len(ranked) > 1:
                 ru, ru_t = ranked[1]
@@ -498,170 +274,686 @@ def print_best_table(groups):
             print(f'{k:>3}  {best:<16} {t:>14,.0f}  {ru:<16} {margin:>10}')
 
 
-def plot_best(groups, color_map):
-    """Winner strip: one row per group, one cell per k, colored by the fastest
-    combo (same colors as the other plots). Each cell also shows how much
-    slower the runner-up was (e.g. 1.8x)."""
-    rankings = [(label, best_per_k(ds)) for label, ds in groups]
-    all_ks = sorted({k for _, r in rankings for k in r})
+def plot_best(labels, datasets, color_map):
+    """One row per CSV, one cell per k, colored by the fastest pair; the number
+    in each cell is how much slower the runner-up was."""
+    rankings = [best_per_k(ds) for ds in datasets]
+    all_ks = sorted({k for r in rankings for k in r})
     if not all_ks:
         return None
     k_idx = {k: i for i, k in enumerate(all_ks)}
-
-    fig, ax = plt.subplots(figsize=(max(6, 1.1 * len(all_ks) + 3),
-                                    0.9 * len(rankings) + 1.8))
+    n = len(rankings)
+    fig, ax = plt.subplots(figsize=(max(6.0, 0.5 * len(all_ks) + 3.5), 0.38 * n + 2.2),
+                           layout='constrained')
     used = set()
-    for row, (label, ranking) in enumerate(rankings):
+    any_tie = False
+    for row, ranking in enumerate(rankings):
         for k, ranked in ranking.items():
             combo, t = ranked[0]
             used.add(combo)
-            x = k_idx[k]
-            ax.add_patch(Rectangle((x, row), 1, 1, facecolor=color_map[combo],
-                                   edgecolor='white', alpha=0.85))
-            note = f'{ranked[1][1] / t:.1f}x' if len(ranked) > 1 else ''
-            ax.text(x + 0.5, row + 0.5, note, ha='center', va='center', fontsize=8)
-
+            tie = len(ranked) > 1 and ranked[1][1] / t < _TIE
+            any_tie = any_tie or tie
+            ax.add_patch(Rectangle((k_idx[k], row), 1, 1, facecolor=color_map[combo],
+                                   edgecolor='white', alpha=0.3 if tie else 0.9))
+            if len(ranked) > 1:
+                ax.text(k_idx[k] + 0.5, row + 0.5, f'{ranked[1][1] / t:.1f}x',
+                        ha='center', va='center', fontsize=6)
     ax.set_xlim(0, len(all_ks))
-    ax.set_ylim(len(rankings), 0)
+    ax.set_ylim(n, 0)
     ax.set_xticks([i + 0.5 for i in range(len(all_ks))])
-    ax.set_xticklabels([str(k) for k in all_ks])
-    ax.set_yticks([i + 0.5 for i in range(len(rankings))])
-    ax.set_yticklabels([label for label, _ in rankings])
-    ax.set_xlabel('k  (matrix dim = 2^k)')
-    ax.set_title('Fastest function per k (by time; label = runner-up slowdown)')
-    ax.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
-              fontsize='small', loc='upper left', bbox_to_anchor=(1.01, 1))
-    fig.tight_layout()
+    ax.set_xticklabels([str(k) for k in all_ks], fontsize=8)
+    ax.set_yticks([i + 0.5 for i in range(n)])
+    ax.set_yticklabels(labels, fontsize=8)
+    ax.set_xlabel('k  (dim = 2^k)')
+    ax.set_title('Fastest pair per k')
+    handles = [Patch(facecolor=color_map[c], label=c) for c in sorted(used)]
+    if any_tie:
+        handles.append(Patch(facecolor='gray', alpha=0.3, label=f'faded: within {(_TIE - 1) * 100:.0f}% of runner-up'))
+    fig.legend(handles=handles, loc='outside right upper', fontsize='small')
     return fig
 
-def plot_best_by_density_strip(groups, color_map):
-    """Winner strip ordered by density (low -> high). One cell per distinct
-    (density, k); color = fastest combo; text = runner-up slowdown.
-    k is kept in the key so runs at different sizes (which have very
-    different absolute times) are never pooled into one median."""
-    def key_fn(r):
-        if r[KRON] <= 0:
-            return None
-        return (float(f'{_density(r[K], r[KRON]):.6g}'), r[K])
 
-    rankings = [(label, best_by(ds, key_fn)) for label, ds in groups]
-    all_keys = sorted({key for _, r in rankings for key in r})
-    if not all_keys:
-        print('No kron_nnz data found; skipping density strip.')
+def plot_ranks(label, data):
+    """One graph: rows = format pairs (best on average at the top), columns = k. Colour = the
+    pair's rank at that k (1 = fastest, bright); the number is how much slower it is than the
+    fastest pair at that k (1.00x = the winner). Blank = no run."""
+    times = defaultdict(lambda: defaultdict(list))
+    for combo, rows in data.items():
+        for r in rows:
+            if r[TIME] > 0:
+                times[r[K]][combo].append(r[TIME])
+    per_k = {k: {c: median(v) for c, v in cm.items()} for k, cm in times.items()}
+    ks = sorted(per_k)
+    combos = sorted({c for cm in per_k.values() for c in cm})
+    if not ks:
         return None
-    idx = {key: i for i, key in enumerate(all_keys)}
-
-    fig, ax = plt.subplots(figsize=(max(8, 0.6 * len(all_keys) + 3),
-                                    0.9 * len(rankings) + 2.5))
-    used = set()
-    for row, (label, ranking) in enumerate(rankings):
-        for key, ranked in ranking.items():
-            combo, t = ranked[0]
-            used.add(combo)
-            x = idx[key]
-            ax.add_patch(Rectangle((x, row), 1, 1, facecolor=color_map[combo],
-                                   edgecolor='white', alpha=0.85))
-            note = f'{ranked[1][1] / t:.1f}x' if len(ranked) > 1 else ''
-            ax.text(x + 0.5, row + 0.5, note, ha='center', va='center', fontsize=7)
-
-    ax.set_xlim(0, len(all_keys))
-    ax.set_ylim(len(rankings), 0)
-    ax.set_xticks([i + 0.5 for i in range(len(all_keys))])
-    ax.set_xticklabels([f'{d:.2e}\n(k={k})' for d, k in all_keys],
-                       rotation=60, ha='right', fontsize=7)
-    ax.set_yticks([i + 0.5 for i in range(len(rankings))])
-    ax.set_yticklabels([label for label, _ in rankings])
-    ax.set_xlabel('density = kron_nnz / 4^k  (sparsest -> densest)')
-    ax.set_title('Fastest function per density (label = runner-up slowdown)')
-    ax.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in sorted(used)],
-              fontsize='small', loc='upper left', bbox_to_anchor=(1.01, 1))
-    fig.tight_layout()
+    rank = {}   # (combo, k) -> (rank, slowdown)
+    for k, cm in per_k.items():
+        order = sorted(cm, key=cm.get)
+        for i, c in enumerate(order):
+            rank[(c, k)] = (i + 1, cm[c] / cm[order[0]])
+    avg_rank = {c: sum(rank[(c, k)][0] for k in ks if (c, k) in rank) /
+                   max(1, sum(1 for k in ks if (c, k) in rank)) for c in combos}
+    combos.sort(key=avg_rank.get)
+    n = len(combos)
+    cmap = plt.get_cmap('viridis')
+    fig, ax = plt.subplots(figsize=(max(6.0, 0.45 * len(ks) + 3.0), 0.4 * n + 1.9),
+                           layout='constrained')
+    for row, c in enumerate(combos):
+        for col, k in enumerate(ks):
+            if (c, k) not in rank:
+                continue
+            rk, slow = rank[(c, k)]
+            frac = 1.0 - (rk - 1) / max(1, n - 1)          # rank 1 -> 1.0 (bright)
+            ax.add_patch(Rectangle((col, row), 1, 1, facecolor=cmap(frac), edgecolor='white'))
+            txt = f'{slow:.2f}x' if slow < 10 else (f'{slow:.0f}x' if slow < 1000 else '>999x')
+            ax.text(col + 0.5, row + 0.5, txt, ha='center', va='center', fontsize=6,
+                    color='black' if frac > 0.5 else 'white')
+    ax.set_xlim(0, len(ks))
+    ax.set_ylim(n, 0)
+    ax.set_xticks([i + 0.5 for i in range(len(ks))])
+    ax.set_xticklabels([str(k) for k in ks], fontsize=8)
+    ax.set_yticks([i + 0.5 for i in range(n)])
+    ax.set_yticklabels(combos, fontsize=8)
+    ax.set_xlabel('k  (dim = 2^k)')
+    ax.set_title(f'{label}: pairs ranked at each k (bright = fastest)')
     return fig
+
+
+def _row_order(datasets):
+    """Row order for the heatmaps: sparsest base graph (fewest nnz per row at the smallest k) first."""
+    keys = []
+    for i, ds in enumerate(datasets):
+        med = point_medians([ds], min_k=1)
+        if med:
+            _, k, nnz = min(med, key=lambda x: x[1])
+            keys.append((nnz / float(2 ** k), i))
+        else:
+            keys.append((float('inf'), i))
+    return [i for _, i in sorted(keys)]
+
+
+def plot_best_by_scalar(labels, datasets, color_map, name, fn, bin_decades):
+    """Like the fastest-pair-per-k figure, but the x axis is a different quantity, in log bins
+    (e.g. density). Rows = graphs, sparsest base graph first; cell colour = the pair with the
+    smallest average log time relative to the best in that bin; blank = no data.
+    If colour changes line up in a vertical band, this quantity decides the winner."""
+    order = _row_order(datasets)
+    cells = {}  # (row, bin) -> {combo: [log slowdown, ...]}
+    for row, i in enumerate(order):
+        for (_, k, nnz), cm in point_medians([datasets[i]], min_k=1).items():
+            b = math.floor(math.log10(fn(k, nnz)) / bin_decades)
+            best = min(cm.values())
+            d = cells.setdefault((row, b), {})
+            for c, t in cm.items():
+                d.setdefault(c, []).append(math.log(t / best))
+    if not cells:
+        return None
+    b_lo = min(b for _, b in cells)
+    b_hi = max(b for _, b in cells)
+    n = len(order)
+    fig, ax = plt.subplots(figsize=(max(7.0, 0.3 * (b_hi - b_lo + 1) + 4.5), 0.38 * n + 2.2),
+                           layout='constrained')
+    used = set()
+    any_tie = False
+    for (row, b), d in cells.items():
+        # a pair missing at some point of the bin cannot win the bin
+        n_pts = max(len(v) for v in d.values())
+        full = {c: sum(v) / len(v) for c, v in d.items() if len(v) == n_pts}
+        ranked = sorted(full, key=full.get)
+        combo = ranked[0]
+        used.add(combo)
+        tie = len(ranked) > 1 and math.exp(full[ranked[1]] - full[combo]) < _TIE
+        any_tie = any_tie or tie
+        ax.add_patch(Rectangle((b - b_lo, row), 1, 1, facecolor=color_map[combo],
+                               edgecolor='white', alpha=0.3 if tie else 0.9))
+    ax.set_xlim(0, b_hi - b_lo + 1)
+    ax.set_ylim(n, 0)
+    step = max(1, int(round(1.0 / bin_decades)))  # label once per decade
+    ticks = [b - b_lo for b in range(b_lo, b_hi + 1) if b % step == 0]
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([f'1e{(t + b_lo) * bin_decades:.0f}' for t in ticks], fontsize=8)
+    ax.set_yticks([i + 0.5 for i in range(n)])
+    ax.set_yticklabels([labels[i] for i in order], fontsize=8)
+    ax.set_xlabel(f'{name}  (log bins, {bin_decades:g} decade wide)')
+    ax.set_title(f'Fastest pair by {name}')
+    handles = [Patch(facecolor=color_map[c], label=c) for c in sorted(used)]
+    if any_tie:
+        handles.append(Patch(facecolor='gray', alpha=0.3, label=f'faded: within {(_TIE - 1) * 100:.0f}% of runner-up'))
+    fig.legend(handles=handles, loc='outside right upper', fontsize='small')
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# Pooled analysis: does one scalar decide the winner, and what does it cost
+# to always use one pair?  One "point" is one (CSV, k).
+# ---------------------------------------------------------------------------
+
+_ALL_PAIRS = False
+_TIE = 1.03   # winner within this factor of the runner-up = near tie (drawn faded)
+_MIN_K = 1   # set from --min-k: pooled analyses ignore smaller k (tiny runs are timer noise)
+
+
+def point_medians(datasets, min_k=None):
+    """{ (csv_index, k, kron_nnz): { combo: median time } } for time > 0 and known kron_nnz."""
+    pooled = defaultdict(lambda: defaultdict(list))
+    for i, data in enumerate(datasets):
+        for combo, rows in data.items():
+            for r in rows:
+                if r[TIME] > 0 and r[KRON] > 0 and r[K] >= (_MIN_K if min_k is None else min_k):
+                    pooled[(i, r[K], r[KRON])][combo].append(r[TIME])
+    return {key: {c: median(v) for c, v in combos.items()} for key, combos in pooled.items()}
+
+
+def _nnz(k, nnz):
+    return nnz
+
+
+def _density(k, nnz):
+    return nnz / float(4 ** k)
+
+
+def _nnz_per_row(k, nnz):
+    return nnz / float(2 ** k)
+
+
+SCALARS = {
+    'k': lambda k, nnz: float(k),
+    'nnz': lambda k, nnz: float(nnz),
+    'density': _density,
+    'nnz per row': _nnz_per_row,
+}
+
+
+def best_segmentation_accuracy(points, max_segments):
+    """points: [(x, label)]. Cut the points, sorted by x, into at most max_segments
+    runs, each predicting its most common label; return the best fraction correct
+    (the accuracy of the best 'thresholds on one scalar' rule)."""
+    pts = sorted(points, key=lambda p: p[0])
+    n = len(pts)
+    if n == 0:
+        return float('nan')
+    labels = sorted({l for _, l in pts})
+    prefix = {l: [0] * (n + 1) for l in labels}
+    for i, (_, l) in enumerate(pts):
+        for m in labels:
+            prefix[m][i + 1] = prefix[m][i] + (1 if m == l else 0)
+
+    def seg_correct(j, i):
+        return max(prefix[m][i] - prefix[m][j] for m in labels)
+
+    dp = [[-1] * (n + 1) for _ in range(max_segments + 1)]
+    dp[0][0] = 0
+    for s in range(1, max_segments + 1):
+        for i in range(1, n + 1):
+            best = -1
+            for j in range(i):
+                if dp[s - 1][j] != -1:
+                    best = max(best, dp[s - 1][j] + seg_correct(j, i))
+            dp[s][i] = best
+    return max(dp[s][n] for s in range(1, max_segments + 1)) / n
+
+
+def count_transitions(points):
+    pts = sorted(points, key=lambda p: p[0])
+    return sum(1 for a, b in zip(pts, pts[1:]) if a[1] != b[1])
+
+
+def print_separation_table(datasets):
+    med = point_medians(datasets)
+    winners = {key: min(c, key=c.get) for key, c in med.items() if c}
+    if not winners:
+        print('\nNo kron_nnz data found; skipping the separation table.')
+        return
+    n = len(winners)
+    counts = defaultdict(int)
+    for w in winners.values():
+        counts[w] += 1
+    print('\n== Does one scalar decide the winner? (all CSVs pooled) ==')
+    print(f'{n} points (CSV, k); always guessing the most common winner is right '
+          f'{max(counts.values()) / n:.0%} of the time.')
+    print('Accuracy = best "thresholds on this one scalar" rule with at most N segments.')
+    print(f'{"scalar":<12} {"winner changes":>15} {"3 segments":>12} {"4 segments":>12} {"6 segments":>12}')
+    for name, fn in SCALARS.items():
+        pts = [(fn(k, nnz), winners[(i, k, nnz)]) for (i, k, nnz) in winners]
+        print(f'{name:<12} {count_transitions(pts):>15d} '
+              f'{best_segmentation_accuracy(pts, 3):>12.0%} '
+              f'{best_segmentation_accuracy(pts, 4):>12.0%} '
+              f'{best_segmentation_accuracy(pts, 6):>12.0%}')
+
+
+def best_rule_regret(points, max_segments):
+    """points: [(x, {combo: time})]. Sort by x, cut into at most max_segments runs, and in
+    each run always use one pair, chosen to minimise total log slowdown vs the best pair.
+    Returns (mean slowdown, worst slowdown) of the best such rule."""
+    pts = sorted(points, key=lambda p: p[0])
+    n = len(pts)
+    combos = sorted({c for _, cm in pts for c in cm})
+    pre = {c: [0.0] for c in combos}
+    for _, cm in pts:
+        best = min(cm.values())
+        for c in combos:
+            pre[c].append(pre[c][-1] + (math.log(cm[c] / best) if c in cm else 1e9))
+    def seg(j, i):
+        return min(range(len(combos)), key=lambda m: pre[combos[m]][i] - pre[combos[m]][j]), \
+               min(pre[c][i] - pre[c][j] for c in combos)
+    INF = float('inf')
+    dp = [[INF] * (n + 1) for _ in range(max_segments + 1)]
+    back = [[None] * (n + 1) for _ in range(max_segments + 1)]
+    dp[0][0] = 0.0
+    for sg in range(1, max_segments + 1):
+        for i in range(1, n + 1):
+            for j in range(i):
+                if dp[sg - 1][j] < INF:
+                    v = dp[sg - 1][j] + seg(j, i)[1]
+                    if v < dp[sg][i]:
+                        dp[sg][i], back[sg][i] = v, j
+    sg = min(range(1, max_segments + 1), key=lambda g: dp[g][n])
+    i, worst = n, 1.0
+    while sg > 0:
+        j = back[sg][i]
+        m, _ = seg(j, i)
+        c = combos[m]
+        for _, cm in pts[j:i]:
+            worst = max(worst, cm[c] / min(cm.values()) if c in cm else INF)
+        i, sg = j, sg - 1
+    return math.exp(dp[min(range(1, max_segments + 1), key=lambda g: dp[g][n])][n] / n), worst
+
+
+def print_rule_regret_table(datasets, max_segments=3):
+    """The metric that matters: how much slower than the oracle is a threshold rule on one
+    scalar (at most 3 segments), and how does that compare with one fixed pair?"""
+    med = point_medians(datasets)
+    med = {key: cm for key, cm in med.items() if len(cm) > 1}
+    if not med:
+        return
+    print(f'\n== Cost of a {max_segments}-segment threshold rule (slowdown vs. always picking the best) ==')
+    print(f'{"rule":<14} {"mean":>8} {"worst":>8}')
+    for name, fn in SCALARS.items():
+        pts = [(fn(k, nnz), cm) for (i, k, nnz), cm in med.items()]
+        mean, worst = best_rule_regret(pts, max_segments)
+        print(f'{name:<14} {mean:>7.3f}x {worst:>7.2f}x')
+    pts = [(0.0, cm) for cm in med.values()]
+    mean, worst = best_rule_regret(pts, 1)
+    print(f'{"one fixed pair":<14} {mean:>7.3f}x {worst:>7.2f}x')
+
+
+def _binned_median_line(xs, ys, n_bins=8):
+    pts = sorted(zip(xs, ys))
+    if len(pts) < 2:
+        return [p[0] for p in pts], [p[1] for p in pts]
+    n_bins = max(1, min(n_bins, len(pts) // 3))
+    size = len(pts) / float(n_bins)
+    bx, by = [], []
+    for b in range(n_bins):
+        chunk = pts[int(round(b * size)):int(round((b + 1) * size))]
+        if chunk:
+            bx.append(median([p[0] for p in chunk]))
+            by.append(median([p[1] for p in chunk]))
+    return bx, by
+
+
+def plot_slowdown_vs_scalar(datasets, color_map):
+    """Each dot = one input (a CSV at one k): how much slower a format pair is than the best
+    pair there (1x = it wins). Left: against density. Right: against nnz per row. The panel
+    where each pair's dots form a tidy curve is the better explanation. Lines = binned medians."""
+    med = point_medians(datasets)
+    if not med:
+        return None
+    combos = sorted({c for v in med.values() for c in v})
+    if not _ALL_PAIRS:  # drop pairs that are hopeless (avg > 2x slower) so the good ones are readable
+        def _gm(c):
+            v = [cm[c] / min(cm.values()) for cm in med.values() if c in cm]
+            return math.exp(sum(math.log(x) for x in v) / len(v))
+        good = [c for c in combos if _gm(c) < 2.0]
+        combos = good or combos
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.6), sharey=True, layout='constrained')
+    ymax = 1.1
+    for ax, (xname, xfn) in zip(axes, (('density', _density), ('nnz per row', _nnz_per_row))):
+        for c in combos:
+            xs, ys = [], []
+            for (i, k, nnz), cm in med.items():
+                if c in cm:
+                    xs.append(xfn(k, nnz))
+                    ys.append(cm[c] / min(cm.values()))
+            if not xs:
+                continue
+            ymax = max(ymax, max(ys))
+            ax.scatter(xs, ys, s=12, color=color_map[c], alpha=0.35, linewidths=0)
+            bx, by = _binned_median_line(xs, ys)
+            ax.plot(bx, by, color=color_map[c], linewidth=2.2)
+        ax.set_xscale('log')
+        ax.set_xlabel(xname)
+        ax.set_title(f'Slowdown vs. {xname}')
+        ax.grid(True, alpha=0.3)
+    axes[0].set_ylabel('time / time of best pair\n(1x = this pair wins)')
+    axes[0].set_yscale('log')
+    span = math.log(ymax * 1.05)
+    ticks = []
+    for t in (1, 1.05, 1.1, 1.2, 1.3, 1.5, 2, 3, 5, 10, 20, 50, 100):
+        if t <= ymax * 1.05 and (not ticks or math.log(t / ticks[-1]) >= span / 7):
+            ticks.append(t)  # only keep ticks far enough apart that labels never touch
+    axes[0].set_yticks(ticks)
+    axes[0].yaxis.set_major_formatter(FuncFormatter(lambda v, _: f'{v:g}x'))
+    axes[0].yaxis.set_minor_formatter(NullFormatter())
+    axes[0].set_ylim(0.98, ymax * 1.05)
+    fig.legend(handles=[Patch(facecolor=color_map[c], label=c) for c in combos],
+               loc='outside right upper', fontsize='small')
+    return fig
+
+
+def plot_fixed_pair_cost(datasets, color_map):
+    """If you always used one pair: bar = average slowdown vs the best pair, tick = worst case."""
+    med = point_medians(datasets)
+    if not med:
+        return None
+    combos = sorted({c for v in med.values() for c in v})
+    gm, worst = [], []
+    for c in combos:
+        v = [cm[c] / min(cm.values()) for cm in med.values() if c in cm]
+        gm.append(math.exp(sum(math.log(x) for x in v) / len(v)))
+        worst.append(max(v))
+    fig, ax = plt.subplots(figsize=(max(6.0, 1.3 * len(combos) + 1.5), 4.6),
+                           layout='constrained')
+    xs = list(range(len(combos)))
+    ax.bar(xs, [g - 1 for g in gm], bottom=1, color=[color_map[c] for c in combos], alpha=0.8)
+    ax.set_yscale('log')
+    ax.scatter(xs, worst, marker='_', s=600, color='black', zorder=3)
+    for x, g, w in zip(xs, gm, worst):
+        ax.text(x, w * 1.1, f'avg {g:.2f}x\nworst {w:.1f}x', ha='center', va='bottom', fontsize=8)
+    ax.axhline(1.0, color='gray', linewidth=0.8)
+    ax.set_xticks(xs)
+    ax.set_xticklabels(combos, rotation=30, ha='right', fontsize=8)
+    ax.set_ylim(0.9, max(worst) * 2.5)
+    ax.set_ylabel('slower than the best pair (log scale)')
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f'{v:g}x'))
+    ax.yaxis.set_minor_formatter(NullFormatter())
+    ax.set_title('Cost of always using one pair')
+    ax.grid(True, alpha=0.3, axis='y')
+    return fig
+
+
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Tiled mode: block-size sweeps (CSV has block_size and grid_size columns)
+# ---------------------------------------------------------------------------
+
+def load_tiled(csv_path):
+    """{function: {k: {block_size: (time, cache, branch, faults)}}}, medians over repeats.
+    block_size 0 or empty marks an untiled baseline row."""
+    raw = defaultdict(list)
+    with open(csv_path, newline='') as f:
+        reader = csv.DictReader(f)
+        if 'block_size' not in (reader.fieldnames or []):
+            raise SystemExit(f'{csv_path} has no block_size column; it is not a tiled CSV')
+        for row in reader:
+            key = (row['function'], int(row['k']), int(float(row.get('block_size') or 0)))
+            raw[key].append((int(row['time']), int(row.get('cache') or 0),
+                             int(row.get('branch') or 0), int(row.get('faults') or 0)))
+    out = defaultdict(lambda: defaultdict(dict))
+    for (fn, k, b), rows in raw.items():
+        out[fn][k][b] = tuple(median(col) for col in zip(*rows))
+    return out
+
+
+def _fmt_block(b):
+    """65536 -> '64K', 1048576 -> '1M' (labels stay short; exact value if not a power of 1024)."""
+    b = int(b)
+    if b >= 1 << 20 and b % (1 << 20) == 0:
+        return f'{b >> 20}M'
+    if b >= 1 << 10 and b % (1 << 10) == 0:
+        return f'{b >> 10}K'
+    return str(b)
+
+
+def _block_ticks(ax, blocks, max_labels=5):
+    blocks = sorted(blocks)
+    ax.set_xscale('log', base=2)
+    ax.set_xticks(blocks)
+    step = max(1, math.ceil(len(blocks) / max_labels))
+    ax.set_xticklabels([_fmt_block(b) if i % step == 0 else '' for i, b in enumerate(blocks)])
+    ax.xaxis.set_minor_formatter(NullFormatter())
+    ax.xaxis.set_minor_locator(matplotlib.ticker.NullLocator())
+    ax.yaxis.set_minor_formatter(matplotlib.ticker.LogFormatterSciNotation(minor_thresholds=(2, 0.5)))
+    ax.grid(True, alpha=0.3)
+
+
+_TILED_METRICS = {'time': 0, 'cache': 1, 'branch': 2}
+
+
+def _tiled_fns(T):
+    return sorted(fn for fn, by_k in T.items() if any(b > 0 for pts in by_k.values() for b in pts))
+
+
+def plot_tiled_one(T, metric, min_k):
+    """One heatmap per tiled function: x = k, y = block size, colour = metric / best over
+    block sizes at that k (1 = best). A star marks the best block size at each k."""
+    idx = _TILED_METRICS[metric]
+    fns = _tiled_fns(T)
+    fig, axes = plt.subplots(len(fns), 1, figsize=(7.5, 3.3 * len(fns) + 0.6),
+                             layout='constrained', squeeze=False)
+    mappable = None
+    for ax, fn in zip(axes[:, 0], fns):
+        ks = sorted(k for k in T[fn] if k >= min_k and any(b > 0 for b in T[fn][k]))
+        blocks = sorted({b for k in ks for b in T[fn][k] if b > 0})
+        if not ks or not blocks:
+            ax.set_visible(False)
+            continue
+        grid = np.full((len(blocks), len(ks)), np.nan)
+        for j, k in enumerate(ks):
+            vals = {b: v[idx] for b, v in T[fn][k].items() if b > 0 and v[idx] > 0}
+            if not vals:
+                continue
+            best = min(vals.values())
+            for b, v in vals.items():
+                grid[blocks.index(b), j] = v / best
+            bi = blocks.index(min(vals, key=vals.get))
+            ax.scatter([j], [bi], marker='*', s=70, color='white', edgecolor='black', zorder=3)
+        mappable = ax.pcolormesh(np.arange(len(ks) + 1) - 0.5, np.arange(len(blocks) + 1) - 0.5,
+                                 np.ma.masked_invalid(grid), cmap='viridis_r',
+                                 norm=matplotlib.colors.LogNorm(vmin=1.0, vmax=3.0))
+        ax.set_xticks(range(len(ks)))
+        step = max(1, math.ceil(len(ks) / 12))
+        ax.set_xticklabels([str(k) if i % step == 0 else '' for i, k in enumerate(ks)])
+        ax.set_yticks(range(len(blocks)))
+        ystep = max(1, math.ceil(len(blocks) / 8))
+        ax.set_yticklabels([_fmt_block(b) if i % ystep == 0 else '' for i, b in enumerate(blocks)])
+        ax.set_xlabel('k  (dim = 2^k)')
+        ax.set_ylabel('block size')
+        ax.set_title(fn)
+    if mappable is not None:
+        cb = fig.colorbar(mappable, ax=axes[:, 0].tolist(), shrink=0.8)
+        cb.set_label(f'{metric} / best block at this k  (log scale; star = best)')
+        cb.set_ticks([1, 1.5, 2, 3])
+        cb.set_ticklabels(['1', '1.5', '2', '3+'])
+    return fig
+
+
+def _rel_to_best(T, min_k):
+    """{function: {block: [time / best time over blocks, ...]}} over every (k >= min_k)."""
+    rel = defaultdict(lambda: defaultdict(list))
+    for fn, by_k in T.items():
+        for k, pts in by_k.items():
+            tiled = {b: v[0] for b, v in pts.items() if b > 0 and v[0] > 0}
+            if k < min_k or len(tiled) < 2:
+                continue
+            best = min(tiled.values())
+            for b, t in tiled.items():
+                rel[fn][b].append(t / best)
+    return rel
+
+
+def plot_tiled_relative(Ts, color_map, min_k):
+    """All CSVs pooled: slowdown vs the best block size, against block size."""
+    pooled = defaultdict(lambda: defaultdict(list))
+    for T in Ts:
+        for fn, by_b in _rel_to_best(T, min_k).items():
+            for b, xs in by_b.items():
+                pooled[fn][b].extend(xs)
+    if not pooled:
+        return None
+    fig, ax = plt.subplots(figsize=(7.0, 4.6), layout='constrained')
+    blocks = set()
+    for fn, by_b in sorted(pooled.items()):
+        bs = sorted(by_b)
+        blocks.update(bs)
+        med = [median(by_b[b]) for b in bs]
+        lo = [sorted(by_b[b])[len(by_b[b]) // 4] for b in bs]
+        hi = [sorted(by_b[b])[(3 * len(by_b[b])) // 4] for b in bs]
+        ax.plot(bs, med, color=color_map[fn], linewidth=1.8, marker='o', markersize=3)
+        ax.fill_between(bs, lo, hi, color=color_map[fn], alpha=0.15, linewidth=0)
+    ax.axhline(1.0, color='black', linewidth=0.8)
+    ax.set_yscale('log')
+    _block_ticks(ax, blocks)
+    ax.set_xlabel('block size')
+    ax.set_ylabel('time / best block size (same graph, k)')
+    ax.set_title('Cost of a fixed block size (median, IQR band)')
+    figure_legend(fig, color_map, pooled.keys())
+    return fig
+
+
+def plot_tiled_best_block(labels, Ts, metric, min_k):
+    """Best block size against k, one panel per tiled function, one line per CSV."""
+    idx = _TILED_METRICS[metric]
+    fns = sorted({fn for T in Ts for fn in _tiled_fns(T)})
+    if not fns:
+        return None
+    fig, axes = plt.subplots(len(fns), 1, figsize=(7.5, 3.6 * len(fns) + 0.6),
+                             layout='constrained', squeeze=False)
+    cycle = plt.get_cmap('tab20').colors
+    any_pts = False
+    for ax, fn in zip(axes[:, 0], fns):
+        for i, (label, T) in enumerate(zip(labels, Ts)):
+            pts = []
+            for k, by_b in sorted(T.get(fn, {}).items()):
+                vals = {b: v[idx] for b, v in by_b.items() if b > 0 and v[idx] > 0}
+                if k >= min_k and vals:
+                    pts.append((k, min(vals, key=vals.get)))
+            if pts:
+                any_pts = True
+                ks, bs = zip(*pts)
+                ax.plot(ks, bs, color=cycle[i % 20], marker='o', markersize=3, linewidth=1.2)
+        ax.set_yscale('log', base=2)
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: _fmt_block(v)))
+        ax.yaxis.set_minor_formatter(NullFormatter())
+        ax.yaxis.set_minor_locator(matplotlib.ticker.NullLocator())
+        ax.set_title(fn)
+        ax.set_xlabel('k  (dim = 2^k)')
+        ax.set_ylabel(f'best block size ({metric})')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=8))
+        ax.grid(True, alpha=0.3)
+    if not any_pts:
+        plt.close(fig)
+        return None
+    handles = [matplotlib.lines.Line2D([], [], color=cycle[i % 20], label=l) for i, l in enumerate(labels)]
+    try:
+        fig.legend(handles=handles, loc='outside right', fontsize='small')
+    except ValueError:
+        axes[0][0].legend(handles=handles, fontsize='small')
+    return fig
+
+
+def print_tiled_table(labels, Ts, min_k):
+    """Per function: best block size by median relative time, and the regret of each block size."""
+    print('\nTiled: median slowdown vs the best block size at the same (graph, k)')
+    pooled = defaultdict(lambda: defaultdict(list))
+    for T in Ts:
+        for fn, by_b in _rel_to_best(T, min_k).items():
+            for b, xs in by_b.items():
+                pooled[fn][b].extend(xs)
+    for fn, by_b in sorted(pooled.items()):
+        row = '  '.join(f'{b}:{median(xs):.3f}' for b, xs in sorted(by_b.items()))
+        best_b = min(by_b, key=lambda b: median(by_b[b]))
+        print(f'  {fn}: best fixed block = {best_b}   ({row})')
+
+
+def run_tiled(args, labels, stem, ext):
+    Ts = [load_tiled(p) for p in args.csv_files]
+    for p, T in zip(args.csv_files, Ts):
+        if not T:
+            raise SystemExit(f'No usable rows found in {p}')
+    for label, T in zip(labels, Ts):
+        if not _tiled_fns(T):
+            print(f'{label}: no rows with block_size > 0, skipped')
+            continue
+        save(plot_tiled_one(T, args.tiled_metric, args.min_k), f'{stem}_tiled_{slug(label)}{ext}')
+    print_tiled_table(labels, Ts, args.min_k)
+    color_map = build_color_map(Ts)
+    for suffix, fig in (('_tiled_best_block', plot_tiled_best_block(labels, Ts, args.tiled_metric, args.min_k)),
+                        ('_tiled_relative', plot_tiled_relative(Ts, color_map, args.min_k))):
+        if fig is not None:
+            save(fig, f'{stem}{suffix}{ext}')
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('csv_files', nargs='+',
-                         help='One or more benchmark CSV files (columns: '
-                              'k,function,time,...,cache,branch,alloc). Pass 2+ to compare '
-                              '(or, in violin mode, to pool as repeated samples of the '
-                              'same dataset).')
+    # allow_abbrev=False: an unknown option must be an error, never silently read
+    # as an abbreviation of another option.
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('csv_files', nargs='+', help='Benchmark CSVs, one per run.')
+    parser.add_argument('--mode', choices=['separate', 'tiled'], default='separate',
+                        help="'separate' (default): one image per CSV. 'tiled': CSVs with block_size/grid_size columns, block-size sweeps.")
+    parser.add_argument('--tiled-metric', choices=['time', 'cache', 'branch'], default='time',
+                        help='tiled mode: metric used to pick the best block size and colour the heatmaps (default time).')
     parser.add_argument('--labels', nargs='+', default=None,
-                         help='Labels for each csv_file, in order (default: file basenames). '
-                              'Not used in violin mode, since csv_files are treated as replicates '
-                              'of one dataset rather than distinct, individually-labeled datasets.')
-    parser.add_argument('--mode', choices=['overlay', 'grid', 'violin'], default='overlay',
-                         help="'overlay' (default): all datasets on shared axes, distinguished "
-                              "by linestyle, treating each csv_file as a distinct dataset. "
-                              "'grid': one row of panels per dataset, easier to read with many "
-                              "files/combos. 'violin': treats ALL csv_files as repeated "
-                              "samples of the SAME dataset -- pools points sharing a (combo, k) "
-                              "across every file into one distribution per combo/k, instead "
-                              "of a per-file row or line.")
-    parser.add_argument('-o', '--out', default='taco_bench.png', help='Output image path')
-    parser.add_argument('--linear', action='store_true', help='Use linear y-axis instead of log')
+                        help='Names for the CSVs, in order (default: file names with timestamps removed).')
+    parser.add_argument('-o', '--out', default='taco_bench.png',
+                        help='Output path; images are written as OUT_<name>.png, OUT_best.png, etc.')
+    parser.add_argument('--min-k', type=int, default=10,
+                        help='Pooled analyses (tables and the last three images) ignore k below this (default 10: tiny runs are timer noise). Per-CSV images and the best-per-k figure show every k.')
+    parser.add_argument('--tie', type=float, default=1.03,
+                        help='Heatmap cells where the winner beats the runner-up by less than this factor are drawn faded (default 1.03).')
+    parser.add_argument('--all-pairs', action='store_true', help='Show every pair in the slowdown plot, not just the good ones.')
+    parser.add_argument('--linear', action='store_true', help='Linear y-axis instead of log.')
     args = parser.parse_args()
 
-    if args.mode == 'violin':
-        if args.labels:
-            raise SystemExit('--labels is not used in violin mode (csv_files are pooled as '
-                              'replicates, not labeled separately)')
-    elif args.labels and len(args.labels) != len(args.csv_files):
+    if args.labels and len(args.labels) != len(args.csv_files):
         raise SystemExit('--labels must match the number of csv_files given')
+    labels = clean_labels(args.labels or [os.path.basename(p) for p in args.csv_files])
 
-    labels = args.labels or [os.path.basename(p) for p in args.csv_files]
+    if args.mode == 'tiled':
+        stem, ext = os.path.splitext(args.out)
+        run_tiled(args, labels, stem, ext or '.png')
+        return
 
-    if args.mode == 'overlay' and len(args.csv_files) > len(LINESTYLES):
-        raise SystemExit(
-            f'overlay mode supports at most {len(LINESTYLES)} files '
-            f'(got {len(args.csv_files)}) -- use --mode grid instead'
-        )
-
-    all_datasets = [load_results(p) for p in args.csv_files]
-    for p, data in zip(args.csv_files, all_datasets):
+    datasets = [load_results(p) for p in args.csv_files]
+    for p, data in zip(args.csv_files, datasets):
         if not data:
             raise SystemExit(f'No usable rows found in {p}')
-
-    color_map = build_color_map(all_datasets)
+    color_map = build_color_map(datasets)
     log_scale = not args.linear
-
-    if args.mode == 'overlay':
-        fig = plot_overlay(all_datasets, labels, color_map, log_scale)
-        title_dirs = ' vs '.join(labels)
-        fig.suptitle(f'TACO format benchmark: {title_dirs}')
-    elif args.mode == 'grid':
-        fig = plot_grid(all_datasets, labels, color_map, log_scale)
-        title_dirs = ' vs '.join(labels)
-        fig.suptitle(f'TACO format benchmark: {title_dirs}')
-    else:
-        fig = plot_violin(all_datasets, color_map, log_scale)
-        fig.suptitle(f'TACO format benchmark: {len(args.csv_files)} samples')
-
-    if args.mode == 'violin':
-        groups = [(f'{len(args.csv_files)} samples (median)', all_datasets)]
-    else:
-        groups = [(lbl, [d]) for lbl, d in zip(labels, all_datasets)]
-
-    print_best_table(groups)
-    best_fig = plot_best(groups, color_map)
-    if best_fig is not None:
-        stem, ext = os.path.splitext(args.out)
-        best_path = f'{stem}_best{ext or ".png"}'
-        best_fig.savefig(best_path, dpi=150, bbox_inches='tight')
-        print(f'Saved best-function plot to {best_path}')
+    global _MIN_K, _ALL_PAIRS, _TIE
+    _MIN_K, _ALL_PAIRS, _TIE = args.min_k, args.all_pairs, args.tie
 
     stem, ext = os.path.splitext(args.out)
-    for suffix, fn in (('_best_kron', plot_best_kron),
-                       ('_best_density', plot_best_density),
-                       ('_best_density_strip', plot_best_by_density_strip)):
-        f = fn(groups, color_map)
-        if f is not None:
-            path = f'{stem}{suffix}{ext or ".png"}'
-            f.savefig(path, dpi=150, bbox_inches='tight')
-            print(f'Saved {suffix[1:]} plot to {path}')
+    ext = ext or '.png'
 
-    fig.savefig(args.out, dpi=150, bbox_inches='tight')
-    print(f'Saved plot to {args.out}')
+    # One image per CSV.
+    for label, data in zip(labels, datasets):
+        save(plot_one(data, color_map, log_scale), f'{stem}_{slug(label)}{ext}')
+
+    # One rank figure per CSV.
+    for label, data in zip(labels, datasets):
+        fig = plot_ranks(label, data)
+        if fig is not None:
+            save(fig, f'{stem}_ranks_{slug(label)}{ext}')
+
+    # Summaries across all CSVs.
+    print_best_table(labels, datasets)
+    print_separation_table(datasets)
+    print_rule_regret_table(datasets)
+    for suffix, fig in (('_best', plot_best(labels, datasets, color_map)),
+                        ('_best_by_density', plot_best_by_scalar(
+                            labels, datasets, color_map, 'density = nnz / 4^k', _density, 0.5)),
+                        ('_best_by_nnz_per_row', plot_best_by_scalar(
+                            labels, datasets, color_map, 'nnz per row', _nnz_per_row, 0.25)),
+                        ('_best_by_nnz', plot_best_by_scalar(
+                            labels, datasets, color_map, 'input nnz', _nnz, 0.25)),
+                        ('_slowdown_vs_scalar', plot_slowdown_vs_scalar(datasets, color_map)),
+                        ('_fixed_pair_cost', plot_fixed_pair_cost(datasets, color_map))):
+        if fig is not None:
+            save(fig, f'{stem}{suffix}{ext}')
 
 
 if __name__ == '__main__':

@@ -1,1 +1,33 @@
 \chapter{Discussion and Future Work}
+
+\section{Putting everything together}
+I think this thesis is very much a tale of putting the cart before the horse, over and over again. It started with investigations into FPGA implementations
+(Chapter~\ref{ch:fpga}) before I really had a clue what would even be good on them. It then progressed into an investigation of cost models for choosing sparse sub-block formats, because I believed that this would yield good results. Of course, it did not in fact yield desirable results (Chapter~\ref{ch:pact}). Though the analytical cost models were good at predicting actual empirical operation counts, those operation counts were actually a very poor proxy for real runtime performance. This lead me to ask the much more scoped and narrow questions of Chapter~\ref{ch:kron_taco}, now equipped with an upgraded reptest library that could
+measure real hardware events (Chapter~\ref{ch:reptest}).
+
+On the Kronecker graphs I tested, the most important choice was just not choosing any format combinations that forced a bad dataflow. Avoiding inner-product type sparse intersections matters by orders of magnitude. But among the combos left, a single fixed combo is within a few percent of the best on average. Where the best combination does change can be explained by simpler structural quantities about those particular matrices. Together this suggests a much simpler practical rule of beginning with any one good combination and switching when the crossover points (on whatever quantity that most line up with) point us to.
+
+\section{Limitations}
+
+\begin{itemize}
+  \item \textbf{Inputs.} All conclusions in Chapter~\ref{ch:kron_taco} come from Kronecker graphs. They served their purpose in allowing structure to be held constant across sizes, but they are nonetheless all of the same synthetic family.
+  \item \textbf{Kernels.} The TACO kernels I timed write one value per product and do not accumulate or merge, so they measure the multiply and store of partial products and not a complete SpGEMM. Algorithms that accumulate may behave differently, and may benefit from tiling in a way these did not.
+  \item \textbf{Mechanisms for crossover are hypotheses.} The branch mispredictions explanation for the early switch  is consistent with the counters and the generated code. The explanation for the hypersparse advantage of \texttt{CSC\_x\_COO} (it skips empty values of the contraction index) comes from reading the code and from the trend, as well as resting on a single graph, ATP-GR-QC. There may very well be other explanations that could be found with more data and experiments.
+\end{itemize}
+
+\section{Future work}
+
+\begin{itemize}
+\item \textbf{Other inputs.} Check whether the crossover thresholds hold on real matrix collections. I'd also like to look at structural properties beyond nonzero counts such as shape. Though, I found no structural effect after accounting for nonzeros and nonzeros per row, but I tested only a few properties.
+
+\item \textbf{Try the simple selector.} As Chapter~\ref{ch:pact} demonstrates, a selector is only good if it actually produces performant computations. I'd like
+to actually test if the simple selector is any good.
+
+\item \textbf{Other kernels and algorithms.} Try kernels that actually accumulate. As well, revisit tiling there, since the absence of an accumulator is one possible reason tiling failed. As well more experiments into multithreading. The thread experiments in Chapter~\ref{ch:pact} found little benefit beyond two threads at the sizes that could be solved, so larger inputs are needed.
+
+\item \textbf{Hardware.} CPUs are not very good at the very branchy work required for variable per-block sparse format operations. Architectures with cheaper irregular control flow might suit it better. The FPGA design in Chapter~\ref{ch:fpga} was a first investigation into this.
+\end{itemize}
+
+\section{Closing}
+I think that most useful contributions from this thesis are really the measurments themselves. I set out to build fast implementations and realized I didn't really
+know enough to do that. And so this thesis hoped to answer the questions one should ask before building the fast implementation.

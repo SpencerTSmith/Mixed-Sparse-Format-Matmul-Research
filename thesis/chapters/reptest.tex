@@ -39,6 +39,7 @@ awkward for kernels that need per-experiment setup, such as matrix
 generation at a chosen density, or that we wish to be driven from a variable-sweep loop in
 the program, or that have special blocking transformations that need to be done on input matrices.
 I wanted the program to own its own control flow and simply mark the section(s) to be repeated and measured.
+An example program can be found in Listing~\ref{lst:reptest_example}.
 
 \paragraph{Simplicity.}
 All the code for this thesis is written in C on top of a small base layer library of my own.
@@ -79,87 +80,3 @@ which are not known to have the best behaviour regarding pre-faulting.
 In addition to counters, each run records the total bytes requested from the
 allocators malloc and calloc. This is \emph{requested}, not actually mapped or touched memory,
 so it can exceed what page faults show if memory is allocated but never written, as is often the case with TACO generated code.
-
-\section{Example Usage}
-Below I provide a simple example program demonstrating the library's use. Note that the user is free do define the order and sections of interest.
-The example usage below is not the only way to use the library, but it has the general structure most of my experiments ended up in.
-
-\note{Probably this giant ass listing needs to go in the appendix...}
-\begin{lstlisting}[language=C, caption={Example usage of Repetition Test Library}]
-// NOTE: Define the interface that all the functions we want to test conform to.
-typedef void (*Test_Function)(u8 *buffer, usize buffer_size);
-static
-void read_buffer_linearly(u8 *buffer, usize buffer_size)
-{
-  ... // Omitted for brevity
-}
-static
-void read_buffer_randomly(u8 *buffer, usize buffer_size)
-{
-  ... // Omitted for brevity
-}
-
-// NOTE: Each entry is just going to be the function and
-// then a little string to name it.
-typedef struct Function_Entry Function_Entry;
-struct Function_Entry
-{
-  const char    *name;
-  Test_Function function;
-};
-// NOTE: Ok now we can just make an array of all the functions we want to test.
-Function_Entry entries[] =
-{
-  {"linearly", read_buffer_linearly},
-  {"randomly", read_buffer_randomly},
-};
-
-int main(int argc, char **argv)
-{
-  Arena arena = arena_make(.reserve_size = GB(64));
-  u64 cpu_timer_frequency = estimate_cpu_timer_freq();
-
-  // NOTE: How many seconds to keep trying for a new min, will reset once
-  // we find a new minimum.
-  u32 seconds_to_try_for_min = 1;
-
-  // NOTE: User may provide custom fields.
-  Repetition_Series *series = repetition_series_make(60 * STATIC_COUNT(entries), ((const char *[]){"buffer_size", "function"}));
-
-  for (usize buffer_size = MB(1); buffer_size <= MB(4); buffer_size *= 4)
-  {
-    for (usize test_func_idx = 0; test_func_idx < STATIC_COUNT(entries); test_func_idx++)
-    {
-      // NOTE: Allocating and deallocating every time to make it fair page-fault wise.
-      u8 *buffer = os_allocate(buffer_size, OS_ALLOCATION_COMMIT);
-
-      Function_Entry *entry = &entries[test_func_idx];
-
-      Repetition_Tester tester = repetition_series_new_tester(series, buffer_size,
-                                                              cpu_timer_frequency,
-                                                              seconds_to_try_for_min,
-                                                              "--- %s @ %lu MB ---", entry->name,
-                                                              buffer_size / MB(1));
-
-      // NOTE: User may set fields of current test.
-      repetition_series_set_field(series, "buffer_size", "%lu", buffer_size);
-      repetition_series_set_field(series, "function", entry->name);
-
-      // NOTE: The main loop, it will continue testing until the minimum time has not decreased in user-provided time-frame.
-      while (repetition_series_is_testing(series, &tester))
-      {
-        repetition_tester_begin_time(&tester);
-        entry->function(buffer, buffer_size);
-        repetition_tester_close_time(&tester);
-
-        repetition_tester_count_bytes(&tester, buffer_size);
-      }
-
-      os_deallocate(buffer, buffer_size);
-    }
-  }
-
-  // NOTE: Self-explanatory
-  repetition_series_save_csv(series, "out.csv");
-}
-\end{lstlisting}
