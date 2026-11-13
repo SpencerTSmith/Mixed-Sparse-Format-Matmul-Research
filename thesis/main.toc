@@ -1,10 +1,10 @@
 \contentsline {section}{Acknowledgments}{iv}{}%
 \contentsline {section}{List of Figures}{ix}{}%
-\contentsline {section}{List of Tables}{xviii}{}%
-\contentsline {section}{Abstract}{xix}{}%
+\contentsline {section}{List of Tables}{xvii}{}%
+\contentsline {section}{Abstract}{xviii}{}%
 \contentsline {chapter}{\numberline {1}Introduction}{1}{}%
 \contentsline {section}{\numberline {1.1}Central Question}{2}{}%
-\contentsline {section}{\numberline {1.2}Approach}{2}{}%
+\contentsline {section}{\numberline {1.2}Contributions}{2}{}%
 \contentsline {section}{\numberline {1.3}Outline}{3}{}%
 \contentsline {chapter}{\numberline {2}Background}{4}{}%
 \contentsline {subsection}{\numberline {2.0.1}Sparse Matrix Storage Formats}{4}{}%
@@ -85,7 +85,7 @@
 \contentsline {subsection}{\numberline {6.4.1}The pair family matters most}{61}{}%
 \contentsline {subsection}{\numberline {6.4.2}Switch from CSR $\times $ CSR to CSC $\times $ CSR / CSC $\times $ COO}{62}{}%
 \contentsline {subsection}{\numberline {6.4.3}Outer Product Tie}{63}{}%
-\contentsline {subsection}{\numberline {6.4.4}Tiling does not help}{64}{}%
+\contentsline {subsection}{\numberline {6.4.4}Tiling does not help, at these sizes}{64}{}%
 \contentsline {section}{\numberline {6.5}Discussion and Summary}{65}{}%
 \contentsline {chapter}{\numberline {7}Streaming SpMV for FPGA}{70}{}%
 \contentsline {section}{\numberline {7.1}Introduction}{70}{}%

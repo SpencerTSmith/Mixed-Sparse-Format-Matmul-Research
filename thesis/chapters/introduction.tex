@@ -1,25 +1,22 @@
 \chapter{Introduction}
 
-Sparse matrix-matrix multiplication (SpGEMM), multiplies two matrices that are mostly zeros. It shows up in graph algorithms such as triangle counting and multi-source breadth-first search, in algebraic multigrid solvers, and in sparse machine learning workloads. Because most entries are zero, the matrices are not stored as full grids of numbers. They are stored in a \emph{format} that records only the nonzeros and where they are, such as coordinate lists (COO), compressed rows (CSR) or compressed columns (CSC). The format decides which loops the multiplication can use, how memory is accessed, and how much work is wasted on empty parts of the matrix.
+Sparse matrix-matrix multiplication (SpGEMM), multiplies two matrices that are mostly zeros. It shows up in graph algorithms such as triangle counting and multi-source breadth-first search, in algebraic multigrid solvers, and in sparse machine learning workloads. Because most entries are zero, the matrices are not stored as full grids of numbers. They are stored in a \emph{format} that records only the nonzeros and where they are, such as coordinate lists (COO), compressed rows (CSR) or compressed columns (CSC). The format decides which loop orderings the multiplication can use, how memory is accessed, and how much work is wasted on empty parts of the matrix.
 
 The same product can therefore be computed in many ways, and they can differ in runtime performance by a significant degree. Two things make choosing the optimal combination difficult. There is no single best format, since it depends on the matrix. And for SpGEMM there are two input matrices, so the choice is a \emph{pair} of formats, and the pair fixes the dataflow: row-wise (Gustavson), outer product, or inner product, see Chapter~\ref{ch:background}. Most of the existing work on format selection studies sparse matrix-vector multiplication on one matrix at a time. For SpGEMM, how the best pair changes with the size and structure of the input is less well documented (Section~\ref{sec:lit-gaps}).
 
 \section{Central Question}
 This thesis asks one central question. For SpGEMM, how does the best pair of storage formats vary with the scale and structure of the matrix, and secondarily what hardware behaviour explains those differences? It began as a hardware question. My very earliest paper of this degree focused on an FPGA design (Chapter~\ref{ch:fpga}) which stored blocks of a matrix in different formats. While writing it I realized I came upon a number of questions which I hadn't answered but needed to. Questions like: which formats were worth implementing, how to decide, what to measure to decide, etc. The rest of the thesis tries to answer those questions.
 
-\section{Approach}
-
-The work happened in three stages.
-
+\section{Contributions}
 \begin{enumerate}
-  \item \textbf{Determine what to Measure.} I wrote a benchmarking library, the repetition test library (Chapter~\ref{ch:reptest}). It is capable of collecting a number of measurements that I thought would be important and explanatory.
-  \item \textbf{Predict Best Format.} I implemented kernels for all sixteen pairings of four formats, derived operation count formulae for them,
-  and used the formulae to choose a format for each block of a matrix with an optimization solver (Chapter~\ref{ch:pact}).
-  The formulae were accurate but the approach unfortunately did not pay off.
-  \item \textbf{Measure systematically.} I generated kernels for every format pair with the TACO compiler and swept them over Kronecker graphs at increasing scale, recording hardware counters (Chapter~\ref{ch:kron_taco}). Kronecker graphs can be made at any size, so at a fixed scale every graph has the same dimensions and only the structure differs, which lets size and structure be separated.
+  \item \textbf{Repetition Test Library.} I wrote a benchmarking library, the repetition test library (Chapter~\ref{ch:reptest}). It is capable of collecting a number of measurements that I thought would be important and explanatory.
+  \item \textbf{Analytical Formulae for Memory And Floating Point Operations.} I implemented kernels for all sixteen pairings of four formats, derived operation count formulae for them. The formulae were accurate to actual empirically observed counts on uniformly sparse matrices.
+  \item \textbf{Choose Best Format Pairing per-block for SpGEMM.} Used the above kernels and formulae to choose a format for each block of a matrix with an optimization solver (Chapter~\ref{ch:pact}).
+  \item \textbf{Sparse BLIS.} Used the optimizer along with tiling and loop ordering in the spirit of the BLIS algorithm to choose the best format per pairing of blocks. The results were quite poor performance-wise.
+  \item \textbf{Kronecker Sweeps.} I generated kernels for every format pair with the TACO compiler and swept them over Kronecker graphs at increasing scale, recording hardware counters (Chapter~\ref{ch:kron_taco}). Kronecker graphs can be made at any size, so at a fixed scale every graph has the same dimensions and only the structure differs, which lets size and structure be separated. This lead to the conclusions regarding the format-pair crossover points and their hardware and structural explanations.
+  \item \textbf{Kronecker Tiling Sweeps.} Finally, I swept over the same Kronecker graphs but this time with tiled formats. Tiling did not help at any sizes tested,
+    but some matrices show a trend of the relative cost of tiling decreasing as matrix size increases.
 \end{enumerate}
-
-I also include the FPGA work (Chapter~\ref{ch:fpga}) as the origin of these questions and as a sketch of future work.
 
 \section{Outline}
 

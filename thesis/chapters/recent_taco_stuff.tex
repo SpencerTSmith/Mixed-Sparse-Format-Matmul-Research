@@ -204,14 +204,14 @@ The sparsest case is ATP-GR-QC, which has fewer nonzeros than rows at every $k\g
   \label{fig:fixed_cost}
 \end{figure}
 
-\subsection{Tiling does not help}
+\subsection{Tiling does not help, at these sizes}
 
 Tiling is a standard way to improve locality in sparse kernels, so I also generated tiled versions of \texttt{CSR\_x\_CSR} and \texttt{CSC\_x\_CSR} and swept the block size at every $k$. The question I wanted answered was whether some block size beats the others, and whether the best size depends on $k$ or on the graph.
 I swept block sizes by power of 2 grids of up to 32x32 blocks, whatever the inner size of those blocks would be.
 
-The answer is that the best block size is the largest one tested, or in other words no tiling. At every $k$ it is $2^k$ or within one or two powers of two of it, which means a single tile covering the whole matrix, and the same holds for both kernels and nearly all the graphs (Figure~\ref{fig:tiled_best_block} and the per-graph heatmaps in Appendix~\ref{app:tiling_figs}). The few graphs where the winner is a step or two smaller at $k\ge 17$ are differences of a few percent, reasonably inside the noise.
+The answer is that the best block size is the largest one tested, or in other words no tiling. At every $k$ it is $2^k$ or within one or two powers of two of it, which means a single tile covering the whole matrix, and the same holds for both kernels and nearly all the graphs (Figure~\ref{fig:tiled_best_block} and the per-graph heatmaps in Appendix~\ref{app:tiling_figs}). The few graphs where the winner is a step or two smaller at $k\ge 17$ are differences of a few percent, reasonably inside noise.
 
-This is a negative result for these kernels but it does not rule out tiling for other kernels, such as ones that accumulate might into a dense row or partial matrix, though Chapter~\ref{ch:pact} also found tiling to be net-negative.
+This is a negative result for these kernels but it does not rule out tiling for other kernels, such as ones that accumulate might into a dense row or partial matrix, though Chapter~\ref{ch:pact} also found tiling to be net-negative. As well, a few matrices like AS-Newman, see Figure~\ref{fig:tiled_AS-Newman}, show a somewhat promising trend of the relative slowdown of blocking decreasing as the size of the matrix increases. On a sufficiently large matrix (which would probably required a distributed memory system), this trend might even cause some block sizes to beat no blocking at all, but that is just speculation.
 
 \begin{figure}[htbp]
   \centering
