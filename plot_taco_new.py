@@ -21,10 +21,11 @@ Output (OUT = taco_bench.png by default):
     OUT_fixed_pair_cost.png      all CSVs pooled: cost of always using one pair
 
 --mode tiled (CSVs with k,function,alloc,kron_nnz,block_size,grid_size,time,...):
-    OUT_tiled_<name>.png      per CSV: one heatmap per function, x = k, y = block size,
-                              colour = time / best block at that k, star = best block
-    OUT_tiled_best_block.png  best block size against k, one panel per function, one line per CSV
-    OUT_tiled_relative.png    pooled: slowdown vs the best block size, against block size
+    OUT_<name>.png            per CSV: one heatmap per function, x = k, y = block size,
+                              colour = time / best of ANY function and block at that k (one
+                              shared scale); white star = function's best block, black = overall
+    OUT_best_block.png        best block size against k, one panel per function, one line per CSV
+    OUT_relative.png          pooled: slowdown vs the best block size, against block size
     plus a printed table (best fixed block size and each block size's median slowdown)
 <name> is the CSV filename with timestamps and node names (like
 2026-11-4_0:6:36_c953) removed. Every figure is checked for overlapping text and
@@ -727,29 +728,38 @@ def _tiled_fns(T):
 
 
 def plot_tiled_one(T, metric, min_k):
-    """One heatmap per tiled function: x = k, y = block size, colour = metric / best over
-    block sizes at that k (1 = best). A star marks the best block size at each k."""
+    """One heatmap per tiled function, all on the same colour scale: x = k, y = block size,
+    colour = metric / the best value over EVERY function and block size at that k (1 = the
+    overall winner at that k). White star = best block size for that function at each k;
+    black star = the overall winner at that k, so the panels can be compared directly."""
     idx = _TILED_METRICS[metric]
     fns = _tiled_fns(T)
     fig, axes = plt.subplots(len(fns), 1, figsize=(7.5, 3.3 * len(fns) + 0.6),
                              layout='constrained', squeeze=False)
+    # Shared axes and one reference value per k, taken over all functions together.
+    ks = sorted({k for fn in fns for k in T[fn] if k >= min_k and any(b > 0 for b in T[fn][k])})
+    blocks = sorted({b for fn in fns for k in ks for b in T[fn].get(k, {}) if b > 0})
+    ref = {}  # k -> (best value, function that has it)
+    for k in ks:
+        cands = [(v[idx], fn) for fn in fns for b, v in T[fn].get(k, {}).items() if b > 0 and v[idx] > 0]
+        if cands:
+            ref[k] = min(cands)
     mappable = None
     for ax, fn in zip(axes[:, 0], fns):
-        ks = sorted(k for k in T[fn] if k >= min_k and any(b > 0 for b in T[fn][k]))
-        blocks = sorted({b for k in ks for b in T[fn][k] if b > 0})
         if not ks or not blocks:
             ax.set_visible(False)
             continue
         grid = np.full((len(blocks), len(ks)), np.nan)
         for j, k in enumerate(ks):
-            vals = {b: v[idx] for b, v in T[fn][k].items() if b > 0 and v[idx] > 0}
-            if not vals:
+            vals = {b: v[idx] for b, v in T[fn].get(k, {}).items() if b > 0 and v[idx] > 0}
+            if not vals or k not in ref:
                 continue
-            best = min(vals.values())
             for b, v in vals.items():
-                grid[blocks.index(b), j] = v / best
+                grid[blocks.index(b), j] = v / ref[k][0]
             bi = blocks.index(min(vals, key=vals.get))
             ax.scatter([j], [bi], marker='*', s=70, color='white', edgecolor='black', zorder=3)
+            if ref[k][1] == fn:
+                ax.scatter([j], [bi], marker='*', s=70, color='black', edgecolor='white', zorder=4)
         mappable = ax.pcolormesh(np.arange(len(ks) + 1) - 0.5, np.arange(len(blocks) + 1) - 0.5,
                                  np.ma.masked_invalid(grid), cmap='viridis_r',
                                  norm=matplotlib.colors.LogNorm(vmin=1.0, vmax=3.0))
@@ -764,7 +774,7 @@ def plot_tiled_one(T, metric, min_k):
         ax.set_title(fn)
     if mappable is not None:
         cb = fig.colorbar(mappable, ax=axes[:, 0].tolist(), shrink=0.8)
-        cb.set_label(f'{metric} / best block at this k  (log scale; star = best)')
+        cb.set_label(f'{metric} / best of any function and block at this k  (log scale)')
         cb.set_ticks([1, 1.5, 2, 3])
         cb.set_ticklabels(['1', '1.5', '2', '3+'])
     return fig
@@ -877,11 +887,11 @@ def run_tiled(args, labels, stem, ext):
         if not _tiled_fns(T):
             print(f'{label}: no rows with block_size > 0, skipped')
             continue
-        save(plot_tiled_one(T, args.tiled_metric, args.min_k), f'{stem}_tiled_{slug(label)}{ext}')
+        save(plot_tiled_one(T, args.tiled_metric, args.min_k), f'{stem}_{slug(label)}{ext}')
     print_tiled_table(labels, Ts, args.min_k)
     color_map = build_color_map(Ts)
-    for suffix, fig in (('_tiled_best_block', plot_tiled_best_block(labels, Ts, args.tiled_metric, args.min_k)),
-                        ('_tiled_relative', plot_tiled_relative(Ts, color_map, args.min_k))):
+    for suffix, fig in (('_best_block', plot_tiled_best_block(labels, Ts, args.tiled_metric, args.min_k)),
+                        ('_relative', plot_tiled_relative(Ts, color_map, args.min_k))):
         if fig is not None:
             save(fig, f'{stem}{suffix}{ext}')
 
