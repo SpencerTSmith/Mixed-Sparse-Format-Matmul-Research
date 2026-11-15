@@ -386,6 +386,16 @@ Blocking_Entry blocking_entries[] =
     .pack_b   = blocked_CSC_x_CSR_pack_B,
     .assemble = blocked_CSC_x_CSR_assemble,
   },
+  {
+    .name     = "Blocked_CSC_x_COO",
+    .a_mode   = {.ordering = {0,1,3,2}, .types = {taco_mode_dense, taco_mode_dense, taco_mode_dense, taco_mode_sparse} },
+    .b_mode   = {.ordering = {0,1,2,3}, .types = {taco_mode_sparse, taco_mode_sparse, taco_mode_sparse, taco_mode_sparse} },
+    .c_mode   = {.ordering = {0,1,2,3}, .types = {taco_mode_sparse, taco_mode_sparse, taco_mode_sparse, taco_mode_sparse} }, // Always blocked coo
+    .compute  = blocked_CSC_x_COO_compute,
+    .pack_a   = blocked_CSC_x_COO_pack_A,
+    .pack_b   = blocked_CSC_x_COO_pack_B,
+    .assemble = blocked_CSC_x_COO_assemble,
+  },
 };
 
 typedef struct TACO_Memory_Alloc TACO_Memory_Alloc;
