@@ -7,6 +7,9 @@ The same product can therefore be computed in many ways, and they can differ in 
 \section{Central Question}
 This thesis asks one central question. For SpGEMM, how does the best pair of storage formats vary with the scale and structure of the matrix, and secondarily what hardware behaviour explains those differences? It began as a hardware question. My very earliest paper of this degree focused on an FPGA design (Chapter~\ref{ch:fpga}) which stored blocks of a matrix in different formats. While writing it I realized I came upon a number of questions which I hadn't answered but needed to. Questions like: which formats were worth implementing, how to decide, what to measure to decide, etc. The rest of the thesis tries to answer those questions.
 
+\section{Claim}
+This thesis argues that, for sparse matrix-matrix multiplication using the kernels I chose and on the Kronecker graph data I tested on, choosing among storage formats is a simple decision. The dataflow of the format pair matters by orders of magnitude, and within the good pairs a fixed choice is within a few percent of the best. However, where the best pair does change follows quantities such as Number of Non-zeroes(nnz) or size, or quantities derived from these, that are known before the multiply runs.
+
 \section{Contributions}
 \begin{enumerate}
   \item \textbf{Repetition Test Library.} I wrote a benchmarking library, the repetition test library (Chapter~\ref{ch:reptest}). It is capable of collecting a number of measurements that I thought would be important and explanatory.

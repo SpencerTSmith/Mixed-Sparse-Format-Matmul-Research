@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.11.7)  13 NOV 2026 10:09
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.11.7)  15 NOV 2026 17:57
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1704,21 +1704,20 @@ Package pdftex.def Info: figures/tiled_AS-Newman_s2.png  used on input line 377
 
 
 ] [136 <./figures/tiled_AS-Newman_s2.png>]
-<figures/tiled_ATP-GR-QC_s2.png, id=639, 542.025pt x 520.344pt>
+<figures/tiled_ATP-GR-QC_s2.png, id=639, 542.025pt x 758.835pt>
 File: figures/tiled_ATP-GR-QC_s2.png Graphic file (type png)
 <use figures/tiled_ATP-GR-QC_s2.png>
 Package pdftex.def Info: figures/tiled_ATP-GR-QC_s2.png  used on input line 393
 .
-(pdftex.def)             Requested size: 390.26596pt x 374.65532pt.
- [137
-
- <./figures/tiled_ATP-GR-QC_s2.png>]
+(pdftex.def)             Requested size: 329.08815pt x 460.72343pt.
+ [137 <./figures/tiled_ATP-GR-QC_s2.png>]
 <figures/tiled_Answers_s2.png, id=644, 542.025pt x 520.344pt>
 File: figures/tiled_Answers_s2.png Graphic file (type png)
 <use figures/tiled_Answers_s2.png>
 Package pdftex.def Info: figures/tiled_Answers_s2.png  used on input line 401.
 (pdftex.def)             Requested size: 390.26596pt x 374.65532pt.
  [138
+
 
  <./figures/tiled_Answers_s2.png>]
 <figures/tiled_Bio-Proteins_s2.png, id=650, 542.025pt x 520.344pt>
@@ -1856,7 +1855,7 @@ Package pdftex.def Info: figures/tiled_Web-Notredame_s2.png  used on input line
  [153
 
  <./figures/tiled_Web-Notredame_s2.png>])
-runsystem(latexminted cleantemp  --timestamp 20261113100944 FAD58DE7366495DB465
+runsystem(latexminted cleantemp  --timestamp 20261115175745 FAD58DE7366495DB465
 0CFEFAC2FCD61)...executed safely (allowed).
 
  (./main.aux)
@@ -1900,7 +1899,7 @@ m-super/sfrm1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti120
 0.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt0800.pfb></usr/sha
 re/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb></usr/share/texmf-dist/f
 onts/type1/public/cm-super/sftt1200.pfb>
-Output written on main.pdf (172 pages, 9002202 bytes).
+Output written on main.pdf (172 pages, 9027438 bytes).
 PDF statistics:
  838 PDF objects out of 1000 (max. 8388607)
  462 compressed objects within 5 object streams

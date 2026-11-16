@@ -2,8 +2,7 @@
 
 \section{Putting everything together}
 I think this thesis is very much a tale of putting the cart before the horse, over and over again. It started with investigations into FPGA implementations
-(Chapter~\ref{ch:fpga}) before I really had a clue what would even be good on them. It then progressed into an investigation of cost models for choosing sparse sub-block formats, because I believed that this would yield good results. Of course, it did not in fact yield desirable results (Chapter~\ref{ch:pact}). Though the analytical cost models were good at predicting actual empirical operation counts, those operation counts were actually a very poor proxy for real runtime performance. This lead me to ask the much more scoped and narrow questions of Chapter~\ref{ch:kron_taco}, now equipped with an upgraded reptest library that could
-measure real hardware events (Chapter~\ref{ch:reptest}).
+(Chapter~\ref{ch:fpga}) before I really had a clue what exactly the FPGA might best take advantage of. It then progressed into an investigation of cost models for choosing sparse sub-block formats, because I believed that this would yield good results. Of course, it did not in fact yield desirable results (Chapter~\ref{ch:pact}). Though the analytical cost models were good at predicting actual empirical operation counts, those operation counts were actually a very poor proxy for real runtime performance. This lead me to ask the much more scoped and narrow questions of Chapter~\ref{ch:kron_taco}, now equipped with an upgraded reptest library that could measure real hardware events (Chapter~\ref{ch:reptest}).
 
 On the Kronecker graphs I tested, the most important choice was just not choosing any format combinations that forced a bad dataflow. Avoiding inner-product type sparse intersections matters by orders of magnitude. But among the combos left, a single fixed combo is within a few percent of the best on average. Where the best combination does change can be explained by simpler structural quantities about those particular matrices. Together this suggests a much simpler practical rule of beginning with any one good combination and switching when the crossover points (on whatever quantity that most line up with) point us to.
 
@@ -29,5 +28,5 @@ to actually test if the simple selector is any good.
 \end{itemize}
 
 \section{Closing}
-I think that most useful contributions from this thesis are really the measurments themselves. I set out to build fast implementations and realized I didn't really
-know enough to do that. And so this thesis hoped to answer the questions one should ask before building the fast implementation.
+I think that most useful contributions from this thesis are really the measurements themselves. I set out to build fast implementations and realized I didn't really
+know enough about the problem to do that. And so this thesis hoped to answer the questions one should ask before building the fast implementation.
