@@ -275,10 +275,45 @@ def print_best_table(labels, datasets):
             print(f'{k:>3}  {best:<16} {t:>14,.0f}  {ru:<16} {margin:>10}')
 
 
+def _density_order(datasets, labels=None):
+    """Indices of the CSVs, most dense graph first. Within one graph density = nnz / 4^k falls
+    by a constant factor per k, so the ranking between graphs does not depend on k: fit
+    log(density) against k for each graph and compare the fits at one reference k."""
+    pts = []
+    for ds in datasets:
+        by_k = {}
+        for rows in ds.values():
+            for r in rows:
+                if r[KRON] > 0:
+                    by_k[r[K]] = r[KRON]
+        pts.append(sorted((k, math.log(nnz / 4.0 ** k)) for k, nnz in by_k.items()))
+    all_ks = sorted(k for p in pts for k, _ in p)
+    ref = all_ks[len(all_ks) // 2] if all_ks else 0
+    keys = []
+    for i, p in enumerate(pts):
+        if len(p) >= 2:
+            slope, icpt = np.polyfit([k for k, _ in p], [v for _, v in p], 1)
+            val = slope * ref + icpt
+        elif p:
+            val = p[0][1]
+        else:
+            val = float('-inf')
+        keys.append((-val, i))
+    order = [i for _, i in sorted(keys)]
+    if labels is not None:
+        print(f'\nGraph order, most to least dense (density at k={ref}):')
+        for i in order:
+            val = -keys[i][0]
+            print(f'  {labels[i]:<28} {math.exp(val):.2e}')
+    return order
+
+
 def plot_best(labels, datasets, color_map):
-    """One row per CSV, one cell per k, colored by the fastest pair; the number
-    in each cell is how much slower the runner-up was."""
-    rankings = [best_per_k(ds) for ds in datasets]
+    """One row per CSV (most dense graph at the top), one cell per k, colored by the fastest
+    pair; the number in each cell is how much slower the runner-up was."""
+    order = _density_order(datasets, labels)
+    labels = [labels[i] for i in order]
+    rankings = [best_per_k(datasets[i]) for i in order]
     all_ks = sorted({k for r in rankings for k in r})
     if not all_ks:
         return None
@@ -306,7 +341,7 @@ def plot_best(labels, datasets, color_map):
     ax.set_yticks([i + 0.5 for i in range(n)])
     ax.set_yticklabels(labels, fontsize=8)
     ax.set_xlabel('k  (dim = 2^k)')
-    ax.set_title('Fastest pair per k')
+    ax.set_title('Fastest pair per k  (graphs ordered most to least dense)')
     handles = [Patch(facecolor=color_map[c], label=c) for c in sorted(used)]
     if any_tie:
         handles.append(Patch(facecolor='gray', alpha=0.3, label=f'faded: within {(_TIE - 1) * 100:.0f}% of runner-up'))
@@ -362,30 +397,26 @@ def plot_ranks(label, data):
 
 
 def _row_order(datasets):
-    """Row order for the heatmaps: sparsest base graph (fewest nnz per row at the smallest k) first."""
-    keys = []
-    for i, ds in enumerate(datasets):
-        med = point_medians([ds], min_k=1)
-        if med:
-            _, k, nnz = min(med, key=lambda x: x[1])
-            keys.append((nnz / float(2 ** k), i))
-        else:
-            keys.append((float('inf'), i))
-    return [i for _, i in sorted(keys)]
+    """Row order for the heatmaps: most dense graph first, the same order as the fastest-pair-per-k figure."""
+    return _density_order(datasets)
 
 
 def plot_best_by_scalar(labels, datasets, color_map, name, fn, bin_decades):
     """Like the fastest-pair-per-k figure, but the x axis is a different quantity, in log bins
-    (e.g. density). Rows = graphs, sparsest base graph first; cell colour = the pair with the
+    (e.g. density). Rows = graphs, most dense first; cell colour = the pair with the
     smallest average log time relative to the best in that bin; blank = no data.
+    Each cell is labelled with how much faster the winner is than the runner-up and the k
+    (or k range) of the points in that bin.
     If colour changes line up in a vertical band, this quantity decides the winner."""
     order = _row_order(datasets)
     cells = {}  # (row, bin) -> {combo: [log slowdown, ...]}
+    cell_ks = defaultdict(set)  # (row, bin) -> {k, ...}
     for row, i in enumerate(order):
         for (_, k, nnz), cm in point_medians([datasets[i]], min_k=1).items():
             b = math.floor(math.log10(fn(k, nnz)) / bin_decades)
             best = min(cm.values())
             d = cells.setdefault((row, b), {})
+            cell_ks[(row, b)].add(k)
             for c, t in cm.items():
                 d.setdefault(c, []).append(math.log(t / best))
     if not cells:
@@ -393,7 +424,7 @@ def plot_best_by_scalar(labels, datasets, color_map, name, fn, bin_decades):
     b_lo = min(b for _, b in cells)
     b_hi = max(b for _, b in cells)
     n = len(order)
-    fig, ax = plt.subplots(figsize=(max(7.0, 0.3 * (b_hi - b_lo + 1) + 4.5), 0.38 * n + 2.2),
+    fig, ax = plt.subplots(figsize=(max(7.0, 0.45 * (b_hi - b_lo + 1) + 4.5), 0.45 * n + 2.2),
                            layout='constrained')
     used = set()
     any_tie = False
@@ -408,6 +439,10 @@ def plot_best_by_scalar(labels, datasets, color_map, name, fn, bin_decades):
         any_tie = any_tie or tie
         ax.add_patch(Rectangle((b - b_lo, row), 1, 1, facecolor=color_map[combo],
                                edgecolor='white', alpha=0.3 if tie else 0.9))
+        ks = sorted(cell_ks[(row, b)])
+        k_txt = f'k={ks[0]}' if len(ks) == 1 else f'k={ks[0]}-{ks[-1]}'
+        speedup = f'{math.exp(full[ranked[1]] - full[combo]):.2f}x\n' if len(ranked) > 1 else ''
+        ax.text(b - b_lo + 0.5, row + 0.5, speedup + k_txt, ha='center', va='center', fontsize=5)
     ax.set_xlim(0, b_hi - b_lo + 1)
     ax.set_ylim(n, 0)
     step = max(1, int(round(1.0 / bin_decades)))  # label once per decade
