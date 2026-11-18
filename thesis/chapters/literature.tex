@@ -80,16 +80,16 @@ whether or not the row is empty, part of a format's cost scales with the dimensi
   \tarr{4.2}{0.1}{row}{0,0,2,3,3}
   \tarr{4.2}{-0.4}{col}{1,3,0,2,3}
   \tarr{4.2}{-0.9}{vals}{5,1,7,3,8}
-  \node[font=\small\bfseries, anchor=west] at (3.2,-1.55) {CSR (dense $\to$ compressed)};
+  \node[font=\small\bfseries, anchor=west] at (3.2,-1.55) {CSR};
   \tarr{4.2}{-2.0}{pos}{0,2,2,3,5}
   \tarr{4.2}{-2.5}{crd}{1,3,0,2,3}
   \tarr{4.2}{-3.0}{vals}{5,1,7,3,8}
-  \node[font=\small\bfseries, anchor=west] at (3.2,-3.65) {CSC (columns first)};
+  \node[font=\small\bfseries, anchor=west] at (3.2,-3.65) {CSC};
   \tarr{4.2}{-4.1}{pos}{0,1,2,3,5}
   \tarr{4.2}{-4.6}{crd}{2,0,3,0,3}
   \tarr{4.2}{-5.1}{vals}{7,5,3,1,8}
 \end{tikzpicture}
-\caption{One matrix in three formats (indices from zero). In CSR, \texttt{pos[i]} to \texttt{pos[i+1]} delimits row $i$ in \texttt{crd}; row~1 is empty, so \texttt{pos[1]}$=$\texttt{pos[2]}. CSC is the same over columns. COO repeats the row coordinate per non-zero and has no \texttt{pos}.}
+\caption{The same matrix represented in each format. In CSR, \texttt{pos[i]} to \texttt{pos[i+1]} delimits row $i$ in \texttt{crd}; row~1 is empty, so \texttt{pos[1]}$=$\texttt{pos[2]}. CSC is the same over columns. COO repeats the row coordinate per non-zero and has no \texttt{pos}.}
 \label{fig:taco-formats}
 \end{figure}
 
